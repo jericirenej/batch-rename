@@ -24,7 +24,9 @@ const listFiles = async (): Promise<string[]> => {
   const currentDir = process.cwd();
   const dirContent = await readdir(currentDir, { withFileTypes: true });
   const files = dirContent
-    .filter((dirEntry) => dirEntry.isFile())
+    .filter(
+      (dirEntry) => dirEntry.isFile() && dirEntry.name !== ROLLBACK_FILE_NAME
+    )
     .map((fileDirEntry) => fileDirEntry.name);
   return files;
 };
@@ -101,6 +103,5 @@ const cleanUpRollbackFile = async (): Promise<void> => {
   }
 };
 
-
 // (async () => await cleanUpRollbackFile())();
-renameFiles("odd")
+renameFiles("odd");
