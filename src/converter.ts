@@ -102,4 +102,5 @@ const cleanUpRollbackFile = async (): Promise<void> => {
 };
 
 
-(async () => await cleanUpRollbackFile())();
+// (async () => await cleanUpRollbackFile())();
+renameFiles("odd")
