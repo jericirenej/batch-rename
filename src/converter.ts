@@ -9,7 +9,7 @@ import {
   RenameList,
   TransformTypes,
 } from "./types";
-import { updateIf } from "typescript";
+
 export const renameFiles = async (
   transformType: TransformTypes
 ): Promise<void> => {
@@ -70,13 +70,14 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList) => {
 /**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (
   splitFileList,
-  transformPattern
+  transformPattern,
+  initialName
 ) => {
   const isEvenOddTransform = ["even", "odd"].some((pattern) =>
     transformPattern.includes(pattern)
   );
   if (isEvenOddTransform) {
-    return evenOddTransform(splitFileList, transformPattern);
+    return evenOddTransform(splitFileList, transformPattern, initialName);
   }
   // Return list with no transform
   return splitFileList.map((splitFile) => {
@@ -89,7 +90,8 @@ export const generateRenameList: GenerateRenameList = (
 /**Return a list of odd|even names, along with original file names */
 export const evenOddTransform = (
   splitFileList: ExtractBaseAndExtReturn,
-  transformPattern: TransformTypes
+  transformPattern: TransformTypes,
+  initialName?: string
 ) => {
   return splitFileList.map((splitFile, index) => {
     const { ext, baseName } = splitFile;
@@ -103,7 +105,9 @@ export const evenOddTransform = (
       const prePend = new Array(diffToMinLength).fill("0").join("");
       stringifiedNum = prePend + stringifiedNum;
     }
-    return { rename: `${stringifiedNum}${ext}`, original: baseName + ext };
+    let finalRename = `${stringifiedNum}${ext}`;
+    finalRename = initialName ? `${initialName}-${finalRename}` : finalRename;
+    return { rename: finalRename, original: baseName + ext };
   });
 };
 
@@ -124,45 +128,67 @@ export const cleanUpRollbackFile = async (): Promise<void> => {
   }
 };
 
+const restoreBaseFunction = async (): Promise<{
+  rollbackData: RenameList;
+  existingFiles: string[];
+  missingFiles: string[];
+  filesToRestore: string[];
+} | void> => {
+  const targetPath = path.resolve(process.cwd(), ROLLBACK_FILE_NAME);
+  const existingFiles = await listFiles();
+  if (!existingFiles.length) {
+    return console.log("There are no files available to convert!");
+  }
+  const rollBackFileExists = existsSync(targetPath);
+  if (!rollBackFileExists) {
+    console.log(
+      "Rollback file not found. Restore to original file names not possible."
+    );
+    return;
+  }
+  const rollbackData = JSON.parse(
+    await readFile(targetPath, "utf8")
+  ) as RenameList;
+
+  const missingFiles: string[] = [];
+  existingFiles.forEach((file) => {
+    const targetName = rollbackData.find(
+      (rollbackInfo) => rollbackInfo.rename === file
+    );
+    if (!targetName) missingFiles.push(file);
+  });
+  const filesToRestore = existingFiles.filter(
+    (file) => !missingFiles.includes(file)
+  );
+  return { rollbackData, existingFiles, missingFiles, filesToRestore };
+};
+
 /**Restore original filenames on the basis of the rollbackFile */
 export const restoreOriginalFileNames = async (): Promise<void> => {
   try {
-    const targetPath = path.resolve(process.cwd(), ROLLBACK_FILE_NAME);
-    const existingFiles = await listFiles();
-    if (!existingFiles.length) {
-      return console.log("There are no files available to convert!");
-    }
-    const rollBackFileExists = existsSync(targetPath);
-    if (!rollBackFileExists) {
-      console.log(
-        "Rollback file not found. Restore to original file names not possible."
-      );
-      return;
-    }
-    const rollbackData = JSON.parse(
-      await readFile(targetPath, "utf8")
-    ) as RenameList;
-    const missingData: string[] = [];
+    const restoreBaseData = await restoreBaseFunction();
+    if (!restoreBaseData) throw new Error();
+    const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
+
     const batchRename: Promise<void>[] = [];
-    existingFiles.forEach(async (file) => {
-      const targetName = rollbackData.find(
-        (rollbackInfo) => rollbackInfo.rename === file
-      );
-      if (targetName) {
-        const { original } = targetName;
+    if (filesToRestore.length) {
+      filesToRestore.forEach(async (file) => {
+        const targetName = rollbackData.find(
+          (rollbackInfo) => rollbackInfo.rename === file
+        );
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const { original } = targetName!;
         const currentPath = path.resolve(process.cwd(), file);
         const newPath = path.resolve(process.cwd(), original);
         return batchRename.push(rename(currentPath, newPath));
-      } else {
-        missingData.push(file);
-      }
-    });
-    if (missingData.length) {
+      });
+    }
+    if (missingFiles.length) {
       if (!batchRename.length) {
         console.log("Restore data could not be parsed for any of the files!");
       } else {
         console.log("The following files did not have restore data available:");
-        missingData.map((file) => console.log(file));
+        missingFiles.map((file) => console.log(file));
       }
     }
     if (batchRename.length) {
@@ -172,13 +198,69 @@ export const restoreOriginalFileNames = async (): Promise<void> => {
       await cleanUpRollbackFile();
     }
   } catch (err) {
-    console.log("An unexpected error ocurred!");
+    console.log(
+      "An unexpected error ocurred while trying to restore original file names!"
+    );
+    console.error(err);
+  }
+};
+
+export const dryRunTransform = async (
+  transformType: TransformTypes,
+  baseName?: string
+): Promise<void> => {
+  try {
+    const splitFiles = await listFiles().then((fileList) =>
+      extractBaseAndExt(fileList)
+    );
+    const transformedNames = generateRenameList(
+      splitFiles,
+      transformType,
+      baseName
+    );
+    transformedNames.forEach((name) =>
+      console.log(`${name.original} --> ${name.rename}`)
+    );
+  } catch (err) {
+    console.log(
+      "An error ocurred while trying to perform the dry-run of the renaming function!"
+    );
+    console.error(err);
+  }
+};
+
+export const dryRunRestore = async () => {
+  try {
+    const restoreData = await restoreBaseFunction();
+    if (!restoreData) throw Error();
+    const { existingFiles, missingFiles, rollbackData, filesToRestore } =
+      restoreData;
+    if (filesToRestore.length) {
+      console.log("Will convert", filesToRestore.length, "files...");
+      filesToRestore.forEach((file) => {
+        const target = rollbackData.find((restore) => restore.rename === file);
+        if (target) {
+          console.log(`${file} --> ${target.original}`);
+        }
+      });
+    }
+    if (!filesToRestore.length) {
+      console.log("Restore data could not be parsed for any of the files!");
+      return;
+    }
+    if (missingFiles.length) {
+      console.log("The following files did not have restore data available:");
+      missingFiles.map((file) => console.log(file));
+      return;
+    }
+  } catch (err) {
     console.error(err);
   }
 };
 
 // (async () => await cleanUpRollbackFile())();
 
- // (async () => await restoreOriginalFileNames())();
- // (async () => await renameFiles("even"))();
+// (async () => await restoreOriginalFileNames())();
+// (async () => await renameFiles("even"))();
 
+(async () => await dryRunRestore())();
