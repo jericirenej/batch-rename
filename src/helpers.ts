@@ -8,15 +8,19 @@ export const generateFileList = async (
 ): Promise<void> => {
   const placeholderName = "someFile";
 
-  const nameArray = new Array(length)
-    .fill(0)
-    .map((place, index) => {
-      const endPoint = `-${index+1}.ext`
-      const name = baseName ? `${baseName}${endPoint}`: `${placeholderName}${endPoint}`;
-      return path.join(process.cwd(), name);
-    }
+  const nameArray = new Array(length).fill(0).map((place, index) => {
+    const sequenceNumber = index + 1;
+    let stringifiedNum = sequenceNumber.toString();
+    const diff = (10 * length).toString().length - stringifiedNum.length;
 
-    );
+    const padding = new Array(diff).fill(0).join("");
+    stringifiedNum = padding + stringifiedNum;
+    const endPoint = `-${stringifiedNum}.ext`;
+    const name = baseName
+      ? `${baseName}${endPoint}`
+      : `${placeholderName}${endPoint}`;
+    return path.join(process.cwd(), name);
+  });
   console.log(nameArray);
   const promiseTouch = nameArray.map((name) => touchFileAsync(name));
   await Promise.all(promiseTouch);
@@ -31,9 +35,4 @@ const touchFileAsync = async (pathName: string) => {
   }
 };
 
-const touchFileSync = (pathName: string) => {
-  closeSync(openSync(pathName, "w+"));
-};
-
 (async () => await generateFileList(32))();
-// touchFileSync(path.resolve(process.cwd(), "somFile.ext"));
