@@ -263,4 +263,5 @@ export const dryRunRestore = async () => {
 // (async () => await restoreOriginalFileNames())();
 // (async () => await renameFiles("even"))();
 
-(async () => await dryRunRestore())();
+// (async () => await dryRunRestore())();
+// (async () => await dryRunTransform("even"))();
