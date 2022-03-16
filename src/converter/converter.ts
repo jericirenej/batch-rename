@@ -3,22 +3,21 @@ import { existsSync } from "fs";
 import path from "path";
 import { MIN_NUMBER_LENGTH, ROLLBACK_FILE_NAME } from "./constants";
 import {
+  EvenOddTransform,
   ExtractBaseAndExt,
-  ExtractBaseAndExtReturn,
   GenerateRenameList,
   RenameList,
+  RenameListArgs,
   TransformTypes,
 } from "../types";
 
-export const renameFiles = async (
-  transformType: TransformTypes,
-  
-): Promise<void> => {
+export const renameFiles = async (args: RenameListArgs): Promise<void> => {
   try {
-    const splitFiles = await listFiles().then((fileList) =>
+    const { transformPattern } = args;
+    const splitFileList = await listFiles().then((fileList) =>
       extractBaseAndExt(fileList)
     );
-    const transformedNames = generateRenameList(splitFiles, transformType);
+    const transformedNames = generateRenameList({...args, splitFileList});
     console.log("Writing rollback file...");
     await writeFile(
       path.resolve(process.cwd(), ROLLBACK_FILE_NAME),
@@ -29,7 +28,9 @@ export const renameFiles = async (
     transformedNames.forEach((transformName) =>
       batchRename.push(rename(transformName.original, transformName.rename))
     );
-    console.log(`Renaming ${batchRename.length} files to ${transformType}...`);
+    console.log(
+      `Renaming ${batchRename.length} files to ${transformPattern}...`
+    );
     await Promise.all(batchRename);
     console.log("Completed!");
   } catch (err) {
@@ -69,16 +70,13 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList) => {
 };
 
 /**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
-export const generateRenameList: GenerateRenameList = (
-  splitFileList,
-  transformPattern,
-  initialName
-) => {
+export const generateRenameList: GenerateRenameList = (args) => {
+  const { splitFileList, transformPattern } = args;
   const isEvenOddTransform = ["even", "odd"].some((pattern) =>
     transformPattern.includes(pattern)
   );
   if (isEvenOddTransform) {
-    return evenOddTransform(splitFileList, transformPattern, initialName);
+    return evenOddTransform(args);
   }
   // Return list with no transform
   return splitFileList.map((splitFile) => {
@@ -89,11 +87,9 @@ export const generateRenameList: GenerateRenameList = (
 };
 
 /**Return a list of odd|even names, along with original file names */
-export const evenOddTransform = (
-  splitFileList: ExtractBaseAndExtReturn,
-  transformPattern: TransformTypes,
-  initialName?: string
-) => {
+export const evenOddTransform: EvenOddTransform = (args) => {
+  const { splitFileList, transformPattern, initialName, preserveOriginal } =
+    args;
   return splitFileList.map((splitFile, index) => {
     const { ext, baseName } = splitFile;
     let sequenceNumber = index * 2;
@@ -107,7 +103,10 @@ export const evenOddTransform = (
       stringifiedNum = prePend + stringifiedNum;
     }
     let finalRename = `${stringifiedNum}${ext}`;
-    finalRename = initialName ? `${initialName}-${finalRename}` : finalRename;
+    const append = preserveOriginal ? baseName : initialName ? initialName : "";
+    finalRename = append
+      ? `${stringifiedNum}-${append}${ext}`
+      : `${stringifiedNum}${ext}`;
     return { rename: finalRename, original: baseName + ext };
   });
 };
@@ -207,18 +206,13 @@ export const restoreOriginalFileNames = async (): Promise<void> => {
 };
 
 export const dryRunTransform = async (
-  transformType: TransformTypes,
-  baseName?: string
+  args: RenameListArgs
 ): Promise<void> => {
   try {
-    const splitFiles = await listFiles().then((fileList) =>
+    const splitFileList = await listFiles().then((fileList) =>
       extractBaseAndExt(fileList)
     );
-    const transformedNames = generateRenameList(
-      splitFiles,
-      transformType,
-      baseName
-    );
+    const transformedNames = generateRenameList({...args, splitFileList});
     transformedNames.forEach((name) =>
       console.log(`${name.original} --> ${name.rename}`)
     );
@@ -234,7 +228,7 @@ export const dryRunRestore = async () => {
   try {
     const restoreData = await restoreBaseFunction();
     if (!restoreData) throw Error();
-    const { existingFiles, missingFiles, rollbackData, filesToRestore } =
+    const { missingFiles, rollbackData, filesToRestore } =
       restoreData;
     if (filesToRestore.length) {
       console.log("Will convert", filesToRestore.length, "files...");
@@ -258,11 +252,3 @@ export const dryRunRestore = async () => {
     console.error(err);
   }
 };
-
-// (async () => await cleanUpRollbackFile())();
-
-// (async () => await restoreOriginalFileNames())();
-// (async () => await renameFiles("even"))();
-
-// (async () => await dryRunRestore())();
-// (async () => await dryRunTransform("even"))();

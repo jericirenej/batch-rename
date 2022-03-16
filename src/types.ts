@@ -1,13 +1,22 @@
 export type TransformTypes = "even" | "odd";
 export type ExtractBaseAndExtReturn = { baseName: string; ext: string }[];
 export type ExtractBaseAndExt = (fileList: string[]) => ExtractBaseAndExtReturn;
-export type RenameList = {rename:string, original: string}[];
-export type GenerateRenameList = (splitFileList: ExtractBaseAndExtReturn, transformPattern: TransformTypes, initialName?:string) => RenameList;
+export type RenameList = { rename: string; original: string }[];
+export type RenameListArgs = {
+  transformPattern: TransformTypes;
+  initialName?: string;
+  preserveOriginal?: boolean;
+};
+export type GenerateRenameListArgs = RenameListArgs & {
+  splitFileList: ExtractBaseAndExtReturn;
+};
+export type GenerateRenameList = (args: GenerateRenameListArgs) => RenameList;
 
-export type ProgramOptions = {
-  short: string;
-  long: string;
-  type: string;
-  description: string;
-  defaultValue: string;
-}[]
+export type EvenOddTransformReturn = {
+  rename: string;
+  original: string;
+}[];
+
+export type EvenOddTransform = (
+  args: GenerateRenameListArgs
+) => EvenOddTransformReturn;
