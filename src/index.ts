@@ -1,29 +1,19 @@
 import { Command } from "commander";
+import programOptions from "./programOptions";
 
 const program = new Command();
 
-program
-  .version("1.0.0")
-  .name("oddEvenRename")
-  .description(
-`Simple utility for batch renaming files using even or odd numbers. 
-Run this in the folder in which you want to perform the operation.
+program.version("1.0.0").name("batchTransform");
 
-By default, the transform operation will generate a rollbackFile. 
-A transform argument (required) can optionally be combined with --dry-run or --cleanRollback.`
-  )
-  .option("--odd", "Transform argument. Rename using even numbers (2n)")
-  .option("--even", "Transform argument. Rename using odd numbers (2n)")
-  .option(
-    "--restore",
-    "Restore transformed files to previous names, if restore file is available."
-  )
-  .option("--dry-run", "Run transform operation without writing to disk ")
-  .option("--cleanRollback", "Remove rollback file, if it exists")
-  .option(
-    "--baseName [name]",
-    "Specify an optional base name for transformed files."
-  );
+programOptions.forEach((programOption) => {
+  const { description, long, short, type, defaultValue } = programOption;
+  let toggle = `-${short}, --${long}`;
+  toggle = type ? `${toggle} ${type}` : toggle;
+  if (defaultValue) {
+    return program.option(toggle, description, defaultValue);
+  }
+  return program.option(toggle, description, defaultValue);
+});
 
 program.parse(process.argv);
 
