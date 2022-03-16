@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require("path");
+const WebpackBundleAnalyzer = require("webpack-bundle-analyzer");
 
 module.exports = {
   mode: "production",
-  entry: "./src/converter.ts",
+  entry: "./src/index.ts",
   context: path.resolve(__dirname, "."),
   module: {
     rules: [
@@ -24,4 +25,5 @@ module.exports = {
     chunkFilename: "[name]-[contenthash:6].js",
   },
   target: "node",
+  plugins: [new WebpackBundleAnalyzer.BundleAnalyzerPlugin()],
 };
