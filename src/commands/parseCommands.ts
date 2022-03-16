@@ -5,7 +5,8 @@ import {
   renameFiles,
   restoreOriginalFileNames,
 } from "../converter/converter";
-import { RenameListArgs, TransformTypes, validTransformTypes } from "../types";
+import type { RenameListArgs, TransformTypes } from "../types";
+import { validTransformTypes } from "../types";
 import { OptionKeysWithValues } from "./programOptions";
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
@@ -28,9 +29,9 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
 
   const transformPattern = transformationSanityCheck(options);
   const args: RenameListArgs = {
-    appendName: appendName as string|undefined,
+    appendName: appendName as string | undefined,
     transformPattern,
-    preserveOriginal: preserveOriginal as boolean|undefined,
+    preserveOriginal: preserveOriginal as boolean | undefined,
   };
   if (dryRun) {
     console.log("DRY RUN");

@@ -1,14 +1,13 @@
 import { rename, readdir, writeFile, unlink, readFile } from "fs/promises";
 import { existsSync } from "fs";
-import path from "path";
+import {resolve} from "path";
 import { MIN_NUMBER_LENGTH, ROLLBACK_FILE_NAME } from "./constants";
-import {
+import type {
   EvenOddTransform,
   ExtractBaseAndExt,
   GenerateRenameList,
   RenameList,
   RenameListArgs,
-  TransformTypes,
 } from "../types";
 
 export const renameFiles = async (args: RenameListArgs): Promise<void> => {
@@ -20,7 +19,7 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
     const transformedNames = generateRenameList({...args, splitFileList});
     console.log("Writing rollback file...");
     await writeFile(
-      path.resolve(process.cwd(), ROLLBACK_FILE_NAME),
+      resolve(process.cwd(), ROLLBACK_FILE_NAME),
       JSON.stringify(transformedNames, undefined, 2),
       "utf-8"
     );
@@ -113,7 +112,7 @@ export const evenOddTransform: EvenOddTransform = (args) => {
 
 export const cleanUpRollbackFile = async (): Promise<void> => {
   try {
-    const targetPath = path.resolve(process.cwd(), ROLLBACK_FILE_NAME);
+    const targetPath = resolve(process.cwd(), ROLLBACK_FILE_NAME);
     const rollBackFileExists = existsSync(targetPath);
     if (!rollBackFileExists) {
       console.log("No rollback file exists. Exiting.");
@@ -134,7 +133,7 @@ const restoreBaseFunction = async (): Promise<{
   missingFiles: string[];
   filesToRestore: string[];
 } | void> => {
-  const targetPath = path.resolve(process.cwd(), ROLLBACK_FILE_NAME);
+  const targetPath = resolve(process.cwd(), ROLLBACK_FILE_NAME);
   const existingFiles = await listFiles();
   if (!existingFiles.length) {
     return console.log("There are no files available to convert!");
@@ -178,8 +177,8 @@ export const restoreOriginalFileNames = async (): Promise<void> => {
         );
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const { original } = targetName!;
-        const currentPath = path.resolve(process.cwd(), file);
-        const newPath = path.resolve(process.cwd(), original);
+        const currentPath = resolve(process.cwd(), file);
+        const newPath = resolve(process.cwd(), original);
         return batchRename.push(rename(currentPath, newPath));
       });
     }

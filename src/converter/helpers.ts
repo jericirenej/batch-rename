@@ -1,5 +1,5 @@
 import { open } from "fs/promises";
-import path from "path";
+import {join} from "path";
 /**Create files for testing purposes */
 export const generateFileList = async (
   length: number,
@@ -18,7 +18,7 @@ export const generateFileList = async (
     const name = baseName
       ? `${baseName}${endPoint}`
       : `${placeholderName}${endPoint}`;
-    return path.join(process.cwd(), name);
+    return join(process.cwd(), name);
   });
   console.log(nameArray);
   const promiseTouch = nameArray.map((name) => touchFileAsync(name));
