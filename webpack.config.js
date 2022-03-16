@@ -20,7 +20,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, "prod"),
-    filename: "converter.js",
+    filename: "batchTransform.js",
     chunkFilename: "[name]-[contenthash:6].js",
   },
   target: "node",

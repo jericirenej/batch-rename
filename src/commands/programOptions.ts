@@ -1,4 +1,4 @@
-import { ProgramOptions } from "./types";
+import { ProgramOptions } from "../types";
 
 const programOptions: ProgramOptions = [
   {

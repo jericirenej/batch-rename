@@ -1,5 +1,4 @@
 import { open } from "fs/promises";
-import { openSync, closeSync } from "fs";
 import path from "path";
 /**Create files for testing purposes */
 export const generateFileList = async (

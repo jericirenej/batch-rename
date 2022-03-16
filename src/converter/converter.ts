@@ -8,10 +8,11 @@ import {
   GenerateRenameList,
   RenameList,
   TransformTypes,
-} from "./types";
+} from "../types";
 
 export const renameFiles = async (
-  transformType: TransformTypes
+  transformType: TransformTypes,
+  
 ): Promise<void> => {
   try {
     const splitFiles = await listFiles().then((fileList) =>
