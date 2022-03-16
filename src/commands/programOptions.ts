@@ -1,6 +1,4 @@
-import { ProgramOptions } from "../types";
-
-const programOptions: ProgramOptions = [
+const programOptions = [
   {
     short: "o",
     long: "odd",
@@ -53,12 +51,12 @@ const programOptions: ProgramOptions = [
   },
   {
     short: "b",
-    long: "basename",
+    long: "baseName",
     type: "[name]",
     description:
       "Specify an optional base name for transformed files. This overwrites the preserveOriginal flag.",
     defaultValue: "",
   },
-];
+] as const;
 
 export default programOptions;
