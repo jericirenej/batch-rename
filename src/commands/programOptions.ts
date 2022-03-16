@@ -36,13 +36,6 @@ const programOptions = [
     defaultValue: "",
   },
   {
-    short: "d",
-    long: "dryRun",
-    type: "",
-    description: "Run transform operation without writing to disk.",
-    defaultValue: "",
-  },
-  {
     short: "c",
     long: "cleanRollback",
     type: "",
@@ -50,13 +43,17 @@ const programOptions = [
     defaultValue: "",
   },
   {
-    short: "b",
-    long: "baseName",
+    short: "a",
+    long: "appendName",
     type: "[name]",
     description:
-      "Specify an optional base name for transformed files. This overwrites the preserveOriginal flag.",
+      "Specify an optional name to append to transformed files. This overwrites the preserveOriginal flag.",
     defaultValue: "",
   },
 ] as const;
+
+const optionKeys = programOptions.map(option => option.long);
+export type OptionKeys = typeof optionKeys[number];
+export type OptionKeysWithValues = Record<OptionKeys, boolean | string>;
 
 export default programOptions;

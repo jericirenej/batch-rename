@@ -88,7 +88,7 @@ export const generateRenameList: GenerateRenameList = (args) => {
 
 /**Return a list of odd|even names, along with original file names */
 export const evenOddTransform: EvenOddTransform = (args) => {
-  const { splitFileList, transformPattern, initialName, preserveOriginal } =
+  const { splitFileList, transformPattern, appendName, preserveOriginal } =
     args;
   return splitFileList.map((splitFile, index) => {
     const { ext, baseName } = splitFile;
@@ -103,7 +103,7 @@ export const evenOddTransform: EvenOddTransform = (args) => {
       stringifiedNum = prePend + stringifiedNum;
     }
     let finalRename = `${stringifiedNum}${ext}`;
-    const append = preserveOriginal ? baseName : initialName ? initialName : "";
+    const append = preserveOriginal ? baseName : appendName ? appendName : "";
     finalRename = append
       ? `${stringifiedNum}-${append}${ext}`
       : `${stringifiedNum}${ext}`;

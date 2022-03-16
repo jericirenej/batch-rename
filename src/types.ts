@@ -1,10 +1,11 @@
-export type TransformTypes = "even" | "odd";
+export const validTransformTypes = ["even", "odd"] as const;
+export type TransformTypes = typeof validTransformTypes[number];
 export type ExtractBaseAndExtReturn = { baseName: string; ext: string }[];
 export type ExtractBaseAndExt = (fileList: string[]) => ExtractBaseAndExtReturn;
 export type RenameList = { rename: string; original: string }[];
 export type RenameListArgs = {
   transformPattern: TransformTypes;
-  initialName?: string;
+  appendName?: string;
   preserveOriginal?: boolean;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
