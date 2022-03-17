@@ -1,10 +1,9 @@
 import {
   cleanUpRollbackFile,
-  dryRunRestore,
   dryRunTransform,
   renameFiles,
-  restoreOriginalFileNames,
 } from "../converter/converter";
+import { dryRunRestore, restoreOriginalFileNames } from "../converter/restorePoint";
 import type { RenameListArgs, TransformTypes } from "../types";
 import { validTransformTypes } from "../types";
 import { OptionKeysWithValues } from "./programOptions";

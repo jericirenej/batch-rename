@@ -1,4 +1,4 @@
-export const validTransformTypes = ["even", "odd"] as const;
+export const validTransformTypes = ["even", "odd", "sortByDate"] as const;
 export type TransformTypes = typeof validTransformTypes[number];
 export type ExtractBaseAndExtReturn = { baseName: string; ext: string }[];
 export type ExtractBaseAndExt = (fileList: string[]) => ExtractBaseAndExtReturn;
