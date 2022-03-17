@@ -1,6 +1,10 @@
+import { Stats } from "fs";
+
 export const validTransformTypes = ["even", "odd", "sortByDate"] as const;
 export type TransformTypes = typeof validTransformTypes[number];
-export type ExtractBaseAndExtReturn = { baseName: string; ext: string }[];
+type ExtractBaseAndExtTemplate = { baseName: string; ext: string };
+export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
+export type FileListWithStats = (ExtractBaseAndExtTemplate & {stats: Stats})[];
 export type ExtractBaseAndExt = (fileList: string[]) => ExtractBaseAndExtReturn;
 export type RenameList = { rename: string; original: string }[];
 export type RenameListArgs = {
@@ -13,11 +17,26 @@ export type GenerateRenameListArgs = RenameListArgs & {
 };
 export type GenerateRenameList = (args: GenerateRenameListArgs) => RenameList;
 
-export type EvenOddTransformReturn = {
+export type GeneralTransformReturn = {
   rename: string;
   original: string;
 }[];
 
 export type EvenOddTransform = (
   args: GenerateRenameListArgs
-) => EvenOddTransformReturn;
+) => GeneralTransformReturn;
+
+export type DateTransformOptions =
+  | "creationDate"
+  | "lastAccessed"
+  | "lastModified";
+export type DateTransformTypes = {
+  type: DateTransformOptions;
+  splitFileList: ExtractBaseAndExtReturn;
+};
+
+export type ProvideFileStats = (splitFileList: ExtractBaseAndExtReturn)=> Promise<FileListWithStats>;
+
+export type DateTransform = (
+  args: DateTransformTypes
+) => Promise<GeneralTransformReturn>;

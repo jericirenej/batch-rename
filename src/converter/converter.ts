@@ -1,6 +1,6 @@
 import { rename, readdir, writeFile, unlink } from "fs/promises";
 import { existsSync } from "fs";
-import {resolve} from "path";
+import { resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "./constants";
 import type {
   ExtractBaseAndExt,
@@ -8,6 +8,7 @@ import type {
   RenameListArgs,
 } from "../types";
 import { evenOddTransform } from "./evenOddTransform";
+import { provideFileStats } from "./dateConverter";
 
 export const renameFiles = async (args: RenameListArgs): Promise<void> => {
   try {
@@ -15,7 +16,10 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
     const splitFileList = await listFiles().then((fileList) =>
       extractBaseAndExt(fileList)
     );
-    const transformedNames = generateRenameList({...args, splitFileList});
+    // TEMPORARY RETURN!
+    if (transformPattern === "sortByDate")
+      return console.log(await provideFileStats(splitFileList));
+    const transformedNames = generateRenameList({ ...args, splitFileList });
     console.log("Writing rollback file...");
     await writeFile(
       resolve(process.cwd(), ROLLBACK_FILE_NAME),
@@ -103,15 +107,12 @@ export const cleanUpRollbackFile = async (): Promise<void> => {
   }
 };
 
-
-export const dryRunTransform = async (
-  args: RenameListArgs
-): Promise<void> => {
+export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
   try {
     const splitFileList = await listFiles().then((fileList) =>
       extractBaseAndExt(fileList)
     );
-    const transformedNames = generateRenameList({...args, splitFileList});
+    const transformedNames = generateRenameList({ ...args, splitFileList });
     transformedNames.forEach((name) =>
       console.log(`${name.original} --> ${name.rename}`)
     );
@@ -122,4 +123,3 @@ export const dryRunTransform = async (
     console.error(err);
   }
 };
-
