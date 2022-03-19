@@ -1,12 +1,14 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-undef */
-const path = require("path");
-const WebpackBundleAnalyzer = require("webpack-bundle-analyzer");
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+import ResolveTypescriptPlugin from "resolve-typescript-plugin";
+import WebpackBundleAnalyzer from "webpack-bundle-analyzer";
 
-module.exports = {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+export default {
   mode: "production",
   entry: "./src/index.ts",
-  context: path.resolve(__dirname, "."),
+  context: resolve(__dirname, "."),
   module: {
     rules: [
       {
@@ -18,12 +20,16 @@ module.exports = {
   },
   resolve: {
     extensions: [".ts", ".js"],
+    plugins: [new ResolveTypescriptPlugin()],
   },
   output: {
-    path: path.resolve(__dirname, "prod"),
+    path: resolve(__dirname, "prod"),
     filename: "batchTransform.js",
     chunkFilename: "[name]-[contenthash:6].js",
   },
   target: "node",
+  experiments: {
+    topLevelAwait: true,
+  },
   plugins: [new WebpackBundleAnalyzer.BundleAnalyzerPlugin()],
 };

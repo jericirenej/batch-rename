@@ -4,7 +4,7 @@ import programOptions, {
   OptionKeysWithValues,
 } from "./commands/programOptions.js";
 
-(async () => {
+
   const program = new Command();
 
   program.version("1.0.0").name("batchTransform");
@@ -23,6 +23,5 @@ import programOptions, {
 
   const options = program.opts() as OptionKeysWithValues;
 
-  console.log(options);
-  return parseOptions(options);
-})();
+  console.log("REMAINING ARGS:", program.args);
+  await parseOptions(options);

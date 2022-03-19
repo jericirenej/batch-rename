@@ -10,7 +10,7 @@
   "author": "Irenej Jerič",
   "license": "ISC",
   "bin": "dist/index.js",
-  "type":"module",
+  "type": "module",
   "dependencies": {
     "@types/jest": "^27.4.1",
     "@types/node": "^17.0.21",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "jest-mock": "^27.5.1",
+    "resolve-typescript-plugin": "^1.1.5",
     "ts-loader": "^9.2.8",
     "webpack": "^5.70.0",
     "webpack-bundle-analyzer": "^4.5.0",
