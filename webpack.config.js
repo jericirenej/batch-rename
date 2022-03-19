@@ -1,3 +1,4 @@
+import webpack from "webpack";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import ResolveTypescriptPlugin from "resolve-typescript-plugin";
@@ -26,10 +27,13 @@ export default {
     path: resolve(__dirname, "prod"),
     filename: "batchRename.js",
     chunkFilename: "[name]-[contenthash:6].js",
+    chunkFormat: "module",
+    module: true,
   },
   target: "node",
   experiments: {
     topLevelAwait: true,
+    outputModule: true,
   },
-  plugins: [new WebpackBundleAnalyzer.BundleAnalyzerPlugin()],
+  plugins: [],
 };
