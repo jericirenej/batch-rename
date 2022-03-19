@@ -1,5 +1,9 @@
 import { Stats } from "fs";
-import { VALID_DATE_TRANSFORM_TYPES, VALID_TRANSFORM_TYPES } from "./constants";
+import {
+  UTILITY_ACTIONS,
+  VALID_DATE_TRANSFORM_TYPES,
+  VALID_TRANSFORM_TYPES,
+} from "./constants";
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 type ExtractBaseAndExtTemplate = { baseName: string; ext: string };
@@ -28,6 +32,7 @@ export type RenameListArgs = {
   preserveOriginal?: boolean;
   dateRename?: DateTransformOptions;
   detailedDate?: boolean;
+  dryRun?: boolean;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -74,7 +79,7 @@ export type ProgramOptions = {
   long: OptionKeys;
   description: string;
   type?: string;
-  defaultValue?: string|boolean;
+  defaultValue?: string | boolean;
   choices?: string[];
 };
 
@@ -82,3 +87,9 @@ export type OptionKeysWithValues = Record<
   OptionKeys,
   boolean | string | string[]
 >;
+
+
+export type UtilityActions = typeof UTILITY_ACTIONS[number]
+export type UtilityActionsCheck = (
+  options: Partial<OptionKeysWithValues>
+) => UtilityActions;

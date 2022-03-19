@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { readFile, rename } from "fs/promises";
 import { resolve } from "path";
-import type { RenameList } from "../types";
+import type { RenameList, RenameListArgs } from "../types";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import { cleanUpRollbackFile, listFiles } from "./converter.js";
 
@@ -41,8 +41,11 @@ const restoreBaseFunction = async (): Promise<{
 };
 
 /**Restore original filenames on the basis of the rollbackFile */
-export const restoreOriginalFileNames = async (): Promise<void> => {
+export const restoreOriginalFileNames = async (
+  dryRun:boolean|undefined,
+): Promise<void> => {
   try {
+    if (dryRun) return await dryRunRestore();
     const restoreBaseData = await restoreBaseFunction();
     if (!restoreBaseData) throw new Error();
     const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
@@ -86,8 +89,7 @@ export const dryRunRestore = async () => {
   try {
     const restoreData = await restoreBaseFunction();
     if (!restoreData) throw Error();
-    const { missingFiles, rollbackData, filesToRestore } =
-      restoreData;
+    const { missingFiles, rollbackData, filesToRestore } = restoreData;
     if (filesToRestore.length) {
       console.log("Will convert", filesToRestore.length, "files...");
       filesToRestore.forEach((file) => {

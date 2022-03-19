@@ -14,6 +14,7 @@ import { dateTransform, provideFileStats } from "./dateConverter.js";
 
 export const renameFiles = async (args: RenameListArgs): Promise<void> => {
   try {
+    if(args.dryRun) return await dryRunTransform(args);
     const { transformPattern } = args;
     const splitFileList = await listFiles().then((fileList) =>
       extractBaseAndExt(fileList)

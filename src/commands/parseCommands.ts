@@ -1,68 +1,51 @@
-import {
-  cleanUpRollbackFile,
-  dryRunTransform,
-  renameFiles,
-} from "../converter/converter.js";
-import {
-  dryRunRestore,
-  restoreOriginalFileNames,
-} from "../converter/restorePoint.js";
+import { renameFiles } from "../converter/converter.js";
+
 import type {
   RenameListArgs,
   TransformTypes,
   OptionKeysWithValues,
   DateTransformOptions,
+  UtilityActionsCheck,
+  UtilityActions,
 } from "../types";
-import { VALID_TRANSFORM_TYPES } from "../constants.js";
+import {
+  utilityActionsCorrespondenceTable,
+  UTILITY_ACTIONS,
+  VALID_TRANSFORM_TYPES,
+} from "../constants.js";
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
-  const {
-    appendName,
-    cleanRollback,
-    dryRun,
-    preserveOriginal,
-    restore,
-    dateRename,
-    detailedDate,
-  } = options;
-  if (restore) {
-    if (dryRun) {
-      await dryRunRestore();
-      process.exit(0);
-    }
-    await restoreOriginalFileNames();
-    process.exit(0);
+  const { appendName, preserveOriginal, dryRun, dateRename, detailedDate } =
+    options;
+  const utilityActions = utilityActionsCheck(options);
+  if (utilityActions) {
+    return await utilityActionsCorrespondenceTable[utilityActions](
+      dryRun as boolean | undefined
+    );
   }
+  const transformPattern = transformationCheck(options);
 
-  if (cleanRollback) {
-    await cleanUpRollbackFile();
-    process.exit(0);
+  let transformedPreserve: boolean;
+  try {
+    transformedPreserve = JSON.parse(
+      (preserveOriginal as string).toLowerCase()
+    ) as boolean;
+  } catch {
+    transformedPreserve = true;
   }
-
-  const transformPattern = transformationSanityCheck(options);
-  const transformedPreserve = preserveOriginal
-    ? (JSON.parse((preserveOriginal as string).toLowerCase()) as boolean)
-    : true;
   const args: RenameListArgs = {
     appendName: appendName as string | undefined,
     transformPattern,
     preserveOriginal: transformedPreserve,
     dateRename: dateRename as DateTransformOptions,
     detailedDate: detailedDate as boolean | undefined,
+    dryRun: dryRun as boolean | undefined,
   };
-  // ! Don't forget to remove console.log("PARSED ARGS", args);
-  if (dryRun) {
-    await dryRunTransform(args);
-    process.exit(0);
-  }
 
-  await renameFiles(args);
-  process.exit(0);
+  return await renameFiles(args);
 };
 
-const transformationSanityCheck = (
-  options: OptionKeysWithValues
-): TransformTypes => {
+const transformationCheck = (options: OptionKeysWithValues): TransformTypes => {
   const keys = Object.keys(options) as unknown as Array<keyof typeof options>;
   const transformationPicked = keys.filter(
     (key) =>
@@ -83,4 +66,18 @@ const transformationSanityCheck = (
     process.exit(1);
   }
   return transformationPicked[0] as TransformTypes;
+};
+
+const utilityActionsCheck: UtilityActionsCheck = (options) => {
+  const keys = Object.keys(options) as UtilityActions[];
+  const utilityActions = keys.filter((key) =>
+    UTILITY_ACTIONS.some((action) => action === key)
+  );
+  if (utilityActions.length > 1) {
+    console.log("Only one type of utility action can be executed at the time!");
+    console.log(`Chosen: ${JSON.stringify(utilityActions)}.
+    Available: ${JSON.stringify(UTILITY_ACTIONS)}.`);
+    process.exit(1);
+  }
+  return utilityActions[0];
 };
