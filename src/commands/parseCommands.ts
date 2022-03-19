@@ -3,14 +3,28 @@ import {
   dryRunTransform,
   renameFiles,
 } from "../converter/converter.js";
-import { dryRunRestore, restoreOriginalFileNames } from "../converter/restorePoint.js";
-import type { RenameListArgs, TransformTypes, OptionKeysWithValues } from "../types";
+import {
+  dryRunRestore,
+  restoreOriginalFileNames,
+} from "../converter/restorePoint.js";
+import type {
+  RenameListArgs,
+  TransformTypes,
+  OptionKeysWithValues,
+  DateTransformOptions,
+} from "../types";
 import { VALID_TRANSFORM_TYPES } from "../constants.js";
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
-  const { appendName, cleanRollback, dryRun, preserveOriginal, restore } =
-    options;
-
+  const {
+    appendName,
+    cleanRollback,
+    dryRun,
+    preserveOriginal,
+    restore,
+    dateRename,
+    detailedDate,
+  } = options;
   if (restore) {
     if (dryRun) {
       await dryRunRestore();
@@ -26,13 +40,18 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
   }
 
   const transformPattern = transformationSanityCheck(options);
+  const transformedPreserve = preserveOriginal
+    ? (JSON.parse((preserveOriginal as string).toLowerCase()) as boolean)
+    : true;
   const args: RenameListArgs = {
     appendName: appendName as string | undefined,
     transformPattern,
-    preserveOriginal: preserveOriginal as boolean | undefined,
+    preserveOriginal: transformedPreserve,
+    dateRename: dateRename as DateTransformOptions,
+    detailedDate: detailedDate as boolean | undefined,
   };
+  // ! Don't forget to remove console.log("PARSED ARGS", args);
   if (dryRun) {
-    console.log("DRY RUN");
     await dryRunTransform(args);
     process.exit(0);
   }

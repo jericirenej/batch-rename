@@ -15,7 +15,7 @@ programOptions.forEach((programOption) => {
   let toggle = `-${short}, --${long}`;
   toggle = type ? `${toggle} ${type}` : toggle;
   const singleOption = new Option(toggle, description);
-  if (defaultValue && defaultValue.length) singleOption.preset(defaultValue);
+  if (defaultValue) singleOption.preset(defaultValue);
   if (choices && choices.length) singleOption.choices(choices);
 
   return program.addOption(singleOption);

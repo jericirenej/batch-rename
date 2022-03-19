@@ -6,9 +6,11 @@ import type {
   ExtractBaseAndExt,
   GenerateRenameList,
   RenameListArgs,
+  FileListWithStatsArray,
+  ExtractBaseAndExtReturn,
 } from "../types";
 import { evenOddTransform } from "./evenOddTransform.js";
-import { provideFileStats } from "./dateConverter.js";
+import { dateTransform, provideFileStats } from "./dateConverter.js";
 
 export const renameFiles = async (args: RenameListArgs): Promise<void> => {
   try {
@@ -16,10 +18,19 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
     const splitFileList = await listFiles().then((fileList) =>
       extractBaseAndExt(fileList)
     );
-    // TEMPORARY RETURN!
-    if (transformPattern === "sortByDate")
-      return console.log(await provideFileStats(splitFileList));
-    const transformedNames = generateRenameList({ ...args, splitFileList });
+    let listWithStats!: FileListWithStatsArray;
+
+    if (transformPattern === "dateRename") {
+      listWithStats = await provideFileStats(splitFileList);
+    }
+
+    const fileList: ExtractBaseAndExtReturn | FileListWithStatsArray =
+      listWithStats ? listWithStats : splitFileList;
+
+    const transformedNames = generateRenameList({
+      ...args,
+      splitFileList: fileList,
+    });
     console.log("Writing rollback file...");
     await writeFile(
       resolve(process.cwd(), ROLLBACK_FILE_NAME),
@@ -73,21 +84,18 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList) => {
 
 /**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (args) => {
-  const { transformPattern } = args;
+  const { transformPattern, splitFileList } = args;
   const isEvenOddTransform = ["even", "odd"].some((pattern) =>
     transformPattern.includes(pattern)
   );
   if (isEvenOddTransform) {
     return evenOddTransform(args);
   }
+  if (transformPattern === "dateRename") {
+    return dateTransform(args);
+  }
   console.log("No transform function available for the chosen option!");
   process.exit(0);
-  // Return list with no transform
-  // return splitFileList.map((splitFile) => {
-  //   const { ext, baseName } = splitFile;
-  //   const completeFile = baseName + ext;
-  //   return { rename: completeFile, original: completeFile };
-  // });
 };
 
 export const cleanUpRollbackFile = async (): Promise<void> => {
@@ -112,7 +120,19 @@ export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
     const splitFileList = await listFiles().then((fileList) =>
       extractBaseAndExt(fileList)
     );
-    const transformedNames = generateRenameList({ ...args, splitFileList });
+    let listWithStats!: FileListWithStatsArray;
+
+    if (args.transformPattern === "dateRename") {
+      listWithStats = await provideFileStats(splitFileList);
+    }
+
+    const fileList: ExtractBaseAndExtReturn | FileListWithStatsArray =
+      listWithStats ? listWithStats : splitFileList;
+    console.log("ARGS:", args);
+    const transformedNames = generateRenameList({
+      ...args,
+      splitFileList: fileList,
+    });
     transformedNames.forEach((name) =>
       console.log(`${name.original} --> ${name.rename}`)
     );
