@@ -1,14 +1,14 @@
 import { rename, readdir, writeFile, unlink } from "fs/promises";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import { ROLLBACK_FILE_NAME } from "./constants";
+import { ROLLBACK_FILE_NAME } from "./constants.js";
 import type {
   ExtractBaseAndExt,
   GenerateRenameList,
   RenameListArgs,
 } from "../types";
-import { evenOddTransform } from "./evenOddTransform";
-import { provideFileStats } from "./dateConverter";
+import { evenOddTransform } from "./evenOddTransform.js";
+import { provideFileStats } from "./dateConverter.js";
 
 export const renameFiles = async (args: RenameListArgs): Promise<void> => {
   try {

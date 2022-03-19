@@ -1,5 +1,5 @@
 {
-  "name": "even-odd-file-rename",
+  "name": "batch-renamer",
   "version": "1.0.0",
   "description": "File renaming utility.",
   "main": "index.js",
@@ -9,6 +9,8 @@
   },
   "author": "Irenej Jerič",
   "license": "ISC",
+  "bin": "dist/index.js",
+  "type":"module",
   "dependencies": {
     "@types/jest": "^27.4.1",
     "@types/node": "^17.0.21",

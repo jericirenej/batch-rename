@@ -1,7 +1,7 @@
 import { Stats } from "fs";
+import { VALID_TRANSFORM_TYPES } from "./converter/constants";
 
-export const validTransformTypes = ["even", "odd", "sortByDate"] as const;
-export type TransformTypes = typeof validTransformTypes[number];
+export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 type ExtractBaseAndExtTemplate = { baseName: string; ext: string };
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
 export type FileListWithStats = (ExtractBaseAndExtTemplate & {stats: Stats})[];

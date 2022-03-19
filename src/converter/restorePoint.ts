@@ -2,8 +2,8 @@ import { existsSync } from "fs";
 import { readFile, rename } from "fs/promises";
 import { resolve } from "path";
 import type { RenameList } from "../types";
-import { ROLLBACK_FILE_NAME } from "./constants";
-import { cleanUpRollbackFile, listFiles } from "./converter";
+import { ROLLBACK_FILE_NAME } from "./constants.js";
+import { cleanUpRollbackFile, listFiles } from "./converter.js";
 
 const restoreBaseFunction = async (): Promise<{
   rollbackData: RenameList;

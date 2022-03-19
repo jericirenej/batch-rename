@@ -2,11 +2,11 @@ import {
   cleanUpRollbackFile,
   dryRunTransform,
   renameFiles,
-} from "../converter/converter";
-import { dryRunRestore, restoreOriginalFileNames } from "../converter/restorePoint";
+} from "../converter/converter.js";
+import { dryRunRestore, restoreOriginalFileNames } from "../converter/restorePoint.js";
 import type { RenameListArgs, TransformTypes } from "../types";
-import { validTransformTypes } from "../types";
-import { OptionKeysWithValues } from "./programOptions";
+import { VALID_TRANSFORM_TYPES } from "../converter/constants.js";
+import { OptionKeysWithValues } from "./programOptions.js";
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
   const { appendName, cleanRollback, dryRun, preserveOriginal, restore } =
@@ -48,13 +48,13 @@ const transformationSanityCheck = (
   const keys = Object.keys(options) as unknown as Array<keyof typeof options>;
   const transformationPicked = keys.filter(
     (key) =>
-      validTransformTypes.some((transformType) => transformType === key) &&
+      VALID_TRANSFORM_TYPES.some((transformType) => transformType === key) &&
       options[key]
   );
   const numOfTransformations = transformationPicked.length;
   if (!numOfTransformations) {
     console.log(
-      `No transformation operation picked! Please specify one of the following: ${validTransformTypes.join(
+      `No transformation operation picked! Please specify one of the following: ${VALID_TRANSFORM_TYPES.join(
         ", "
       )}.`
     );

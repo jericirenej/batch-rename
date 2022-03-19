@@ -1,8 +1,8 @@
 import { Command, Option } from "commander";
-import { parseOptions } from "./commands/parseCommands";
+import { parseOptions } from "./commands/parseCommands.js";
 import programOptions, {
   OptionKeysWithValues,
-} from "./commands/programOptions";
+} from "./commands/programOptions.js";
 
 (async () => {
   const program = new Command();
