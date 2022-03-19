@@ -1,5 +1,5 @@
 import type { EvenOddTransform } from "../types";
-import { MIN_NUMBER_LENGTH } from "./constants.js";
+import { MIN_NUMBER_LENGTH } from "../constants.js";
 
 /**Return a list of odd|even names, along with original file names */
 export const evenOddTransform: EvenOddTransform = (args) => {

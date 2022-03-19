@@ -1,10 +1,12 @@
 import { Stats } from "fs";
-import { VALID_TRANSFORM_TYPES } from "./converter/constants";
+import { VALID_TRANSFORM_TYPES } from "./constants";
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 type ExtractBaseAndExtTemplate = { baseName: string; ext: string };
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
-export type FileListWithStats = (ExtractBaseAndExtTemplate & {stats: Stats})[];
+export type FileListWithStats = (ExtractBaseAndExtTemplate & {
+  stats: Stats;
+})[];
 export type ExtractBaseAndExt = (fileList: string[]) => ExtractBaseAndExtReturn;
 export type RenameList = { rename: string; original: string }[];
 export type RenameListArgs = {
@@ -35,8 +37,23 @@ export type DateTransformTypes = {
   splitFileList: ExtractBaseAndExtReturn;
 };
 
-export type ProvideFileStats = (splitFileList: ExtractBaseAndExtReturn)=> Promise<FileListWithStats>;
+export type ProvideFileStats = (
+  splitFileList: ExtractBaseAndExtReturn
+) => Promise<FileListWithStats>;
 
 export type DateTransform = (
   args: DateTransformTypes
 ) => Promise<GeneralTransformReturn>;
+
+export type OptionKeys = "odd"|"even"|"preserveOriginal"|"restore"|"dryRun"|"cleanRollback"|"appendName"|"sortByDate"|"searchAndReplace";
+
+export type ProgramOptions = {
+  short: string;
+  long: OptionKeys;
+  description: string;
+  type?: string;
+  defaultValue?: string;
+  choices?: string[];
+};
+
+export type OptionKeysWithValues = Record<OptionKeys, boolean|string|string[]>;

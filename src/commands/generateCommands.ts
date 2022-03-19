@@ -1,8 +1,13 @@
 import { Command, Option } from "commander";
-import programOptions from "./programOptions.js";
+import programConfiguration from "./programConfiguration.js";
 const program = new Command();
 
-program.version("1.0.0").name("batchTransform");
+const { programDescription, programOptions, programName, programVersion } =
+  programConfiguration;
+program
+  .name(programName)
+  .version(programVersion)
+  .description(programDescription);
 
 programOptions.forEach((programOption) => {
   const { description, long, short, type, defaultValue, choices } =
@@ -10,8 +15,9 @@ programOptions.forEach((programOption) => {
   let toggle = `-${short}, --${long}`;
   toggle = type ? `${toggle} ${type}` : toggle;
   const singleOption = new Option(toggle, description);
-  if (defaultValue.length) singleOption.preset(defaultValue);
-  if (choices.length) singleOption.choices(choices);
+  if (defaultValue && defaultValue.length) singleOption.preset(defaultValue);
+  if (choices && choices.length) singleOption.choices(choices);
+
   return program.addOption(singleOption);
 });
 

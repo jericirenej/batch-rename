@@ -24,7 +24,7 @@ export default {
   },
   output: {
     path: resolve(__dirname, "prod"),
-    filename: "batchTransform.js",
+    filename: "batchRename.js",
     chunkFilename: "[name]-[contenthash:6].js",
   },
   target: "node",

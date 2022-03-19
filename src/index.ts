@@ -1,6 +1,6 @@
 import program from "./commands/generateCommands.js";
 import { parseOptions } from "./commands/parseCommands.js";
-import { OptionKeysWithValues } from "./commands/programOptions.js";
+import type { OptionKeysWithValues } from "./types.js";
 
 program.parse(process.argv);
 

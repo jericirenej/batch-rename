@@ -4,9 +4,8 @@ import {
   renameFiles,
 } from "../converter/converter.js";
 import { dryRunRestore, restoreOriginalFileNames } from "../converter/restorePoint.js";
-import type { RenameListArgs, TransformTypes } from "../types";
-import { VALID_TRANSFORM_TYPES } from "../converter/constants.js";
-import { OptionKeysWithValues } from "./programOptions.js";
+import type { RenameListArgs, TransformTypes, OptionKeysWithValues } from "../types";
+import { VALID_TRANSFORM_TYPES } from "../constants.js";
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
   const { appendName, cleanRollback, dryRun, preserveOriginal, restore } =
