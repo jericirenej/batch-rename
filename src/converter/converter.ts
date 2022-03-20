@@ -9,11 +9,12 @@ import type {
 } from "../types";
 import { evenOddTransform } from "./evenOddTransform.js";
 import { dateTransform, provideFileStats } from "./dateConverter.js";
-import { extractBaseAndExt, listFiles } from "./utils.js";
+import { areNewNamesDistinct, extractBaseAndExt, listFiles } from "./utils.js";
+import { searchAndReplace } from "./searchAndReplace.js";
 
 export const renameFiles = async (args: RenameListArgs): Promise<void> => {
   try {
-    if(args.dryRun) return await dryRunTransform(args);
+    if (args.dryRun) return await dryRunTransform(args);
 
     const { transformPattern } = args;
     const splitFileList = await listFiles().then((fileList) =>
@@ -32,19 +33,28 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
       ...args,
       splitFileList: fileList,
     });
-    console.log("Writing rollback file...");
+
+    const newNamesDistinct = areNewNamesDistinct(transformedNames);
+    if (!newNamesDistinct)
+      throw new Error(
+        "All of the new file names are identical to original ones!"
+      );
+
+    process.stdout.write("Writing rollback file...");
     await writeFile(
       resolve(process.cwd(), ROLLBACK_FILE_NAME),
       JSON.stringify(transformedNames, undefined, 2),
       "utf-8"
     );
+    process.stdout.write("DONE");
     const batchRename: Promise<void>[] = [];
-    transformedNames.forEach((transformName) =>
-      batchRename.push(rename(transformName.original, transformName.rename))
-    );
-    console.log(
-      `Renaming ${batchRename.length} files to ${transformPattern}...`
-    );
+    transformedNames.forEach((transformName) => {
+      const { original, rename: newName } = transformName;
+      if (original! == newName) {
+        batchRename.push(rename(original, newName));
+      }
+    });
+    console.log(`Renaming ${batchRename.length} files...`);
     await Promise.all(batchRename);
     console.log("Completed!");
   } catch (err) {
@@ -54,8 +64,6 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
     console.error(err);
   }
 };
-
-
 
 /**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (args) => {
@@ -69,10 +77,12 @@ export const generateRenameList: GenerateRenameList = (args) => {
   if (transformPattern === "dateRename") {
     return dateTransform(args);
   }
+  if (transformPattern === "searchAndReplace") {
+    searchAndReplace(args);
+  }
   console.log("No transform function available for the chosen option!");
   process.exit(0);
 };
-
 
 export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
   try {
@@ -87,7 +97,6 @@ export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
 
     const fileList: ExtractBaseAndExtReturn | FileListWithStatsArray =
       listWithStats ? listWithStats : splitFileList;
-    console.log("ARGS:", args);
     const transformedNames = generateRenameList({
       ...args,
       splitFileList: fileList,

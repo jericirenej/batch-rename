@@ -1,8 +1,8 @@
-import { existsSync } from "fs";
+import { existsSync, rename } from "fs";
 import { readdir, unlink } from "fs/promises";
 import { resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
-import type { ExtractBaseAndExt } from "../types.js";
+import type { ExtractBaseAndExt, RenameList } from "../types.js";
 
 export const cleanUpRollbackFile = async (): Promise<void> => {
   try {
@@ -24,7 +24,7 @@ export const cleanUpRollbackFile = async (): Promise<void> => {
 /**Will separate the basename and file extension. If no extension is found, it will
  * return the whole file name under the base property and an empty ext string
  */
- export const extractBaseAndExt: ExtractBaseAndExt = (fileList) => {
+export const extractBaseAndExt: ExtractBaseAndExt = (fileList) => {
   const regex = /(\.\w+)$/;
   return fileList.map((file) => {
     const extPosition = file.search(regex);
@@ -38,6 +38,7 @@ export const cleanUpRollbackFile = async (): Promise<void> => {
   });
 };
 
+//TODO: Optional argument for path, if targeting a different directory!
 export const listFiles = async (): Promise<string[]> => {
   const currentDir = process.cwd();
   const dirContent = await readdir(currentDir, { withFileTypes: true });
@@ -47,4 +48,10 @@ export const listFiles = async (): Promise<string[]> => {
     )
     .map((fileDirEntry) => fileDirEntry.name);
   return files;
+};
+
+export const areNewNamesDistinct = (renameList: RenameList): boolean => {
+  return renameList.every(
+    (renameInfo) => renameInfo.original !== renameInfo.rename
+  );
 };
