@@ -1,5 +1,5 @@
 {
-  "name": "batch-renamer",
+  "name": "batch-rename",
   "version": "1.0.0",
   "description": "File renaming utility.",
   "main": "index.js",

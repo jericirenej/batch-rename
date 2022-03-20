@@ -2,9 +2,13 @@ import webpack from "webpack";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import ResolveTypescriptPlugin from "resolve-typescript-plugin";
-import WebpackBundleAnalyzer from "webpack-bundle-analyzer";
+import WebpackBundleAnalyzer, {
+  BundleAnalyzerPlugin,
+} from "webpack-bundle-analyzer";
+
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const outputName = "batchRename.js";
 
 export default {
   mode: "production",
@@ -15,7 +19,7 @@ export default {
       {
         test: /\.ts$/,
         use: "ts-loader",
-        exclude: /node_modules/,
+        exclude: [/node_modules/],
       },
     ],
   },
@@ -25,15 +29,31 @@ export default {
   },
   output: {
     path: resolve(__dirname, "prod"),
-    filename: "batchRename.js",
-    chunkFilename: "[name]-[contenthash:6].js",
+    filename: outputName,
     chunkFormat: "module",
     module: true,
   },
+  /* optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          chunks: "all",
+        },
+      },
+    },
+  }, */
   target: "node",
   experiments: {
     topLevelAwait: true,
     outputModule: true,
   },
-  plugins: [],
+  plugins: [
+    new BundleAnalyzerPlugin({
+      analyzerMode: "static",
+      reportFilename: "bundle-analysis.html",
+      openAnalyzer: false,
+    }),
+  ],
 };
