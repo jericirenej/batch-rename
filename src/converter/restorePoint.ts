@@ -3,7 +3,7 @@ import { readFile, rename } from "fs/promises";
 import { resolve } from "path";
 import type { RenameList, RenameListArgs } from "../types";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
-import { cleanUpRollbackFile, listFiles } from "./converter.js";
+import { cleanUpRollbackFile, listFiles } from "./utils.js"
 
 const restoreBaseFunction = async (): Promise<{
   rollbackData: RenameList;

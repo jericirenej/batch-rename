@@ -1,5 +1,5 @@
-import { cleanUpRollbackFile } from "./converter/converter.js";
 import { restoreOriginalFileNames } from "./converter/restorePoint.js";
+import { cleanUpRollbackFile } from "./converter/utils.js";
 
 export const MIN_NUMBER_LENGTH = 4;
 export const ROLLBACK_FILE_NAME = ".rollback.json";
