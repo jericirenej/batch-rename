@@ -74,9 +74,9 @@ const programOptions: ProgramOptions[] = [
   {
     short: "s",
     long: "searchAndReplace",
-    type: "<filter, replacer>",
+    type: "<search,filter...>",
     description:
-      "Will rename files that match the filter argument with the replacer argument. A string or a regex can be supplied. Can be used together with the dryRun flags.",
+      "Will rename part of the file names string that match the filter argument with the replacer argument. A string|regex can be supplied. More than two arguments will be ignored.\nCan be used with the dryRun flag.",
     defaultValue: "",
   },
 ];

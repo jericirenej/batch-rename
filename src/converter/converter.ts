@@ -46,11 +46,11 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
       JSON.stringify(transformedNames, undefined, 2),
       "utf-8"
     );
-    process.stdout.write("DONE");
+    process.stdout.write("DONE.\n");
     const batchRename: Promise<void>[] = [];
     transformedNames.forEach((transformName) => {
       const { original, rename: newName } = transformName;
-      if (original! == newName) {
+      if (original !== newName) {
         batchRename.push(rename(original, newName));
       }
     });
@@ -67,7 +67,7 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
 
 /**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (args) => {
-  const { transformPattern, splitFileList } = args;
+  const { transformPattern } = args;
   const isEvenOddTransform = ["even", "odd"].some((pattern) =>
     transformPattern.includes(pattern)
   );
@@ -78,7 +78,7 @@ export const generateRenameList: GenerateRenameList = (args) => {
     return dateTransform(args);
   }
   if (transformPattern === "searchAndReplace") {
-    searchAndReplace(args);
+    return searchAndReplace(args);
   }
   console.log("No transform function available for the chosen option!");
   process.exit(0);

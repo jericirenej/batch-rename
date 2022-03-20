@@ -3,7 +3,7 @@ import { readFile, rename } from "fs/promises";
 import { resolve } from "path";
 import type { RenameList, RenameListArgs } from "../types";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
-import { cleanUpRollbackFile, listFiles } from "./utils.js"
+import { cleanUpRollbackFile, listFiles } from "./utils.js";
 
 const restoreBaseFunction = async (): Promise<{
   rollbackData: RenameList;
@@ -42,7 +42,7 @@ const restoreBaseFunction = async (): Promise<{
 
 /**Restore original filenames on the basis of the rollbackFile */
 export const restoreOriginalFileNames = async (
-  dryRun:boolean|undefined,
+  dryRun: boolean | undefined
 ): Promise<void> => {
   try {
     if (dryRun) return await dryRunRestore();
@@ -53,14 +53,16 @@ export const restoreOriginalFileNames = async (
     const batchRename: Promise<void>[] = [];
     if (filesToRestore.length) {
       filesToRestore.forEach(async (file) => {
-        const targetName = rollbackData.find(
-          (rollbackInfo) => rollbackInfo.rename === file
-        );
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { original } = targetName!;
-        const currentPath = resolve(process.cwd(), file);
-        const newPath = resolve(process.cwd(), original);
-        return batchRename.push(rename(currentPath, newPath));
+        const targetName = rollbackData.find((rollbackInfo) => {
+          const { rename, original } = rollbackInfo;
+          return rename === file && original !== rename;
+        });
+        if (targetName) {
+          const { original } = targetName;
+          const currentPath = resolve(process.cwd(), file);
+          const newPath = resolve(process.cwd(), original);
+          return batchRename.push(rename(currentPath, newPath));
+        }
       });
     }
     if (missingFiles.length) {
@@ -74,7 +76,6 @@ export const restoreOriginalFileNames = async (
     if (batchRename.length) {
       console.log("Will convert", batchRename.length, "files...");
       await Promise.all(batchRename);
-      console.log("Removing rollback file...");
       await cleanUpRollbackFile();
     }
   } catch (err) {

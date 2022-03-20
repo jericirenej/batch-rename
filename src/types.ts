@@ -8,7 +8,7 @@ import {
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 type ExtractBaseAndExtTemplate = { baseName: string; ext: string };
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
-export type FileListWithStats = ExtractBaseAndExtTemplate & {
+export type FileListWithStats =ExtractBaseAndExtTemplate & {
   stats: Stats;
 };
 
@@ -33,6 +33,7 @@ export type RenameListArgs = {
   dateRename?: DateTransformOptions;
   detailedDate?: boolean;
   dryRun?: boolean;
+  searchAndReplace?: string[];
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -88,8 +89,14 @@ export type OptionKeysWithValues = Record<
   boolean | string | string[]
 >;
 
-
-export type UtilityActions = typeof UTILITY_ACTIONS[number]
+export type UtilityActions = typeof UTILITY_ACTIONS[number];
 export type UtilityActionsCheck = (
   options: Partial<OptionKeysWithValues>
 ) => UtilityActions;
+
+export type SearchAndReplaceArgs = { filter: RegExp | null; replace: string };
+export type GenerateSearchAndReplaceArgs = (
+  args: string[]
+) => SearchAndReplaceArgs;
+
+export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;

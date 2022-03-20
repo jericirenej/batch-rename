@@ -51,7 +51,7 @@ export const listFiles = async (): Promise<string[]> => {
 };
 
 export const areNewNamesDistinct = (renameList: RenameList): boolean => {
-  return renameList.every(
-    (renameInfo) => renameInfo.original !== renameInfo.rename
+  return !renameList.every(
+    (renameInfo) => renameInfo.original === renameInfo.rename
   );
 };

@@ -18,8 +18,14 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
   // Show help and exit, if no arguments supplied;
   if (!Object.keys(options).length) return program.help();
 
-  const { appendName, preserveOriginal, dryRun, dateRename, detailedDate } =
-    options;
+  const {
+    appendName,
+    preserveOriginal,
+    dryRun,
+    dateRename,
+    detailedDate,
+    searchAndReplace,
+  } = options;
 
   // Run util actions first.
   const utilityActions = utilityActionsCheck(options);
@@ -46,6 +52,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
     dateRename: dateRename as DateTransformOptions,
     detailedDate: detailedDate as boolean | undefined,
     dryRun: dryRun as boolean | undefined,
+    searchAndReplace: searchAndReplace as string[] | undefined,
   };
 
   return await renameFiles(args);
