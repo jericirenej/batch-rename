@@ -6,7 +6,5 @@ program.parse(process.argv);
 
 const options = program.opts() as OptionKeysWithValues;
 
-console.log("OPTIONS", options);
-// console.log("REMAINING ARGS", process.argv);
 await parseOptions(options);
 process.exit(0);

@@ -1,5 +1,5 @@
 import { renameFiles } from "../converter/converter.js";
-
+import program from "./generateCommands.js";
 import type {
   RenameListArgs,
   TransformTypes,
@@ -15,14 +15,20 @@ import {
 } from "../constants.js";
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
+  // Show help and exit, if no arguments supplied;
+  if (!Object.keys(options).length) return program.help();
+
   const { appendName, preserveOriginal, dryRun, dateRename, detailedDate } =
     options;
+
+  // Run util actions first.
   const utilityActions = utilityActionsCheck(options);
   if (utilityActions) {
     return await utilityActionsCorrespondenceTable[utilityActions](
       dryRun as boolean | undefined
     );
   }
+  // Check that transformation options are passed properly.
   const transformPattern = transformationCheck(options);
 
   let transformedPreserve: boolean;
