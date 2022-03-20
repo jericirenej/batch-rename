@@ -39,8 +39,8 @@ const extractDate = (milliseconds: number): FormattedDate => {
   const toDate = new Date(milliseconds);
   const [year, month, day, hours, minutes, seconds] = [
     toDate.getFullYear().toString(),
-    formatDate(toDate.getMonth().toString()),
-    formatDate(toDate.getDay().toString()),
+    formatDate((toDate.getMonth() + 1).toString()),
+    formatDate(toDate.getDate().toString()),
     formatDate(toDate.getHours().toString()),
     formatDate(toDate.getMinutes().toString()),
     formatDate(toDate.getSeconds().toString()),
@@ -80,19 +80,23 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
     }
     if (appendName) {
       finalBaseName = `${datePrefix}-${appendName}`;
-    }  
-    
+    }
+
     return {
       rename: `${finalBaseName}${ext}`,
       original: `${baseName}${ext}`,
     };
   });
-  //** Check that all names are distinct. If not, 
+  //** Check that all names are distinct. If not,
   //** throw error to avoid renaming the first file.
-  const areNamesDistinct = transformedNames.every(nameEntry => {
-   const occurrences = transformedNames.filter(entry => entry.rename === nameEntry.rename);
-   return occurrences.length === 1;
+  const areNamesDistinct = transformedNames.every((nameEntry) => {
+    const occurrences = transformedNames.filter(
+      (entry) => entry.rename === nameEntry.rename
+    );
+    return occurrences.length === 1;
   });
-  if(areNamesDistinct) return transformedNames;
-  throw new Error("Transformation would lead to duplication of file names! Operation aborted.")
+  if (areNamesDistinct) return transformedNames;
+  throw new Error(
+    "Transformation would lead to duplication of file names! Operation aborted."
+  );
 };
