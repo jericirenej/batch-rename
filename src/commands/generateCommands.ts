@@ -12,7 +12,7 @@ program
 programOptions.forEach((programOption) => {
   const { description, long, short, type, defaultValue, choices } =
     programOption;
-  let toggle = `-${short}, --${long}`;
+  let toggle = short ? `-${short}, --${long}` : `--${long}`;
   toggle = type ? `${toggle} ${type}` : toggle;
   const singleOption = new Option(toggle, description);
   if (defaultValue) singleOption.preset(defaultValue);

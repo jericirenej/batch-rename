@@ -17,6 +17,22 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "s",
+    long: "searchAndReplace",
+    type: "<search,filter...>",
+    description:
+      "Will rename part of the file names string that match the filter argument with the replacer argument. A string|regex can be supplied. More than two arguments will be ignored.\nCan be used with the dryRun flag.",
+    defaultValue: "",
+  },
+  {
+    short: "f",
+    long: "folderPath",
+    type: "<path>",
+    description:
+      "Specify folder path for which you would like to perform the transform. If omitted, current directory will be used.",
+    defaultValue: "",
+  },
+  {
     short: "p",
     long: "preserveOriginal",
     type: "[boolean]",
@@ -70,14 +86,6 @@ const programOptions: ProgramOptions[] = [
     type: "",
     description:
       "Used with the dateRename option. If included, hours, minutes, and seconds will be included in the chosen date transformation",
-  },
-  {
-    short: "s",
-    long: "searchAndReplace",
-    type: "<search,filter...>",
-    description:
-      "Will rename part of the file names string that match the filter argument with the replacer argument. A string|regex can be supplied. More than two arguments will be ignored.\nCan be used with the dryRun flag.",
-    defaultValue: "",
   },
 ];
 
