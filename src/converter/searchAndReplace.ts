@@ -8,14 +8,14 @@ export const searchAndReplace: SearchAndReplace = (args) => {
   const generatedArgs = generateArguments(searchAndReplace!);
   const targetList = splitFileList.map((fileInfo) => {
     const { filter, replace } = generatedArgs;
-    let baseName = fileInfo.baseName,
+    let {baseName, sourcePath} = fileInfo,
     rename = baseName;
     const ext = fileInfo.ext;
     const original = `${baseName}${ext}`;
     if (filter && filter.test(original)) {
       rename = original.replaceAll(filter, replace);
     }
-    return { original, rename: `${rename}${ext}` };
+    return { original, rename: `${rename}${ext}`, sourcePath };
   });
   return targetList;
 };

@@ -1,27 +1,33 @@
 import { existsSync } from "fs";
 import { readFile, rename } from "fs/promises";
-import { resolve } from "path";
-import type { RenameList, RenameListArgs } from "../types";
+import { join, resolve } from "path";
+import type {
+  RenameList,
+  UtilityActions,
+  UtilityFunctionsArgs,
+} from "../types";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
-import { cleanUpRollbackFile, listFiles } from "./utils.js";
+import { cleanUpRollbackFile, determineDir, listFiles } from "./utils.js";
 
-const restoreBaseFunction = async (): Promise<{
+const restoreBaseFunction = async (
+  transformPath?: string
+): Promise<{
   rollbackData: RenameList;
   existingFiles: string[];
   missingFiles: string[];
   filesToRestore: string[];
 } | void> => {
-  const targetPath = resolve(process.cwd(), ROLLBACK_FILE_NAME);
-  const existingFiles = await listFiles();
+  const targetDir = determineDir(transformPath);
+  const targetPath = join(targetDir, ROLLBACK_FILE_NAME);
+  const existingFiles = await listFiles(targetDir);
   if (!existingFiles.length) {
-    return console.log("There are no files available to convert!");
+    throw new Error("There are no files available to convert!");
   }
   const rollBackFileExists = existsSync(targetPath);
   if (!rollBackFileExists) {
-    console.log(
+    throw new Error(
       "Rollback file not found. Restore to original file names not possible."
     );
-    return;
   }
   const rollbackData = JSON.parse(
     await readFile(targetPath, "utf8")
@@ -42,11 +48,12 @@ const restoreBaseFunction = async (): Promise<{
 
 /**Restore original filenames on the basis of the rollbackFile */
 export const restoreOriginalFileNames = async (
-  dryRun: boolean | undefined
+  args: UtilityFunctionsArgs
 ): Promise<void> => {
-  try {
-    if (dryRun) return await dryRunRestore();
-    const restoreBaseData = await restoreBaseFunction();
+    const { dryRun, transformPath } = args;
+    if (dryRun) return await dryRunRestore(transformPath);
+    const targetDir = determineDir(transformPath);
+    const restoreBaseData = await restoreBaseFunction(targetDir);
     if (!restoreBaseData) throw new Error();
     const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
 
@@ -59,8 +66,8 @@ export const restoreOriginalFileNames = async (
         });
         if (targetName) {
           const { original } = targetName;
-          const currentPath = resolve(process.cwd(), file);
-          const newPath = resolve(process.cwd(), original);
+          const currentPath = join(targetName.sourcePath, file);
+          const newPath = join(targetName.sourcePath, original);
           return batchRename.push(rename(currentPath, newPath));
         }
       });
@@ -76,19 +83,12 @@ export const restoreOriginalFileNames = async (
     if (batchRename.length) {
       console.log("Will convert", batchRename.length, "files...");
       await Promise.all(batchRename);
-      await cleanUpRollbackFile();
+      await cleanUpRollbackFile({ transformPath });
     }
-  } catch (err) {
-    console.log(
-      "An unexpected error ocurred while trying to restore original file names!"
-    );
-    console.error(err);
-  }
 };
 
-export const dryRunRestore = async () => {
-  try {
-    const restoreData = await restoreBaseFunction();
+export const dryRunRestore = async (transformPath?: string) => {
+    const restoreData = await restoreBaseFunction(transformPath);
     if (!restoreData) throw Error();
     const { missingFiles, rollbackData, filesToRestore } = restoreData;
     if (filesToRestore.length) {
@@ -101,15 +101,11 @@ export const dryRunRestore = async () => {
       });
     }
     if (!filesToRestore.length) {
-      console.log("Restore data could not be parsed for any of the files!");
-      return;
+      throw new Error("Restore data could not be parsed for any of the files!");
     }
     if (missingFiles.length) {
       console.log("The following files did not have restore data available:");
       missingFiles.map((file) => console.log(file));
       return;
     }
-  } catch (err) {
-    console.error(err);
-  }
 };

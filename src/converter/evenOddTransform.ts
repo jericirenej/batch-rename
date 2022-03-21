@@ -6,7 +6,7 @@ export const evenOddTransform: EvenOddTransform = (args) => {
   const { splitFileList, transformPattern, appendName, preserveOriginal } =
     args;
   return splitFileList.map((splitFile, index) => {
-    const { ext, baseName } = splitFile;
+    const { ext, baseName, sourcePath } = splitFile;
     let sequenceNumber = index * 2;
     if (transformPattern === "odd") sequenceNumber += 1;
     if (transformPattern === "even") sequenceNumber += 2;
@@ -22,6 +22,6 @@ export const evenOddTransform: EvenOddTransform = (args) => {
     finalRename = append
       ? `${stringifiedNum}-${append}${ext}`
       : `${stringifiedNum}${ext}`;
-    return { rename: finalRename, original: baseName + ext };
+    return { rename: finalRename, original: baseName + ext, sourcePath };
   });
 };

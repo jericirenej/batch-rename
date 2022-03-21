@@ -13,9 +13,9 @@ import type {
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(
     splitFileList.map(async (fileInfo) => {
-      const { baseName, ext } = fileInfo;
+      const { baseName, ext, sourcePath } = fileInfo;
       const originalName = baseName + ext;
-      const stats: Stats = await stat(join(process.cwd(), originalName));
+      const stats: Stats = await stat(join(sourcePath, originalName));
       return { ...fileInfo, stats };
     })
   );
@@ -61,14 +61,14 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
   let originalFileList = splitFileList as FileListWithStatsArray;
   let fileListWithDates: FileListWithDates[] = originalFileList.map(
     (fileInfo) => {
-      const { baseName, stats, ext } = fileInfo;
+      const { baseName, stats, ext, sourcePath } = fileInfo;
       const formattedDate = extractDate(stats[statProp] as number);
-      return { baseName, ext, formattedDate };
+      return { baseName, ext, formattedDate, sourcePath };
     }
   );
 
   const transformedNames = fileListWithDates.map((file) => {
-    const { baseName, ext, formattedDate } = file;
+    const { baseName, ext, formattedDate, sourcePath } = file;
     const { year, month, day, hours, minutes, seconds } = formattedDate;
     let datePrefix = [year, month, day].join("-");
     if (detailedDate) {
@@ -85,10 +85,10 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
     return {
       rename: `${finalBaseName}${ext}`,
       original: `${baseName}${ext}`,
+      sourcePath
     };
   });
-  //** Check that all names are distinct. If not,
-  //** throw error to avoid renaming the first file.
+  // Check that all names are distinct. If not, throw error.
   const areNamesDistinct = transformedNames.every((nameEntry) => {
     const occurrences = transformedNames.filter(
       (entry) => entry.rename === nameEntry.rename

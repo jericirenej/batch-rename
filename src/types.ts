@@ -6,7 +6,7 @@ import {
 } from "./constants";
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
-type ExtractBaseAndExtTemplate = { baseName: string; ext: string };
+type ExtractBaseAndExtTemplate = { baseName: string; ext: string, sourcePath: string };
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
 export type FileListWithStats = ExtractBaseAndExtTemplate & {
   stats: Stats;
@@ -24,8 +24,8 @@ export type FileListWithStatsArray = FileListWithStats[];
 export type FileListWithDates = ExtractBaseAndExtTemplate & {
   formattedDate: FormattedDate;
 };
-export type ExtractBaseAndExt = (fileList: string[]) => ExtractBaseAndExtReturn;
-export type RenameList = { rename: string; original: string }[];
+export type ExtractBaseAndExt = (fileList: string[], sourcePath:string) => ExtractBaseAndExtReturn;
+export type RenameList = { rename: string; original: string, sourcePath:string }[];
 export type RenameListArgs = {
   transformPattern: TransformTypes;
   appendName?: string;
@@ -34,6 +34,7 @@ export type RenameListArgs = {
   detailedDate?: boolean;
   dryRun?: boolean;
   searchAndReplace?: string[];
+  transformPath?: string;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -43,6 +44,7 @@ export type GenerateRenameList = (args: GenerateRenameListArgs) => RenameList;
 export type GeneralTransformReturn = {
   rename: string;
   original: string;
+  sourcePath: string;
 }[];
 
 export type EvenOddTransform = (
@@ -101,3 +103,8 @@ export type GenerateSearchAndReplaceArgs = (
 ) => SearchAndReplaceArgs;
 
 export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;
+
+export type UtilityFunctionsArgs = {
+  transformPath?: string;
+  dryRun?: boolean;
+};

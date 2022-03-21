@@ -1,30 +1,38 @@
-import { existsSync, rename } from "fs";
-import { readdir, unlink } from "fs/promises";
+import { existsSync } from "fs";
+import { lstat, readdir, unlink } from "fs/promises";
 import { resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
-import type { ExtractBaseAndExt, RenameList } from "../types.js";
+import type {
+  ExtractBaseAndExt,
+  RenameList,
+  UtilityFunctionsArgs,
+} from "../types.js";
 
-export const cleanUpRollbackFile = async (): Promise<void> => {
+export const cleanUpRollbackFile = async (
+  args: UtilityFunctionsArgs
+): Promise<void> => {
   try {
-    const targetPath = resolve(process.cwd(), ROLLBACK_FILE_NAME);
+    const { transformPath } = args;
+    const targetDir = determineDir(transformPath);
+    const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
     const rollBackFileExists = existsSync(targetPath);
     if (!rollBackFileExists) {
       console.log("No rollback file exists. Exiting.");
-      return;
+      throw new Error();      
     }
     process.stdout.write("Deleting rollback file...");
     await unlink(targetPath);
     process.stdout.write("DONE!");
   } catch (err) {
     process.stdout.write("FAILED!");
-    console.error(err);
+    throw new Error("Cleaning up rollback file failed!");
   }
 };
 
 /**Will separate the basename and file extension. If no extension is found, it will
  * return the whole file name under the base property and an empty ext string
  */
-export const extractBaseAndExt: ExtractBaseAndExt = (fileList) => {
+export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   const regex = /(\.\w+)$/;
   return fileList.map((file) => {
     const extPosition = file.search(regex);
@@ -32,16 +40,16 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList) => {
       return {
         baseName: file.slice(0, extPosition),
         ext: file.slice(extPosition),
+        sourcePath,
       };
     }
-    return { baseName: file, ext: "" };
+    return { baseName: file, ext: "", sourcePath };
   });
 };
 
-//TODO: Optional argument for path, if targeting a different directory!
-export const listFiles = async (): Promise<string[]> => {
-  const currentDir = process.cwd();
-  const dirContent = await readdir(currentDir, { withFileTypes: true });
+export const listFiles = async (transformPath?: string): Promise<string[]> => {
+  const targetDir = determineDir(transformPath);
+  const dirContent = await readdir(targetDir, { withFileTypes: true });
   const files = dirContent
     .filter(
       (dirEntry) => dirEntry.isFile() && dirEntry.name !== ROLLBACK_FILE_NAME
@@ -55,3 +63,23 @@ export const areNewNamesDistinct = (renameList: RenameList): boolean => {
     (renameInfo) => renameInfo.original === renameInfo.rename
   );
 };
+
+export const checkPath = async (path: string): Promise<string> => {
+  const fullPath = resolve(process.cwd(), path);
+  if (!existsSync(fullPath)) {
+    throw new Error("Target path does not exist!");
+  }
+  const isDir = (await lstat(fullPath)).isDirectory();
+  if (!isDir) {
+    throw new Error("Target path is not a directory!");
+  }
+  const dirInfo = await readdir(fullPath, { withFileTypes: true });
+  const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
+  if (!hasFiles) {
+    throw new Error("Directory has no children file entries!");
+  }
+  return fullPath;
+};
+
+export const determineDir = (transformPath: string | undefined) =>
+  transformPath ? transformPath : process.cwd();

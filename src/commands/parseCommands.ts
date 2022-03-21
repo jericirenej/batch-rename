@@ -14,48 +14,60 @@ import {
   VALID_TRANSFORM_TYPES,
 } from "../constants.js";
 
+import { checkPath } from "../converter/utils.js";
+
 export const parseOptions = async (options: OptionKeysWithValues) => {
-  // Show help and exit, if no arguments supplied;
-  if (!Object.keys(options).length) return program.help();
-
-  const {
-    appendName,
-    preserveOriginal,
-    dryRun,
-    dateRename,
-    detailedDate,
-    searchAndReplace,
-  } = options;
-
-  // Run util actions first.
-  const utilityActions = utilityActionsCheck(options);
-  if (utilityActions) {
-    return await utilityActionsCorrespondenceTable[utilityActions](
-      dryRun as boolean | undefined
-    );
-  }
-  // Check that transformation options are passed properly.
-  const transformPattern = transformationCheck(options);
-
-  let transformedPreserve: boolean;
   try {
-    transformedPreserve = JSON.parse(
-      (preserveOriginal as string).toLowerCase()
-    ) as boolean;
-  } catch {
-    transformedPreserve = true;
-  }
-  const args: RenameListArgs = {
-    appendName: appendName as string | undefined,
-    transformPattern,
-    preserveOriginal: transformedPreserve,
-    dateRename: dateRename as DateTransformOptions,
-    detailedDate: detailedDate as boolean | undefined,
-    dryRun: dryRun as boolean | undefined,
-    searchAndReplace: searchAndReplace as string[] | undefined,
-  };
+    if (!Object.keys(options).length) return program.help();
 
-  return await renameFiles(args);
+    const {
+      appendName,
+      preserveOriginal,
+      dryRun,
+      dateRename,
+      detailedDate,
+      searchAndReplace,
+      folderPath,
+    } = options;
+
+    let transformPath: string | undefined;
+    if (folderPath) {
+      transformPath = await checkPath(folderPath as string);
+    }
+    // Run util actions first.
+    const utilityActions = utilityActionsCheck(options);
+    if (utilityActions) {
+      return await utilityActionsCorrespondenceTable[utilityActions]({
+        dryRun: dryRun as boolean | undefined,
+        transformPath,
+      });
+    }
+    const transformPattern = transformationCheck(options);
+
+    let transformedPreserve: boolean;
+    try {
+      transformedPreserve = JSON.parse(
+        (preserveOriginal as string).toLowerCase()
+      ) as boolean;
+    } catch {
+      transformedPreserve = true;
+    }
+    const args: RenameListArgs = {
+      appendName: appendName as string | undefined,
+      transformPattern,
+      preserveOriginal: transformedPreserve,
+      dateRename: dateRename as DateTransformOptions,
+      detailedDate: detailedDate as boolean | undefined,
+      dryRun: dryRun as boolean | undefined,
+      searchAndReplace: searchAndReplace as string[] | undefined,
+      transformPath,
+    };
+    return await renameFiles(args);
+  } catch (err) {
+    const error = err as Error;
+    console.error(error.message);
+    process.exit(1);
+  }
 };
 
 const transformationCheck = (options: OptionKeysWithValues): TransformTypes => {
@@ -67,16 +79,14 @@ const transformationCheck = (options: OptionKeysWithValues): TransformTypes => {
   );
   const numOfTransformations = transformationPicked.length;
   if (!numOfTransformations) {
-    console.log(
+    throw new Error(
       `No transformation operation picked! Please specify one of the following: ${VALID_TRANSFORM_TYPES.join(
         ", "
       )}.`
     );
-    process.exit(1);
   }
   if (numOfTransformations > 1) {
-    console.log("You can only pick one transformation type!");
-    process.exit(1);
+    throw new Error("You can only pick one transformation type!");
   }
   return transformationPicked[0] as TransformTypes;
 };
@@ -87,10 +97,10 @@ const utilityActionsCheck: UtilityActionsCheck = (options) => {
     UTILITY_ACTIONS.some((action) => action === key)
   );
   if (utilityActions.length > 1) {
-    console.log("Only one type of utility action can be executed at the time!");
-    console.log(`Chosen: ${JSON.stringify(utilityActions)}.
-    Available: ${JSON.stringify(UTILITY_ACTIONS)}.`);
-    process.exit(1);
+    throw new Error(`Only one type of utility action can be executed at the time!
+    Chosen: ${JSON.stringify(utilityActions)}.
+    Available: ${JSON.stringify(UTILITY_ACTIONS)}.
+    `);
   }
   return utilityActions[0];
 };
