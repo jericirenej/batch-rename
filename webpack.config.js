@@ -6,12 +6,18 @@ import WebpackBundleAnalyzer, {
   BundleAnalyzerPlugin,
 } from "webpack-bundle-analyzer";
 
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputName = "batchRename.js";
-
+const determineMode = () => {
+  const args = process.argv;
+  const modeArg = args.filter((arg) => arg.includes("mode"));
+  if (modeArg.length) {
+    return modeArg[0].includes("production") ? "production" : "development";
+  }
+  return "production";
+};
 export default {
-  mode: "production",
+  mode: determineMode(),
   entry: "./src/index.ts",
   context: resolve(__dirname, "."),
   module: {
@@ -33,27 +39,19 @@ export default {
     chunkFormat: "module",
     module: true,
   },
-  /* optimization: {
-    splitChunks: {
-      cacheGroups: {
-        commons: {
-          test: /[\\/]node_modules[\\/]/,
-          name: "vendors",
-          chunks: "all",
-        },
-      },
-    },
-  }, */
   target: "node",
   experiments: {
     topLevelAwait: true,
     outputModule: true,
   },
-  plugins: [
-    new BundleAnalyzerPlugin({
-      analyzerMode: "static",
-      reportFilename: "bundle-analysis.html",
-      openAnalyzer: false,
-    }),
-  ],
+  plugins:
+    determineMode() === "production"
+      ? []
+      : [
+          new BundleAnalyzerPlugin({
+            analyzerMode: "static",
+            reportFilename: "bundle-analysis.html",
+            openAnalyzer: false,
+          }),
+        ],
 };
