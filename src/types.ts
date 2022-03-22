@@ -6,7 +6,11 @@ import {
 } from "./constants";
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
-type ExtractBaseAndExtTemplate = { baseName: string; ext: string, sourcePath: string };
+type ExtractBaseAndExtTemplate = {
+  baseName: string;
+  ext: string;
+  sourcePath: string;
+};
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
 export type FileListWithStats = ExtractBaseAndExtTemplate & {
   stats: Stats;
@@ -24,8 +28,20 @@ export type FileListWithStatsArray = FileListWithStats[];
 export type FileListWithDates = ExtractBaseAndExtTemplate & {
   formattedDate: FormattedDate;
 };
-export type ExtractBaseAndExt = (fileList: string[], sourcePath:string) => ExtractBaseAndExtReturn;
-export type RenameList = { rename: string; original: string, sourcePath:string }[];
+
+export type ProvideFileStats = (
+  splitFileList: ExtractBaseAndExtReturn
+) => Promise<FileListWithStatsArray>;
+
+export type ExtractBaseAndExt = (
+  fileList: string[],
+  sourcePath: string
+) => ExtractBaseAndExtReturn;
+export type RenameList = {
+  rename: string;
+  original: string;
+  sourcePath: string;
+}[];
 export type RenameListArgs = {
   transformPattern: TransformTypes;
   appendName?: string;
@@ -51,19 +67,27 @@ export type EvenOddTransform = (
   args: GenerateRenameListArgs
 ) => GeneralTransformReturn;
 
+export type DateTransform = (
+  args: GenerateRenameListArgs
+) => GeneralTransformReturn;
+
 export type DateTransformOptions = typeof VALID_DATE_TRANSFORM_TYPES[number];
 export type DateTransformTypes = {
   type: DateTransformOptions;
   fileList: FileListWithStats;
 };
 
-export type ProvideFileStats = (
-  splitFileList: ExtractBaseAndExtReturn
-) => Promise<FileListWithStatsArray>;
+export type DateTransformCorrespondenceTable = Record<
+  DateTransformOptions,
+  keyof Stats
+>;
 
-export type DateTransform = (
-  args: GenerateRenameListArgs
-) => GeneralTransformReturn;
+export type SearchAndReplaceArgs = { filter: RegExp | null; replace: string };
+export type GenerateSearchAndReplaceArgs = (
+  args: string[]
+) => SearchAndReplaceArgs;
+
+export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;
 
 export type OptionKeys =
   | "odd"
@@ -97,14 +121,25 @@ export type UtilityActionsCheck = (
   options: Partial<OptionKeysWithValues>
 ) => UtilityActions;
 
-export type SearchAndReplaceArgs = { filter: RegExp | null; replace: string };
-export type GenerateSearchAndReplaceArgs = (
-  args: string[]
-) => SearchAndReplaceArgs;
-
-export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;
-
 export type UtilityFunctionsArgs = {
   transformPath?: string;
   dryRun?: boolean;
 };
+
+export type RestoreBaseReturn = {
+  rollbackData: RenameList;
+  existingFiles: string[];
+  missingFiles: string[];
+  filesToRestore: string[];
+};
+export type RestoreBaseFunction = (
+  transformPath?: string
+) => Promise<RestoreBaseReturn>;
+export type RestoreOriginalFileNames = (
+  args: UtilityFunctionsArgs
+) => Promise<void>;
+export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
+export type ListFiles = (transformPath?: string) => Promise<string[]>;
+export type AreNewNamesDistinct = (renameLIst: RenameList) => boolean;
+export type CheckPath = (path: string) => Promise<string>;
+export type DetermineDir = (transformPath: string|undefined) => string;

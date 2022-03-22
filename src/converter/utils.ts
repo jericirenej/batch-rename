@@ -1,16 +1,21 @@
-import { existsSync } from "fs";
-import { lstat, readdir, unlink } from "fs/promises";
-import { resolve } from "path";
-import { ROLLBACK_FILE_NAME } from "../constants.js";
 import type {
+  AreNewNamesDistinct,
+  CheckPath,
+  CleanUpRollbackFile,
+  DetermineDir,
   ExtractBaseAndExt,
+  ListFiles,
   RenameList,
   UtilityFunctionsArgs,
 } from "../types.js";
 
-export const cleanUpRollbackFile = async (
-  args: UtilityFunctionsArgs
-): Promise<void> => {
+import { existsSync } from "fs";
+import { lstat, readdir, unlink } from "fs/promises";
+import { resolve } from "path";
+
+import { ROLLBACK_FILE_NAME } from "../constants.js";
+
+export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
   try {
     const { transformPath } = args;
     const targetDir = determineDir(transformPath);
@@ -18,7 +23,7 @@ export const cleanUpRollbackFile = async (
     const rollBackFileExists = existsSync(targetPath);
     if (!rollBackFileExists) {
       console.log("No rollback file exists. Exiting.");
-      throw new Error();      
+      throw new Error();
     }
     process.stdout.write("Deleting rollback file...");
     await unlink(targetPath);
@@ -47,7 +52,7 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   });
 };
 
-export const listFiles = async (transformPath?: string): Promise<string[]> => {
+export const listFiles: ListFiles = async (transformPath) => {
   const targetDir = determineDir(transformPath);
   const dirContent = await readdir(targetDir, { withFileTypes: true });
   const files = dirContent
@@ -58,13 +63,13 @@ export const listFiles = async (transformPath?: string): Promise<string[]> => {
   return files;
 };
 
-export const areNewNamesDistinct = (renameList: RenameList): boolean => {
+export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
   return !renameList.every(
     (renameInfo) => renameInfo.original === renameInfo.rename
   );
 };
 
-export const checkPath = async (path: string): Promise<string> => {
+export const checkPath: CheckPath = async (path) => {
   const fullPath = resolve(process.cwd(), path);
   if (!existsSync(fullPath)) {
     throw new Error("Target path does not exist!");
@@ -81,5 +86,5 @@ export const checkPath = async (path: string): Promise<string> => {
   return fullPath;
 };
 
-export const determineDir = (transformPath: string | undefined) =>
+export const determineDir: DetermineDir = (transformPath) =>
   transformPath ? transformPath : process.cwd();

@@ -1,22 +1,17 @@
-import { existsSync } from "fs";
-import { readFile, rename } from "fs/promises";
-import { join, resolve } from "path";
 import type {
   RenameList,
-  UtilityActions,
-  UtilityFunctionsArgs,
+  RestoreBaseFunction,
+  RestoreOriginalFileNames,
 } from "../types";
+
+import { existsSync } from "fs";
+import { readFile, rename } from "fs/promises";
+import { join } from "path";
+
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import { cleanUpRollbackFile, determineDir, listFiles } from "./utils.js";
 
-const restoreBaseFunction = async (
-  transformPath?: string
-): Promise<{
-  rollbackData: RenameList;
-  existingFiles: string[];
-  missingFiles: string[];
-  filesToRestore: string[];
-} | void> => {
+const restoreBaseFunction: RestoreBaseFunction = async (transformPath) => {
   const targetDir = determineDir(transformPath);
   const targetPath = join(targetDir, ROLLBACK_FILE_NAME);
   const existingFiles = await listFiles(targetDir);
@@ -47,65 +42,65 @@ const restoreBaseFunction = async (
 };
 
 /**Restore original filenames on the basis of the rollbackFile */
-export const restoreOriginalFileNames = async (
-  args: UtilityFunctionsArgs
-): Promise<void> => {
-    const { dryRun, transformPath } = args;
-    if (dryRun) return await dryRunRestore(transformPath);
-    const targetDir = determineDir(transformPath);
-    const restoreBaseData = await restoreBaseFunction(targetDir);
-    if (!restoreBaseData) throw new Error();
-    const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
+export const restoreOriginalFileNames: RestoreOriginalFileNames = async (
+  args
+) => {
+  const { dryRun, transformPath } = args;
+  if (dryRun) return await dryRunRestore(transformPath);
+  const targetDir = determineDir(transformPath);
+  const restoreBaseData = await restoreBaseFunction(targetDir);
+  if (!restoreBaseData) throw new Error();
+  const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
 
-    const batchRename: Promise<void>[] = [];
-    if (filesToRestore.length) {
-      filesToRestore.forEach(async (file) => {
-        const targetName = rollbackData.find((rollbackInfo) => {
-          const { rename, original } = rollbackInfo;
-          return rename === file && original !== rename;
-        });
-        if (targetName) {
-          const { original } = targetName;
-          const currentPath = join(targetName.sourcePath, file);
-          const newPath = join(targetName.sourcePath, original);
-          return batchRename.push(rename(currentPath, newPath));
-        }
+  const batchRename: Promise<void>[] = [];
+  if (filesToRestore.length) {
+    filesToRestore.forEach(async (file) => {
+      const targetName = rollbackData.find((rollbackInfo) => {
+        const { rename, original } = rollbackInfo;
+        return rename === file && original !== rename;
       });
-    }
-    if (missingFiles.length) {
-      if (!batchRename.length) {
-        console.log("Restore data could not be parsed for any of the files!");
-      } else {
-        console.log("The following files did not have restore data available:");
-        missingFiles.map((file) => console.log(file));
+      if (targetName) {
+        const { original } = targetName;
+        const currentPath = join(targetName.sourcePath, file);
+        const newPath = join(targetName.sourcePath, original);
+        return batchRename.push(rename(currentPath, newPath));
       }
-    }
-    if (batchRename.length) {
-      console.log("Will convert", batchRename.length, "files...");
-      await Promise.all(batchRename);
-      await cleanUpRollbackFile({ transformPath });
-    }
-};
-
-export const dryRunRestore = async (transformPath?: string) => {
-    const restoreData = await restoreBaseFunction(transformPath);
-    if (!restoreData) throw Error();
-    const { missingFiles, rollbackData, filesToRestore } = restoreData;
-    if (filesToRestore.length) {
-      console.log("Will convert", filesToRestore.length, "files...");
-      filesToRestore.forEach((file) => {
-        const target = rollbackData.find((restore) => restore.rename === file);
-        if (target) {
-          console.log(`${file} --> ${target.original}`);
-        }
-      });
-    }
-    if (!filesToRestore.length) {
-      throw new Error("Restore data could not be parsed for any of the files!");
-    }
-    if (missingFiles.length) {
+    });
+  }
+  if (missingFiles.length) {
+    if (!batchRename.length) {
+      console.log("Restore data could not be parsed for any of the files!");
+    } else {
       console.log("The following files did not have restore data available:");
       missingFiles.map((file) => console.log(file));
-      return;
     }
+  }
+  if (batchRename.length) {
+    console.log("Will convert", batchRename.length, "files...");
+    await Promise.all(batchRename);
+    await cleanUpRollbackFile({ transformPath });
+  }
+};
+
+export const dryRunRestore = async (transformPath?: string): Promise<void> => {
+  const restoreData = await restoreBaseFunction(transformPath);
+  if (!restoreData) throw Error();
+  const { missingFiles, rollbackData, filesToRestore } = restoreData;
+  if (filesToRestore.length) {
+    console.log("Will convert", filesToRestore.length, "files...");
+    filesToRestore.forEach((file) => {
+      const target = rollbackData.find((restore) => restore.rename === file);
+      if (target) {
+        console.log(`${file} --> ${target.original}`);
+      }
+    });
+  }
+  if (!filesToRestore.length) {
+    throw new Error("Restore data could not be parsed for any of the files!");
+  }
+  if (missingFiles.length) {
+    console.log("The following files did not have restore data available:");
+    missingFiles.map((file) => console.log(file));
+    return;
+  }
 };

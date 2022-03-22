@@ -1,14 +1,15 @@
-import { Stats } from "fs";
-import { stat } from "fs/promises";
-import { join, resolve } from "path";
 import type {
   DateTransform,
-  DateTransformOptions,
+  DateTransformCorrespondenceTable,
   FileListWithDates,
   FileListWithStatsArray,
   FormattedDate,
   ProvideFileStats,
 } from "../types";
+
+import { Stats } from "fs";
+import { stat } from "fs/promises";
+import { join } from "path";
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(
@@ -22,10 +23,7 @@ export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   return splitFileListWithStats;
 };
 
-const dateTransformCorrespondenceTable: Record<
-  DateTransformOptions,
-  keyof Stats
-> = {
+const dateTransformCorrespondenceTable: DateTransformCorrespondenceTable = {
   creationDate: "birthtimeMs",
   lastAccessed: "atimeMs",
   lastModified: "mtimeMs",
@@ -85,10 +83,10 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
     return {
       rename: `${finalBaseName}${ext}`,
       original: `${baseName}${ext}`,
-      sourcePath
+      sourcePath,
     };
   });
-  // Check that all names are distinct. If not, throw error.
+
   const areNamesDistinct = transformedNames.every((nameEntry) => {
     const occurrences = transformedNames.filter(
       (entry) => entry.rename === nameEntry.rename
