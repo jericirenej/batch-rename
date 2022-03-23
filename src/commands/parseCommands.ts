@@ -1,4 +1,4 @@
-import { renameFiles } from "../converter/converter.js";
+import { renameFiles } from "../converters/converter-main.js";
 import program from "./generateCommands.js";
 import type {
   RenameListArgs,
@@ -14,7 +14,7 @@ import {
   VALID_TRANSFORM_TYPES,
 } from "../constants.js";
 
-import { checkPath } from "../converter/utils.js";
+import { checkPath } from "../converters/utils.js";
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
   try {
