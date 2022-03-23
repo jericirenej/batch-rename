@@ -6,7 +6,7 @@ import {
 } from "./constants";
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
-type ExtractBaseAndExtTemplate = {
+export type ExtractBaseAndExtTemplate = {
   baseName: string;
   ext: string;
   sourcePath: string;
