@@ -5,8 +5,6 @@ import type {
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
-  RenameList,
-  UtilityFunctionsArgs,
 } from "../types.js";
 
 import { existsSync } from "fs";
@@ -38,7 +36,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
  * return the whole file name under the base property and an empty ext string
  */
 export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
-  const regex = /(\.\w+)$/;
+  const regex = /(?<=\w+)(\.\w+)$/;
   return fileList.map((file) => {
     const extPosition = file.search(regex);
     if (extPosition !== -1) {
