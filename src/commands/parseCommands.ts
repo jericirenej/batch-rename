@@ -22,7 +22,9 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
     if (!Object.keys(options).length) return program.help();
 
     const {
-      appendName,
+      customText,
+      separator,
+      textPosition,
       preserveOriginal,
       dryRun,
       dateRename,
@@ -55,7 +57,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       transformedPreserve = true;
     }
     const args: RenameListArgs = {
-      appendName: appendName as string | undefined,
+      customText: customText as string | undefined,
       transformPattern,
       preserveOriginal: transformedPreserve,
       dateRename: dateRename as DateTransformOptions,
@@ -66,6 +68,8 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       numericTransform: numericTransform as
         | typeof VALID_NUMERIC_TRANSFORM_TYPES[number]
         | undefined,
+      separator: separator as string|undefined,
+      textPosition: textPosition as "append"|"prepend"|undefined,
     };
     return await renameFiles(args);
   } catch (err) {

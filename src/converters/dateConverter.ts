@@ -11,6 +11,7 @@ import { Stats } from "fs";
 import { stat } from "fs/promises";
 import { join } from "path";
 import { composeRenameString } from "./utils.js";
+import { DEFAULT_SEPARATOR } from "../constants.js";
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(
@@ -52,9 +53,11 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
   const {
     splitFileList,
     dateRename,
-    appendName,
+    customText,
+    textPosition,
     preserveOriginal,
     detailedDate,
+    separator,
   } = dateTransformArgs;
   const statProp = dateTransformCorrespondenceTable[dateRename!];
   let originalFileList = splitFileList as FileListWithStatsArray;
@@ -69,11 +72,20 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
   const transformedNames = fileListWithDates.map((file) => {
     const { baseName, ext, formattedDate, sourcePath } = file;
     const { year, month, day, hours, minutes, seconds } = formattedDate;
-    let datePrefix = [year, month, day].join("-");
+    const sep = separator ? separator : DEFAULT_SEPARATOR;
+    let datePrefix = [year, month, day].join(sep);
     if (detailedDate) {
-      datePrefix += `T${hours}-${minutes}-${seconds}`;
+      datePrefix += `T${[hours, minutes, seconds].join(sep)}`;
     }
-    const rename = composeRenameString({baseName, ext, preserveOriginal, newName: datePrefix});
+    const rename = composeRenameString({
+      baseName,
+      ext,
+      preserveOriginal,
+      newName: datePrefix,
+      customText,
+      textPosition,
+      separator,
+    });
 
     return {
       rename,

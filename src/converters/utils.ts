@@ -93,21 +93,26 @@ export const composeRenameString: ComposeRenameString = (args) => {
   const {
     baseName,
     ext,
-    additionalName,
-    position: argPosition,
+    customText,
+    textPosition,
     separator,
     preserveOriginal,
     newName,
   } = args;
-  const position = argPosition ? argPosition : "prepend";
+  const position = textPosition ? textPosition : "prepend";
   const sep = separator ? separator : DEFAULT_SEPARATOR;
   let modifiedName = newName;
-  if (preserveOriginal) {
-    if (position === "prepend") {
-      modifiedName = `${newName}${sep}${baseName}`;
-    }
+  const additionalText = customText
+    ? customText
+    : preserveOriginal
+    ? baseName
+    : "";
+  if (additionalText) {
     if (position === "append") {
-      modifiedName = `${baseName}${sep}${newName}`;
+      modifiedName = `${newName}${sep}${additionalText}`;
+    }
+    if (position === "prepend") {
+      modifiedName = `${additionalText}${sep}${newName}`;
     }
   }
   return `${modifiedName}${ext}`;

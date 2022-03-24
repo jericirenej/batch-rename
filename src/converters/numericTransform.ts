@@ -4,7 +4,7 @@ import { composeRenameString } from "./utils.js";
 
 /**Return a list of odd|even names, along with original file names */
 export const numericTransform: NumericTransform = (args) => {
-  const { splitFileList, appendName, preserveOriginal, numericTransform } =
+  const { splitFileList, customText, textPosition, preserveOriginal, numericTransform, separator } =
     args;
 
   const listLength = splitFileList.length.toString().length;
@@ -14,7 +14,7 @@ export const numericTransform: NumericTransform = (args) => {
     let sequenceNumber = generateSequenceNumber(numericTransform!, index);
 
     const stringifiedNum = generatePaddedNumber(sequenceNumber, listLength);
-    const rename = composeRenameString({baseName, ext, newName:stringifiedNum, preserveOriginal});
+    const rename = composeRenameString({baseName, ext, newName:stringifiedNum, preserveOriginal, customText, textPosition, separator});
     return { rename, original: baseName + ext, sourcePath };
   });
 };

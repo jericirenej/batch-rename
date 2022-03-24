@@ -45,7 +45,8 @@ export type RenameList = {
 }[];
 export type RenameListArgs = {
   transformPattern: TransformTypes;
-  appendName?: string;
+  customText?: string;
+  textPosition?: "append" | "prepend";
   preserveOriginal?: boolean;
   dateRename?: DateTransformOptions;
   detailedDate?: boolean;
@@ -53,6 +54,7 @@ export type RenameListArgs = {
   searchAndReplace?: string[];
   transformPath?: string;
   numericTransform?: typeof VALID_NUMERIC_TRANSFORM_TYPES[number];
+  separator?: string;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -96,12 +98,14 @@ export type OptionKeys =
   | "restore"
   | "dryRun"
   | "cleanRollback"
-  | "appendName"
+  | "customText"
   | "dateRename"
+  | "textPosition"
   | "searchAndReplace"
   | "detailedDate"
   | "folderPath"
-  | "numericTransform";
+  | "numericTransform"
+  | "separator";
 
 export type ProgramOptions = {
   short: string;
@@ -149,8 +153,8 @@ export type ComposeRenameStringArgs = {
   ext: string;
   newName: string;
   preserveOriginal?: boolean;
-  additionalName?: string;
-  position?: "prepend" | "append";
+  customText?: string;
+  textPosition?: "prepend" | "append";
   separator?: string;
 };
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;

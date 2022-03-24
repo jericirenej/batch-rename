@@ -7,7 +7,7 @@ import type { OptionKeysWithValues } from "./types.js";
 
   const options = program.opts() as OptionKeysWithValues;
 
-  console.log(options);
+  // console.log(options);
   // console.log(program);
   await parseOptions(options);
   process.exit(0);
