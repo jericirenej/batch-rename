@@ -7,7 +7,7 @@ import type {
 import { rename, writeFile } from "fs/promises";
 import { join, resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
-import { evenOddTransform } from "./evenOddTransform.js";
+import { numericTransform } from "./numericTransform.js";
 import { dateTransform, provideFileStats } from "./dateConverter.js";
 import {
   areNewNamesDistinct,
@@ -71,11 +71,9 @@ export const renameFiles = async (args: RenameListArgs): Promise<void> => {
 /**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (args) => {
   const { transformPattern } = args;
-  const isEvenOddTransform = ["even", "odd"].some((pattern) =>
-    transformPattern.includes(pattern)
-  );
-  if (isEvenOddTransform) {
-    return evenOddTransform(args);
+  console.log(transformPattern);
+  if (transformPattern === "numericTransform") {
+    return numericTransform(args);
   }
   if (transformPattern === "dateRename") {
     return dateTransform(args);

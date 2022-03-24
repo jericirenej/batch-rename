@@ -5,8 +5,10 @@ import type { OptionKeysWithValues } from "./types.js";
 (async () => {
   program.parse(process.argv);
 
-const options = program.opts() as OptionKeysWithValues;
+  const options = program.opts() as OptionKeysWithValues;
 
-await parseOptions(options);
-process.exit(0);
+  console.log(options);
+  // console.log(program);
+  await parseOptions(options);
+  process.exit(0);
 })();

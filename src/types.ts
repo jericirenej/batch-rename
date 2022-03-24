@@ -2,6 +2,7 @@ import { Stats } from "fs";
 import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
+  VALID_NUMERIC_TRANSFORM_TYPES,
   VALID_TRANSFORM_TYPES,
 } from "./constants";
 
@@ -51,6 +52,7 @@ export type RenameListArgs = {
   dryRun?: boolean;
   searchAndReplace?: string[];
   transformPath?: string;
+  numericTransform?: typeof VALID_NUMERIC_TRANSFORM_TYPES[number];
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -63,7 +65,7 @@ export type GeneralTransformReturn = {
   sourcePath: string;
 }[];
 
-export type EvenOddTransform = (
+export type NumericTransform = (
   args: GenerateRenameListArgs
 ) => GeneralTransformReturn;
 
@@ -90,8 +92,6 @@ export type GenerateSearchAndReplaceArgs = (
 export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;
 
 export type OptionKeys =
-  | "odd"
-  | "even"
   | "preserveOriginal"
   | "restore"
   | "dryRun"
@@ -100,7 +100,8 @@ export type OptionKeys =
   | "dateRename"
   | "searchAndReplace"
   | "detailedDate"
-  | "folderPath";
+  | "folderPath"
+  | "numericTransform";
 
 export type ProgramOptions = {
   short: string;
@@ -142,4 +143,4 @@ export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
 export type ListFiles = (transformPath?: string) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameLIst: RenameList) => boolean;
 export type CheckPath = (path: string) => Promise<string>;
-export type DetermineDir = (transformPath: string|undefined) => string;
+export type DetermineDir = (transformPath: string | undefined) => string;

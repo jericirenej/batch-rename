@@ -12,6 +12,7 @@ import {
   utilityActionsCorrespondenceTable,
   UTILITY_ACTIONS,
   VALID_TRANSFORM_TYPES,
+  VALID_NUMERIC_TRANSFORM_TYPES,
 } from "../constants.js";
 
 import { checkPath } from "../converters/utils.js";
@@ -28,6 +29,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       detailedDate,
       searchAndReplace,
       folderPath,
+      numericTransform,
     } = options;
 
     let transformPath: string | undefined;
@@ -61,6 +63,9 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       dryRun: dryRun as boolean | undefined,
       searchAndReplace: searchAndReplace as string[] | undefined,
       transformPath,
+      numericTransform: numericTransform as
+        | typeof VALID_NUMERIC_TRANSFORM_TYPES[number]
+        | undefined,
     };
     return await renameFiles(args);
   } catch (err) {
