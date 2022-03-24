@@ -144,3 +144,13 @@ export type ListFiles = (transformPath?: string) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameLIst: RenameList) => boolean;
 export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
+export type ComposeRenameStringArgs = {
+  baseName: string;
+  ext: string;
+  newName: string;
+  preserveOriginal?: boolean;
+  additionalName?: string;
+  position?: "prepend" | "append";
+  separator?: string;
+};
+export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;

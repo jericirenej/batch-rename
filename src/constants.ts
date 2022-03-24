@@ -1,6 +1,7 @@
 import { restoreOriginalFileNames } from "./converters/restorePoint.js";
 import { cleanUpRollbackFile } from "./converters/utils.js";
 
+export const DEFAULT_SEPARATOR = "-";
 export const ROLLBACK_FILE_NAME = ".rollback.json";
 export const VALID_TRANSFORM_TYPES = [
   "numericTransform",

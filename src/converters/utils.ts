@@ -2,6 +2,8 @@ import type {
   AreNewNamesDistinct,
   CheckPath,
   CleanUpRollbackFile,
+  ComposeRenameString,
+  ComposeRenameStringArgs,
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
@@ -11,7 +13,7 @@ import { existsSync } from "fs";
 import { lstat, readdir, unlink } from "fs/promises";
 import { resolve } from "path";
 
-import { ROLLBACK_FILE_NAME } from "../constants.js";
+import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
   try {
@@ -86,3 +88,27 @@ export const checkPath: CheckPath = async (path) => {
 
 export const determineDir: DetermineDir = (transformPath) =>
   transformPath ? transformPath : process.cwd();
+
+export const composeRenameString: ComposeRenameString = (args) => {
+  const {
+    baseName,
+    ext,
+    additionalName,
+    position: argPosition,
+    separator,
+    preserveOriginal,
+    newName,
+  } = args;
+  const position = argPosition ? argPosition : "prepend";
+  const sep = separator ? separator : DEFAULT_SEPARATOR;
+  let modifiedName = newName;
+  if (preserveOriginal) {
+    if (position === "prepend") {
+      modifiedName = `${newName}${sep}${baseName}`;
+    }
+    if (position === "append") {
+      modifiedName = `${baseName}${sep}${newName}`;
+    }
+  }
+  return `${modifiedName}${ext}`;
+};

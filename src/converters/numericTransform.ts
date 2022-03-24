@@ -1,5 +1,6 @@
 import type { NumericTransform } from "../types";
 import { VALID_NUMERIC_TRANSFORM_TYPES } from "../constants.js";
+import { composeRenameString } from "./utils.js";
 
 /**Return a list of odd|even names, along with original file names */
 export const numericTransform: NumericTransform = (args) => {
@@ -13,13 +14,8 @@ export const numericTransform: NumericTransform = (args) => {
     let sequenceNumber = generateSequenceNumber(numericTransform!, index);
 
     const stringifiedNum = generatePaddedNumber(sequenceNumber, listLength);
-
-    let finalRename = `${stringifiedNum}${ext}`;
-    const append = preserveOriginal ? baseName : appendName ? appendName : "";
-    finalRename = append
-      ? `${stringifiedNum}-${append}${ext}`
-      : `${stringifiedNum}${ext}`;
-    return { rename: finalRename, original: baseName + ext, sourcePath };
+    const rename = composeRenameString({baseName, ext, newName:stringifiedNum, preserveOriginal});
+    return { rename, original: baseName + ext, sourcePath };
   });
 };
 

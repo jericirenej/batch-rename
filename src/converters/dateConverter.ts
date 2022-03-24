@@ -10,6 +10,7 @@ import type {
 import { Stats } from "fs";
 import { stat } from "fs/promises";
 import { join } from "path";
+import { composeRenameString } from "./utils.js";
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(
@@ -72,16 +73,10 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
     if (detailedDate) {
       datePrefix += `T${hours}-${minutes}-${seconds}`;
     }
-    let finalBaseName = datePrefix;
-    if (preserveOriginal) {
-      finalBaseName = `${datePrefix}-${baseName}`;
-    }
-    if (appendName) {
-      finalBaseName = `${datePrefix}-${appendName}`;
-    }
+    const rename = composeRenameString({baseName, ext, preserveOriginal, newName: datePrefix});
 
     return {
-      rename: `${finalBaseName}${ext}`,
+      rename,
       original: `${baseName}${ext}`,
       sourcePath,
     };
