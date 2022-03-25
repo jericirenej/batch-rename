@@ -3,7 +3,8 @@
 
 
 ## How to run
-The script can be used in one of the following ways:
+Clone the repo, then run `npm install`.
+Afterwards, the script can be used in one of the following ways:
 - Inside the project folder:
   - Run `npm run dev` to transpile TypeScript to JavaScript
   - Run `node dist/index.js` with appropriate options.
