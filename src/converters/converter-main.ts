@@ -42,7 +42,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct)
     throw new Error(
-      "All of the new file names are identical to original ones!"
+      "Duplication of new file names detected! Aborting."
     );
 
   process.stdout.write("Writing rollback file...");
