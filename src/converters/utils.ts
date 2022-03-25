@@ -3,7 +3,6 @@ import type {
   CheckPath,
   CleanUpRollbackFile,
   ComposeRenameString,
-  ComposeRenameStringArgs,
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
