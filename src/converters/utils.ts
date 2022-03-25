@@ -64,9 +64,9 @@ export const listFiles: ListFiles = async (transformPath) => {
 };
 
 export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
-  return !renameList.every(
-    (renameInfo) => renameInfo.original === renameInfo.rename
-  );
+  const newNames = renameList.map(singleDatum => singleDatum.rename);
+  const allDistinct = !newNames.some(newName => newNames.filter(someName => someName === newName).length > 1);
+  return allDistinct;
 };
 
 export const checkPath: CheckPath = async (path) => {
