@@ -5,17 +5,26 @@ const programOptions: ProgramOptions[] = [
   {
     short: "n",
     long: "numericTransform",
-    description: "Rename files either by sequence (n+1), even (2n), or odd (2n+1). Defaults to 'sequence'.",
+    description: "Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to 'sequence'",
     type: "[type]",
     choices: ["sequence", "odd", "even"],
     defaultValue: "sequence",
+  },
+  {
+    short: "d",
+    long: "dateRename",
+    type: "[dateOption]",
+    description:
+    "Use date-related file information to rename a file. Defaults to 'creationDate'. Can be used together wit the '--detailedDate' flag to add time information.",
+    defaultValue: "creationDate",
+    choices: VALID_DATE_TRANSFORM_TYPES as unknown as string[],
   },
   {
     short: "s",
     long: "searchAndReplace",
     type: "<search, filter...>",
     description:
-      "Will rename part of the filename that matches the filter argument with the replacer argument. A string|regex can be supplied. More than two arguments will be ignored. Operates on the complete filename, including the extension",
+      "Takes a string|regex filter argument and a replacer string. In contrast to other two types, this transformations works on the entire file name, including the extension.",
     defaultValue: "",
   },
   {
@@ -23,7 +32,22 @@ const programOptions: ProgramOptions[] = [
     long: "folderPath",
     type: "<path>",
     description:
-      "Specify folder path for which you would like to perform the transform. If omitted, current directory will be used.",
+      "Folder in which the transformation should take place. If omitted, it will default to current working directory.",
+    defaultValue: "",
+  },
+  {
+    short: "r",
+    long: "restore",
+    type: "",
+    description:
+      "Restore transformed files to original names, if restore file is available.",
+    defaultValue: "",
+  },
+  {
+    short: "D",
+    long: "dryRun",
+    type: "",
+    description: "Run transform operation without writing to disk. Expected output will be logged to console.",
     defaultValue: "",
   },
   {
@@ -31,76 +55,52 @@ const programOptions: ProgramOptions[] = [
     long: "preserveOriginal",
     type: "[boolean]",
     description:
-      "Preserve original filename. Not relevant for the 'searchAndReplace' transform type",
+      "Preserve original filename. Not relevant for the 'searchAndReplace' transform type. Defaults to 'true'.",
     defaultValue: "true",
     choices: ["true", "false"],
-  },
-  {
-    short: "r",
-    long: "restore",
-    type: "",
-    description:
-      "Restore transformed files to previous names, if restore file is available.",
-    defaultValue: "",
-  },
-  {
-    short: "D",
-    long: "dryRun",
-    type: "",
-    description: "Run transform operation without writing to disk.",
-    defaultValue: "",
-  },
-  {
-    short: "",
-    long: "cleanRollback",
-    type: "",
-    description: "Remove rollback file, if it exists",
-    defaultValue: "",
   },
   {
     short: "c",
     long: "customText",
     type: "[name]",
     description:
-      "Text to add to the transformed name. This overwrites the preserveOriginal flag.",
+      "Text to add to the transformed name. Overwrites the 'preserveOriginal' flag.",
     defaultValue: "",
   },
   {
     short: "",
     long: "textPosition",
-    description: "If preserveOriginal or additionalText are set, determine whether to prepend or append the name to the transformation. Defaults to append.",
+    description: "Applies to 'preserveOriginal' or 'customText'. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to 'append'",
     type: "[position]",
     choices: ["prepend", "append"],
     defaultValue: "append"
-  },
-  {
-    short: "d",
-    long: "dateRename",
-    type: "[dateOption]",
-    description:
-      "Rename by different types of date data. Defaults to creationDate. Can be used together with the appendName and dryRun flags.",
-    defaultValue: "creationDate",
-    choices: VALID_DATE_TRANSFORM_TYPES as unknown as string[],
   },
   {
     short: "",
     long: "detailedDate",
     type: "",
     description:
-      "Used with the dateRename option. If included, hours, minutes, and seconds will be included in the chosen date transformation",
+      "Appends time information ('T hh:mm:ss') to date transformations.",
   },
   {
     short: "",
     long: "separator",
     type: "[string]",
     description:
-      "Specify a custom separator to be used. Defaults to '-'",
+      "Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Defaults to hyphen ('-').",
+  },
+  {
+    short: "",
+    long: "cleanRollback",
+    type: "",
+    description: "Remove rollback file.",
+    defaultValue: "",
   },
   
 ];
 
 const programDescription =
-  "Allows for batch renaming of files with based on: odd or even numbering, date metadata, or search and replace arguments.";
+  "Allows for batch renaming of files with based on: numbering transformations, date metadata, or search and replace arguments.";
 
 const programName = "batchRename";
 const programConfiguration = {
