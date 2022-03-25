@@ -1,4 +1,4 @@
-import { renameFiles } from "../converters/converter-main.js";
+import { convertFiles } from "../converters/converter-main.js";
 import program from "./generateCommands.js";
 import type {
   RenameListArgs,
@@ -71,7 +71,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       separator: separator as string|undefined,
       textPosition: textPosition as "append"|"prepend"|undefined,
     };
-    return await renameFiles(args);
+    return await convertFiles(args);
   } catch (err) {
     const error = err as Error;
     console.error(error.message);

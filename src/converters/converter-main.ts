@@ -17,7 +17,7 @@ import {
 } from "./utils.js";
 import { searchAndReplace } from "./searchAndReplace.js";
 
-export const renameFiles = async (args: RenameListArgs): Promise<void> => {
+export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   if (args.dryRun) return await dryRunTransform(args);
 
   const { transformPattern, transformPath } = args;
