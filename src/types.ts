@@ -150,8 +150,8 @@ export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {
   baseName: string;
-  ext: string;
   newName: string;
+  ext?: string;
   preserveOriginal?: boolean;
   customText?: string;
   textPosition?: "prepend" | "append";

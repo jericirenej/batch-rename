@@ -88,31 +88,32 @@ export const checkPath: CheckPath = async (path) => {
 export const determineDir: DetermineDir = (transformPath) =>
   transformPath ? transformPath : process.cwd();
 
-export const composeRenameString: ComposeRenameString = (args) => {
-  const {
-    baseName,
-    ext,
-    customText,
-    textPosition,
-    separator,
-    preserveOriginal,
-    newName,
-  } = args;
-  const position = textPosition ? textPosition : "append";
-  const sep = separator ? separator : DEFAULT_SEPARATOR;
-  let modifiedName = newName;
-  const additionalText = customText
-    ? customText
-    : preserveOriginal
-    ? baseName
-    : "";
-  if (additionalText) {
-    if (position === "append") {
-      modifiedName = `${newName}${sep}${additionalText}`;
+  export const composeRenameString: ComposeRenameString = (args) => {
+    const {
+      baseName,
+      ext,
+      customText,
+      textPosition,
+      separator,
+      preserveOriginal,
+      newName,
+    } = args;
+    const position = textPosition ? textPosition : "append";
+    const extension = ext ? ext : "";
+    const sep = separator ? separator : DEFAULT_SEPARATOR;
+    let modifiedName = newName;
+    const additionalText = customText
+      ? customText
+      : preserveOriginal
+      ? baseName
+      : "";
+    if (additionalText) {
+      if (position === "append") {
+        modifiedName = `${newName}${sep}${additionalText}`;
+      }
+      if (position === "prepend") {
+        modifiedName = `${additionalText}${sep}${newName}`;
+      }
     }
-    if (position === "prepend") {
-      modifiedName = `${additionalText}${sep}${newName}`;
-    }
-  }
-  return `${modifiedName}${ext}`;
-};
+    return `${modifiedName}${extension}`;
+  };
