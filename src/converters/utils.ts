@@ -98,7 +98,7 @@ export const composeRenameString: ComposeRenameString = (args) => {
     preserveOriginal,
     newName,
   } = args;
-  const position = textPosition ? textPosition : "prepend";
+  const position = textPosition ? textPosition : "append";
   const sep = separator ? separator : DEFAULT_SEPARATOR;
   let modifiedName = newName;
   const additionalText = customText
