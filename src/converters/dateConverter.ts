@@ -10,7 +10,7 @@ import type {
 import { Stats } from "fs";
 import { stat } from "fs/promises";
 import { join } from "path";
-import { composeRenameString } from "./utils.js";
+import { areNewNamesDistinct, composeRenameString } from "./utils.js";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
@@ -94,12 +94,7 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
     };
   });
 
-  const areNamesDistinct = transformedNames.every((nameEntry) => {
-    const occurrences = transformedNames.filter(
-      (entry) => entry.rename === nameEntry.rename
-    );
-    return occurrences.length === 1;
-  });
+  const areNamesDistinct = areNewNamesDistinct(transformedNames)
   if (areNamesDistinct) return transformedNames;
   throw new Error(
     "Transformation would lead to duplication of file names! Operation aborted."
