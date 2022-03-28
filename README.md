@@ -14,7 +14,7 @@ Afterwards, the script can be used in one of the following ways:
 ## Examples | Quick start
 Rename files in a target folder using a search and replace algorithm.
 
-`node batchRename.js -s [regex|string] [replaceText] -f [filePath]`
+`node batchRename.js -s [regex|string] [replaceText] -f [folderPath]`
 
 Append creation date to files in the current folder and specify a custom separator.
 
