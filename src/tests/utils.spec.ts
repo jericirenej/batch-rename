@@ -1,8 +1,12 @@
 import process from "process";
-import { ExtractBaseAndExtTemplate } from "../types.js";
+import {
+  ComposeRenameStringArgs,
+  ExtractBaseAndExtTemplate,
+} from "../types.js";
 import {
   areNewNamesDistinct,
   checkPath,
+  composeRenameString,
   determineDir,
   extractBaseAndExt,
 } from "../converters/utils.js";
@@ -15,6 +19,7 @@ import {
   renameListWithDistinctNewNames,
 } from "./mocks.js";
 import fs, { existsSync } from "fs";
+import { DEFAULT_SEPARATOR } from "../constants.js";
 
 jest.mock("fs");
 const mockedFs = jest.mocked(fs, true);
@@ -40,10 +45,76 @@ describe("Test utility functions", () => {
     expect(determineDir(undefined)).toBe(examplePath);
     expect(spyOnCwd).toHaveBeenCalledTimes(1);
   });
-  it("areNewNamesDistinct should return false if any of the new names are identical", ()=> {
+  it("areNewNamesDistinct should return false if any of the new names are identical", () => {
     expect(areNewNamesDistinct(renameListWithDistinctNewNames)).toBe(true);
     expect(areNewNamesDistinct(renameListWithIdenticalNewNames)).toBe(false);
-  })
+  });
+  describe.only("Test composeRenameString", () => {
+    const [baseName, ext, customText, newName] = [
+      "baseName",
+      ".ext",
+      "customText",
+      "newName",
+    ];
+    const defaultSep = DEFAULT_SEPARATOR;
+    const args: ComposeRenameStringArgs = {
+      baseName,
+      ext,
+      customText,
+      newName,
+      preserveOriginal: true,
+    };
+    it("Should return a newName-baseName.extension by default", () => {
+      const expected = `${[newName, baseName].join(defaultSep)}${ext}`;
+      expect(composeRenameString({ ...args, customText: undefined })).toBe(
+        expected
+      );
+    });
+    it("CustomText should override baseName and preserveOriginal", () => {
+      const expected = `${[newName, customText].join(defaultSep)}${ext}`;
+      expect(composeRenameString({ ...args, preserveOriginal: true })).toBe(
+        expected
+      );
+    });
+    it("Should drop original baseName, if preserveOriginal is false|undefined and no customText supplied", () => {
+      const expected = `${newName}${ext}`;
+      expect(
+        composeRenameString({
+          ...args,
+          customText: undefined,
+          preserveOriginal: undefined,
+        })
+      ).toBe(expected);
+      expect(
+        composeRenameString({
+          ...args,
+          customText: undefined,
+          preserveOriginal: false,
+        })
+      ).toBe(expected);
+    });
+    it("Should return just newName-baseName, if extension is undefined", () => {
+      const expected = `${newName}${defaultSep}${baseName}`;
+      expect(
+        composeRenameString({ ...args, customText: undefined, ext: undefined })
+      ).toBe(expected);
+    });
+    it("Should respect textPosition", () => {
+      let expected = `${[customText, newName].join(defaultSep)}${ext}`;
+      expect(composeRenameString({ ...args, textPosition: "prepend" })).toBe(
+        expected
+      );
+      expected = `${[newName, customText].join(defaultSep)}${ext}`;
+      expect(composeRenameString({ ...args, textPosition: "append" })).toBe(
+        expected
+      );
+    });
+    it("Respects separator setting", ()=> {
+      const newSep = "_";
+      const expected = `${[newName, customText].join(newSep)}${ext}`;
+      expect(composeRenameString({...args, separator: newSep})).toBe(expected);
+    });
+  });
   /* describe.skip("Test checkPath", () => {
     // afterEach(()=> jest.resetAllMocks());
     it("Should throw error, if provided path doesn't exist", async () => {
