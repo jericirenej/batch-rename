@@ -15,7 +15,12 @@ import { resolve } from "path";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 
-const {CLEAN_ROLLBACK_CLEANUP_FAIL, CLEAN_ROLLBACK_NO_FILE_EXISTS, CHECK_PATH_DOES_NOT_EXIST, CHECK_PATH_NOT_A_DIR, CHECK_PATH_NO_CHILD_FILES} = ERRORS
+const {
+  CLEAN_ROLLBACK_NO_FILE_EXISTS,
+  CHECK_PATH_DOES_NOT_EXIST,
+  CHECK_PATH_NOT_A_DIR,
+  CHECK_PATH_NO_CHILD_FILES,
+} = ERRORS;
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
   try {
@@ -30,8 +35,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
     await unlink(targetPath);
     process.stdout.write("DONE!");
   } catch (err) {
-    process.stdout.write("FAILED!");
-    throw new Error(CLEAN_ROLLBACK_CLEANUP_FAIL);
+    throw err;
   }
 };
 
@@ -65,8 +69,10 @@ export const listFiles: ListFiles = async (transformPath) => {
 };
 
 export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
-  const newNames = renameList.map(singleDatum => singleDatum.rename);
-  const allDistinct = !newNames.some(newName => newNames.filter(someName => someName === newName).length > 1);
+  const newNames = renameList.map((singleDatum) => singleDatum.rename);
+  const allDistinct = !newNames.some(
+    (newName) => newNames.filter((someName) => someName === newName).length > 1
+  );
   return allDistinct;
 };
 
