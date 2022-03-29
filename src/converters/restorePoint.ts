@@ -9,20 +9,28 @@ import { readFile, rename } from "fs/promises";
 import { join } from "path";
 
 import { ROLLBACK_FILE_NAME } from "../constants.js";
+import { ERRORS } from "../messages/errMessages.js";
 import { cleanUpRollbackFile, determineDir, listFiles } from "./utils.js";
 
-const restoreBaseFunction: RestoreBaseFunction = async (transformPath) => {
+const {
+  RESTORE_COULD_NOT_BE_PARSED,
+  RESTORE_NO_FILES_TO_CONVERT,
+  RESTORE_NO_ROLLBACK_FILE_TO_CONVERT,
+  RESTORE_NO_VALID_DATA,
+} = ERRORS;
+
+export const restoreBaseFunction: RestoreBaseFunction = async (
+  transformPath
+) => {
   const targetDir = determineDir(transformPath);
   const targetPath = join(targetDir, ROLLBACK_FILE_NAME);
   const existingFiles = await listFiles(targetDir);
   if (!existingFiles.length) {
-    throw new Error("There are no files available to convert!");
+    throw new Error(RESTORE_NO_FILES_TO_CONVERT);
   }
   const rollBackFileExists = existsSync(targetPath);
   if (!rollBackFileExists) {
-    throw new Error(
-      "Rollback file not found. Restore to original file names not possible."
-    );
+    throw new Error(RESTORE_NO_ROLLBACK_FILE_TO_CONVERT);
   }
   const rollbackData = JSON.parse(
     await readFile(targetPath, "utf8")
@@ -49,7 +57,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async (
   if (dryRun) return await dryRunRestore(transformPath);
   const targetDir = determineDir(transformPath);
   const restoreBaseData = await restoreBaseFunction(targetDir);
-  if (!restoreBaseData) throw new Error();
+  if (!restoreBaseData) throw new Error(RESTORE_NO_VALID_DATA);
   const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
 
   const batchRename: Promise<void>[] = [];
@@ -69,7 +77,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async (
   }
   if (missingFiles.length) {
     if (!batchRename.length) {
-      console.log("Restore data could not be parsed for any of the files!");
+      throw new Error(RESTORE_COULD_NOT_BE_PARSED);
     } else {
       console.log("The following files did not have restore data available:");
       missingFiles.map((file) => console.log(file));
@@ -96,7 +104,7 @@ export const dryRunRestore = async (transformPath?: string): Promise<void> => {
     });
   }
   if (!filesToRestore.length) {
-    throw new Error("Restore data could not be parsed for any of the files!");
+    throw new Error(RESTORE_COULD_NOT_BE_PARSED);
   }
   if (missingFiles.length) {
     console.log("The following files did not have restore data available:");

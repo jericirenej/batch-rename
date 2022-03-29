@@ -12,6 +12,9 @@ import { stat } from "fs/promises";
 import { join } from "path";
 import { areNewNamesDistinct, composeRenameString } from "./utils.js";
 import { DEFAULT_SEPARATOR } from "../constants.js";
+import { ERRORS } from "../messages/errMessages.js";
+
+const { DUPLICATE_FILE_NAMES } = ERRORS;
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(
@@ -94,9 +97,7 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
     };
   });
 
-  const areNamesDistinct = areNewNamesDistinct(transformedNames)
+  const areNamesDistinct = areNewNamesDistinct(transformedNames);
   if (areNamesDistinct) return transformedNames;
-  throw new Error(
-    "Transformation would lead to duplication of file names! Operation aborted."
-  );
+  throw new Error(DUPLICATE_FILE_NAMES);
 };

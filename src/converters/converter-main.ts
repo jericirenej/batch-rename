@@ -16,6 +16,8 @@ import {
   listFiles,
 } from "./utils.js";
 import { searchAndReplace } from "./searchAndReplace.js";
+import { ERRORS } from "../messages/errMessages.js";
+const { DUPLICATE_FILE_NAMES } = ERRORS;
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   if (args.dryRun) return await dryRunTransform(args);
@@ -40,10 +42,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   });
 
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
-  if (!newNamesDistinct)
-    throw new Error(
-      "Duplication of new file names detected! Aborting."
-    );
+  if (!newNamesDistinct) throw new Error(DUPLICATE_FILE_NAMES);
 
   process.stdout.write("Writing rollback file...");
   await writeFile(
