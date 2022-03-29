@@ -15,7 +15,12 @@ import { resolve } from "path";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 
-const {CLEAN_ROLLBACK_CLEANUP_FAIL, CLEAN_ROLLBACK_NO_FILE_EXISTS, CHECK_PATH_DOES_NOT_EXIST, CHECK_PATH_NOT_A_DIR, CHECK_PATH_NO_CHILD_FILES} = ERRORS
+const {
+  CLEAN_ROLLBACK_NO_FILE_EXISTS,
+  CHECK_PATH_DOES_NOT_EXIST,
+  CHECK_PATH_NOT_A_DIR,
+  CHECK_PATH_NO_CHILD_FILES,
+} = ERRORS;
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
   try {
@@ -30,8 +35,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
     await unlink(targetPath);
     process.stdout.write("DONE!");
   } catch (err) {
-    process.stdout.write("FAILED!");
-    throw new Error(CLEAN_ROLLBACK_CLEANUP_FAIL);
+    throw err;
   }
 };
 
@@ -65,8 +69,10 @@ export const listFiles: ListFiles = async (transformPath) => {
 };
 
 export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
-  const newNames = renameList.map(singleDatum => singleDatum.rename);
-  const allDistinct = !newNames.some(newName => newNames.filter(someName => someName === newName).length > 1);
+  const newNames = renameList.map((singleDatum) => singleDatum.rename);
+  const allDistinct = !newNames.some(
+    (newName) => newNames.filter((someName) => someName === newName).length > 1
+  );
   return allDistinct;
 };
 
@@ -90,32 +96,32 @@ export const checkPath: CheckPath = async (path) => {
 export const determineDir: DetermineDir = (transformPath) =>
   transformPath ? transformPath : process.cwd();
 
-  export const composeRenameString: ComposeRenameString = (args) => {
-    const {
-      baseName,
-      ext,
-      customText,
-      textPosition,
-      separator,
-      preserveOriginal,
-      newName,
-    } = args;
-    const position = textPosition ? textPosition : "append";
-    const extension = ext ? ext : "";
-    const sep = separator ? separator : DEFAULT_SEPARATOR;
-    let modifiedName = newName;
-    const additionalText = customText
-      ? customText
-      : preserveOriginal
-      ? baseName
-      : "";
-    if (additionalText) {
-      if (position === "append") {
-        modifiedName = `${newName}${sep}${additionalText}`;
-      }
-      if (position === "prepend") {
-        modifiedName = `${additionalText}${sep}${newName}`;
-      }
+export const composeRenameString: ComposeRenameString = (args) => {
+  const {
+    baseName,
+    ext,
+    customText,
+    textPosition,
+    separator,
+    preserveOriginal,
+    newName,
+  } = args;
+  const position = textPosition ? textPosition : "append";
+  const extension = ext ? ext : "";
+  const sep = separator ? separator : DEFAULT_SEPARATOR;
+  let modifiedName = newName;
+  const additionalText = customText
+    ? customText
+    : preserveOriginal
+    ? baseName
+    : "";
+  if (additionalText) {
+    if (position === "append") {
+      modifiedName = `${newName}${sep}${additionalText}`;
     }
-    return `${modifiedName}${extension}`;
-  };
+    if (position === "prepend") {
+      modifiedName = `${additionalText}${sep}${newName}`;
+    }
+  }
+  return `${modifiedName}${extension}`;
+};
