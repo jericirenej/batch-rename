@@ -32,9 +32,8 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
   if (!rollBackFileExists) {
     throw new Error(RESTORE_NO_ROLLBACK_FILE_TO_CONVERT);
   }
-  const rollbackData = JSON.parse(
-    await readFile(targetPath, "utf8")
-  ) as RenameList;
+  const readRollback = await readFile(targetPath, "utf8");
+  const rollbackData = JSON.parse(readRollback) as RenameList;
 
   const missingFiles: string[] = [];
   existingFiles.forEach((file) => {
