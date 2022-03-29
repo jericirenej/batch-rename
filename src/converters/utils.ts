@@ -13,6 +13,9 @@ import { lstat, readdir, unlink } from "fs/promises";
 import { resolve } from "path";
 
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
+import { ERRORS } from "../messages/errMessages.js";
+
+const {CLEAN_ROLLBACK_CLEANUP_FAIL, CLEAN_ROLLBACK_NO_FILE_EXISTS, CHECK_PATH_DOES_NOT_EXIST, CHECK_PATH_NOT_A_DIR, CHECK_PATH_NO_CHILD_FILES} = ERRORS
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
   try {
@@ -21,15 +24,14 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
     const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
     const rollBackFileExists = existsSync(targetPath);
     if (!rollBackFileExists) {
-      console.log("No rollback file exists. Exiting.");
-      throw new Error();
+      throw new Error(CLEAN_ROLLBACK_NO_FILE_EXISTS);
     }
     process.stdout.write("Deleting rollback file...");
     await unlink(targetPath);
     process.stdout.write("DONE!");
   } catch (err) {
     process.stdout.write("FAILED!");
-    throw new Error("Cleaning up rollback file failed!");
+    throw new Error(CLEAN_ROLLBACK_CLEANUP_FAIL);
   }
 };
 
@@ -71,16 +73,16 @@ export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
 export const checkPath: CheckPath = async (path) => {
   const fullPath = resolve(process.cwd(), path);
   if (!existsSync(fullPath)) {
-    throw new Error("Target path does not exist!");
+    throw new Error(CHECK_PATH_DOES_NOT_EXIST);
   }
   const isDir = (await lstat(fullPath)).isDirectory();
   if (!isDir) {
-    throw new Error("Target path is not a directory!");
+    throw new Error(CHECK_PATH_NOT_A_DIR);
   }
   const dirInfo = await readdir(fullPath, { withFileTypes: true });
   const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
   if (!hasFiles) {
-    throw new Error("Directory has no children file entries!");
+    throw new Error(CHECK_PATH_NO_CHILD_FILES);
   }
   return fullPath;
 };

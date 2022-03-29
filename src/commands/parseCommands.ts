@@ -9,13 +9,21 @@ import type {
   UtilityActions,
 } from "../types";
 import {
-  utilityActionsCorrespondenceTable,
   UTILITY_ACTIONS,
   VALID_TRANSFORM_TYPES,
   VALID_NUMERIC_TRANSFORM_TYPES,
 } from "../constants.js";
 
+import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
+
 import { checkPath } from "../converters/utils.js";
+import { ERRORS } from "../messages/errMessages.js";
+
+const {
+  COMMAND_NO_TRANSFORMATION_PICKED,
+  COMMAND_ONLY_ONE_TRANSFORMATION_PERMITTED,
+  COMMAND_ONLY_ONE_UTILITY_ACTION,
+} = ERRORS;
 
 export const parseOptions = async (options: OptionKeysWithValues) => {
   try {
@@ -68,8 +76,8 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       numericTransform: numericTransform as
         | typeof VALID_NUMERIC_TRANSFORM_TYPES[number]
         | undefined,
-      separator: separator as string|undefined,
-      textPosition: textPosition as "append"|"prepend"|undefined,
+      separator: separator as string | undefined,
+      textPosition: textPosition as "append" | "prepend" | undefined,
     };
     return await convertFiles(args);
   } catch (err) {
@@ -88,14 +96,10 @@ const transformationCheck = (options: OptionKeysWithValues): TransformTypes => {
   );
   const numOfTransformations = transformationPicked.length;
   if (!numOfTransformations) {
-    throw new Error(
-      `No transformation operation picked! Please specify one of the following: ${VALID_TRANSFORM_TYPES.join(
-        ", "
-      )}.`
-    );
+    throw new Error(COMMAND_NO_TRANSFORMATION_PICKED);
   }
   if (numOfTransformations > 1) {
-    throw new Error("You can only pick one transformation type!");
+    throw new Error(COMMAND_ONLY_ONE_TRANSFORMATION_PERMITTED);
   }
   return transformationPicked[0] as TransformTypes;
 };
@@ -106,7 +110,7 @@ const utilityActionsCheck: UtilityActionsCheck = (options) => {
     UTILITY_ACTIONS.some((action) => action === key)
   );
   if (utilityActions.length > 1) {
-    throw new Error(`Only one type of utility action can be executed at the time!
+    throw new Error(`${COMMAND_ONLY_ONE_UTILITY_ACTION}
     Chosen: ${JSON.stringify(utilityActions)}.
     Available: ${JSON.stringify(UTILITY_ACTIONS)}.
     `);
