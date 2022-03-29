@@ -20,6 +20,7 @@ import {
 } from "./mocks.js";
 import fs, { existsSync } from "fs";
 import { DEFAULT_SEPARATOR } from "../constants.js";
+import { mocked } from "ts-jest/dist/utils/testing";
 
 jest.mock("fs");
 const mockedFs = jest.mocked(fs, true);
@@ -49,7 +50,7 @@ describe("Test utility functions", () => {
     expect(areNewNamesDistinct(renameListWithDistinctNewNames)).toBe(true);
     expect(areNewNamesDistinct(renameListWithIdenticalNewNames)).toBe(false);
   });
-  describe.only("Test composeRenameString", () => {
+  describe("Test composeRenameString", () => {
     const [baseName, ext, customText, newName] = [
       "baseName",
       ".ext",
@@ -109,18 +110,12 @@ describe("Test utility functions", () => {
         expected
       );
     });
-    it("Respects separator setting", ()=> {
+    it("Respects separator setting", () => {
       const newSep = "_";
       const expected = `${[newName, customText].join(newSep)}${ext}`;
-      expect(composeRenameString({...args, separator: newSep})).toBe(expected);
+      expect(composeRenameString({ ...args, separator: newSep })).toBe(
+        expected
+      );
     });
   });
-  /* describe.skip("Test checkPath", () => {
-    // afterEach(()=> jest.resetAllMocks());
-    it("Should throw error, if provided path doesn't exist", async () => {
-      mockedFs.existsSync.mockReturnValueOnce(false);
-
-      await expect(()=> checkPath(process.cwd())).rejects.toThrow();
-    });
-  }); */
 });
