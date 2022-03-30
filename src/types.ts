@@ -131,6 +131,11 @@ export type UtilityFunctionsArgs = {
   dryRun?: boolean;
 };
 
+export type CreateBatchRenameList = (
+  renameList: RenameList,
+  filesToRevert?: string[]
+) => Promise<void>[];
+
 export type RestoreBaseReturn = {
   rollbackData: RenameList;
   existingFiles: string[];
