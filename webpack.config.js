@@ -7,7 +7,7 @@ import WebpackBundleAnalyzer, {
 } from "webpack-bundle-analyzer";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const outputName = "batchRename.js";
+const outputName = "batchRename.mjs";
 const determineMode = () => {
   const args = process.argv;
   const modeArg = args.filter((arg) => arg.includes("mode"));

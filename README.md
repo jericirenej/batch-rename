@@ -9,24 +9,24 @@ Afterwards, the script can be used in one of the following ways:
   - Run `npm run dev` to transpile TypeScript to JavaScript
   - Run `node dist/index.js` with appropriate options.
 - As a standalone script:
-  - Run `npm run build` or `npx webpack` which will bundle the application into a single standalone bundle in the `prod` folder, called `batchRename.js`
+  - Run `npm run build` or `npx webpack` which will bundle the application into a single standalone bundle in the `prod` folder, called `batchRename.mjs`
 
 ## Examples | Quick start
 Rename files in a target folder using a search and replace algorithm.
 
-`node batchRename.js -s [regex|string] [replaceText] -f [folderPath]`
+`node batchRename.mjs -s [regex|string] [replaceText] -f [folderPath]`
 
 Append creation date to files in the current folder and specify a custom separator.
 
-`node batchRename.js -d --separator _`
+`node batchRename.mjs -d --separator _`
 
 Preview the odd numbering transform with custom text append in a target folder.
 
-`node batchRename.js -n odd -f [targetFolder] -c CUSTOM_TEXT --textPosition append -D`
+`node batchRename.mjs -n odd -f [targetFolder] -c CUSTOM_TEXT --textPosition append -D`
 
 Rollback | restore to original file names in target folder.
 
-`node batchRename.js -r -f [targetFolder]`
+`node batchRename.mjs -r -f [targetFolder]`
 
 
 
