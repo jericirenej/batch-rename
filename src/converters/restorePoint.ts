@@ -10,7 +10,7 @@ import { join } from "path";
 
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
-import { cleanUpRollbackFile, determineDir, listFiles } from "./utils.js";
+import { cleanUpRollbackFile, createBatchRenameList, determineDir, listFiles } from "./utils.js";
 
 const {
   RESTORE_COULD_NOT_BE_PARSED,
@@ -60,20 +60,9 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async (
   if (!restoreBaseData) throw new Error(RESTORE_NO_VALID_DATA);
   const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
 
-  const batchRename: Promise<void>[] = [];
+  let batchRename: Promise<void>[] = [];
   if (filesToRestore.length) {
-    filesToRestore.forEach(async (file) => {
-      const targetName = rollbackData.find((rollbackInfo) => {
-        const { rename, original } = rollbackInfo;
-        return rename === file && original !== rename;
-      });
-      if (targetName) {
-        const { original } = targetName;
-        const currentPath = join(targetName.sourcePath, file);
-        const newPath = join(targetName.sourcePath, original);
-        return batchRename.push(rename(currentPath, newPath));
-      }
-    });
+    batchRename = createBatchRenameList(rollbackData, filesToRestore);
   }
   if (missingFiles.length) {
     if (!batchRename.length) {
@@ -92,20 +81,18 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async (
 
 export const dryRunRestore = async (transformPath?: string): Promise<void> => {
   const restoreData = await restoreBaseFunction(transformPath);
-  if (!restoreData) throw Error();
   const { missingFiles, rollbackData, filesToRestore } = restoreData;
-  if (filesToRestore.length) {
-    console.log("Will convert", filesToRestore.length, "files...");
-    filesToRestore.forEach((file) => {
-      const target = rollbackData.find((restore) => restore.rename === file);
-      if (target) {
-        console.log(`${file} --> ${target.original}`);
-      }
-    });
-  }
   if (!filesToRestore.length) {
     throw new Error(RESTORE_COULD_NOT_BE_PARSED);
   }
+  console.log("Will convert", filesToRestore.length, "files...");
+  filesToRestore.forEach((file) => {
+    const target = rollbackData.find((restore) => restore.rename === file);
+    if (target) {
+      console.log(`${file} --> ${target.original}`);
+    }
+  });
+
   if (missingFiles.length) {
     console.log("The following files did not have restore data available:");
     missingFiles.map((file) => console.log(file));
