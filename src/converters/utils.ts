@@ -3,14 +3,16 @@ import type {
   CheckPath,
   CleanUpRollbackFile,
   ComposeRenameString,
+  CreateBatchRenameList,
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
+  RenameList,
 } from "../types.js";
 
 import { existsSync } from "fs";
-import { lstat, readdir, unlink } from "fs/promises";
-import { resolve } from "path";
+import { lstat, readdir, rename, unlink } from "fs/promises";
+import { join, resolve } from "path";
 
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
@@ -124,4 +126,42 @@ export const composeRenameString: ComposeRenameString = (args) => {
     }
   }
   return `${modifiedName}${extension}`;
+};
+
+/**A factory function which creates an async array of renaming operations
+ * for either a transform or a revert operation. Restore operations are triggered
+ * if a filesToRevert argument is supplied.
+ */
+export const createBatchRenameList: CreateBatchRenameList = (
+  renameList,
+  filesToRevert = []
+) => {
+  const batchRename: Promise<void>[] = [];
+  if (filesToRevert.length) {
+    filesToRevert.forEach((file) => {
+      const targetName = renameList.find((fileInfo) => {
+        const { rename, original } = fileInfo;
+        return rename === file && original !== rename;
+      });
+      if (targetName) {
+        const [currentPath, revertPath] = [
+          join(targetName.sourcePath, file),
+          join(targetName.sourcePath, targetName.original),
+        ];
+        return batchRename.push(rename(currentPath, revertPath));
+      }
+    });
+    return batchRename;
+  }
+  renameList.forEach((fileInfo) => {
+    const { original, rename: newName, sourcePath } = fileInfo;
+    if (original !== newName) {
+      const [originalFullPath, newNameFullPath] = [
+        join(sourcePath, original),
+        join(sourcePath, newName),
+      ];
+      batchRename.push(rename(originalFullPath, newNameFullPath));
+    }
+  });
+  return batchRename;
 };

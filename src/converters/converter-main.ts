@@ -11,6 +11,7 @@ import { numericTransform } from "./numericTransform.js";
 import { dateTransform, provideFileStats } from "./dateConverter.js";
 import {
   areNewNamesDistinct,
+  createBatchRenameList,
   determineDir,
   extractBaseAndExt,
   listFiles,
@@ -51,17 +52,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     "utf-8"
   );
   process.stdout.write("DONE.\n");
-  const batchRename: Promise<void>[] = [];
-  transformedNames.forEach((transformName) => {
-    const { original, rename: newName, sourcePath } = transformName;
-    if (original !== newName) {
-      const [originalFullPath, newNameFullPath] = [
-        join(sourcePath, original),
-        join(sourcePath, newName),
-      ];
-      batchRename.push(rename(originalFullPath, newNameFullPath));
-    }
-  });
+  const batchRename = createBatchRenameList(transformedNames);
   console.log(`Renaming ${batchRename.length} files...`);
   await Promise.all(batchRename);
   console.log("Completed!");
