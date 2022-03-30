@@ -32,7 +32,6 @@ export const generatePaddedNumber = (
   sequenceNumber: number,
   listLength: number
 ): string => {
-  console.log(listLength, sequenceNumber);
   const sequenceNumLength = sequenceNumber.toString().length;
   const diff = listLength - sequenceNumLength + 1;
   return [...new Array(diff).fill(0), sequenceNumber].join("");
