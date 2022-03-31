@@ -1,6 +1,14 @@
 # batchRename
 **A lean Node.js script for batch file renaming based on number sequencing, date properties, or regex patterns with rollback support.**
 
+<br>
+<hr>
+
+#### **New feature**
+Additional `truncate` transform type added, which takes a number argument. In contrast to other transform types, truncate is *inclusive*, meaning that it can be used on its own, or together with other transform types. 
+
+It will be ignored, if `preserveOriginal` is set to false or if a `customText` is supplied. In `searchAndReplace`, it will only truncate files that match the search. With `numericTransform` and `dateTransform` it will truncate the baseName, but not touch the transformed text.
+<hr>
 
 ## How to run
 Clone the repo, then run `npm install`.
@@ -28,6 +36,10 @@ Rollback | restore to original file names in target folder.
 
 `node batchRename.mjs -r -f [targetFolder]`
 
+Truncate files to 10 characters
+
+`node batchRename.mjs -t 10`
+
 
 
 ## Usage guide
@@ -44,6 +56,7 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-n, -numericTransform`|`sequential \| even \| odd`|Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to `sequence`. To help with file-sorting, the number of digits will always be one more than the (so, a list of 10 files will use three digits: 001, 002 ...) |
 |`-d --dateRename`|`creationDate, lastAccessed, lastModifies`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
 |`-s, --searchAndReplace`|`<filter> <replacer>`|Takes a string|regex filter argument and a replacer string. In contrast to other two types, this transformations works on the entire file name, including the extension.|
+|`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.|
 |`-f, --folderPath`|`<path>`|Folder in which the transformation should take place. If omitted, it will default to current working directory.|
 |`r, --restore`||Restore transformed files to original names, if restore file is available.|
 |`-D, --dryRun`||Run transform operation without writing to disk. Expected output will be logged to console.|
@@ -51,7 +64,7 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-c, --customText`|`string`|Text to add to the transformed name. Overwrites the `preserveOriginal` flag.|
 |`--textPosition`|`prepend \| append`|Applies to `preserveOriginal` or `customText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`|
 |`--detailedDate`||Appends time information (`T hh:mm:ss`) to date transformations.|
-|`--separator`|`character`|Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Defaults to hyphen (`-`).|
+|`--separator`|`character`|Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen (`-`).|
 |`--cleanRollback`||Remove rollback file.|
 |`-h, --help`||Show help.|
 |`-V, --version`||ShowScript version.|

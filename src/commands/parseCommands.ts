@@ -1,4 +1,4 @@
-import { convertFiles } from "../converters/converter-main.js";
+import { convertFiles } from "../converters/converter.js";
 import program from "./generateCommands.js";
 import type {
   RenameListArgs,
@@ -12,6 +12,7 @@ import {
   UTILITY_ACTIONS,
   VALID_TRANSFORM_TYPES,
   VALID_NUMERIC_TRANSFORM_TYPES,
+  INCLUSIVE_TRANSFORM_TYPES,
 } from "../constants.js";
 
 import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
@@ -21,7 +22,7 @@ import { ERRORS } from "../messages/errMessages.js";
 
 const {
   COMMAND_NO_TRANSFORMATION_PICKED,
-  COMMAND_ONLY_ONE_TRANSFORMATION_PERMITTED,
+  COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM,
   COMMAND_ONLY_ONE_UTILITY_ACTION,
 } = ERRORS;
 
@@ -40,6 +41,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       searchAndReplace,
       folderPath,
       numericTransform,
+      truncate,
     } = options;
 
     let transformPath: string | undefined;
@@ -78,6 +80,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
         | undefined,
       separator: separator as string | undefined,
       textPosition: textPosition as "append" | "prepend" | undefined,
+      truncate: truncate as "string"|undefined,
     };
     return await convertFiles(args);
   } catch (err) {
@@ -87,7 +90,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
   }
 };
 
-const transformationCheck = (options: OptionKeysWithValues): TransformTypes => {
+const transformationCheck = (options: OptionKeysWithValues): TransformTypes[] => {
   const keys = Object.keys(options) as unknown as Array<keyof typeof options>;
   const transformationPicked = keys.filter(
     (key) =>
@@ -95,13 +98,19 @@ const transformationCheck = (options: OptionKeysWithValues): TransformTypes => {
       options[key]
   );
   const numOfTransformations = transformationPicked.length;
+  const numOfExclusiveTransformations = transformationPicked.filter(
+    (transformationType) =>
+      !INCLUSIVE_TRANSFORM_TYPES.some(
+        (inclusiveType) => inclusiveType === transformationType
+      )
+  ).length;
   if (!numOfTransformations) {
     throw new Error(COMMAND_NO_TRANSFORMATION_PICKED);
   }
-  if (numOfTransformations > 1) {
-    throw new Error(COMMAND_ONLY_ONE_TRANSFORMATION_PERMITTED);
+  if (numOfExclusiveTransformations > 1) {
+    throw new Error(COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM);
   }
-  return transformationPicked[0] as TransformTypes;
+  return transformationPicked as TransformTypes[];
 };
 
 const utilityActionsCheck: UtilityActionsCheck = (options) => {
