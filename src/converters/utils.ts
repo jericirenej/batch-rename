@@ -14,8 +14,9 @@ import { existsSync } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
 import { join, resolve } from "path";
 
-import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
+import { DEFAULT_SEPARATOR, EXT_REGEX, ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { truncateFile } from "./truncateTransform.js";
 
 const {
   CLEAN_ROLLBACK_NO_FILE_EXISTS,
@@ -45,7 +46,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
  * return the whole file name under the base property and an empty ext string
  */
 export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
-  const regex = /(?<=\w+)(\.\w+)$/;
+  const regex = EXT_REGEX;
   return fileList.map((file) => {
     const extPosition = file.search(regex);
     if (extPosition !== -1) {
@@ -100,18 +101,30 @@ export const determineDir: DetermineDir = (transformPath) =>
 
 export const composeRenameString: ComposeRenameString = (args) => {
   const {
-    baseName,
+    baseName: _baseName,
     ext,
     customText,
     textPosition,
     separator,
     preserveOriginal,
     newName,
+    truncate,
   } = args;
   const position = textPosition ? textPosition : "append";
   const extension = ext ? ext : "";
-  const sep = separator ? separator : DEFAULT_SEPARATOR;
+  let sep = "";
+  // Allow for empty separator (direct concatenation)
+  if (separator && separator.length) sep = separator;
+  if (separator === undefined) sep = DEFAULT_SEPARATOR;
   let modifiedName = newName;
+  const shouldTruncate = !isNaN(Number(truncate)) && preserveOriginal;
+  let baseName = _baseName;
+  if (shouldTruncate)
+    baseName = truncateFile({
+      baseName,
+      preserveOriginal,
+      truncate: truncate!,
+    });
   const additionalText = customText
     ? customText
     : preserveOriginal

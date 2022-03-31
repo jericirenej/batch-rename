@@ -30,6 +30,13 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "t",
+    long: "truncate",
+    description: "Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.",
+    type: "<number>",
+    defaultValue: "",
+  },
+  {
     short: "f",
     long: "folderPath",
     type: "<path>",
@@ -89,7 +96,7 @@ const programOptions: ProgramOptions[] = [
     long: "separator",
     type: "[string]",
     description:
-      "Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Defaults to hyphen ('-').",
+      "Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen ('-').",
   },
   {
     short: "",
