@@ -16,8 +16,10 @@ export const numericTransform: NumericTransform = (args) => {
     baseIndex: baseIndexArg,
   } = args;
 
-  const listLength = splitFileList.length.toString().length;
   const baseIndex = checkBaseIndex(baseIndexArg);
+  const listLength = baseIndex
+    ? (baseIndex + splitFileList.length).toString().length
+    : splitFileList.length.toString().length;
   return splitFileList.map((splitFile, index) => {
     const indexWithBase = baseIndex ? baseIndex + index : index;
     const { ext, baseName, sourcePath } = splitFile;
