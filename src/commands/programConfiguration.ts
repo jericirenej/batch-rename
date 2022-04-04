@@ -53,6 +53,13 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "b",
+    long: "baseIndex",
+    type: "<number>",
+    description: "For numeric transform, optional argument to specify the base index from which sequencing will begin.",
+    defaultValue: ""
+  },
+  {
     short: "D",
     long: "dryRun",
     type: "",

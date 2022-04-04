@@ -6,6 +6,23 @@ import {
   VALID_TRANSFORM_TYPES,
 } from "./constants";
 
+
+export type OptionKeys =
+  | "preserveOriginal"
+  | "restore"
+  | "dryRun"
+  | "cleanRollback"
+  | "customText"
+  | "dateRename"
+  | "textPosition"
+  | "searchAndReplace"
+  | "detailedDate"
+  | "folderPath"
+  | "numericTransform"
+  | "separator"
+  | "truncate"
+  | "baseIndex";
+
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 export type ExtractBaseAndExtTemplate = {
   baseName: string;
@@ -56,6 +73,7 @@ export type RenameListArgs = {
   numericTransform?: typeof VALID_NUMERIC_TRANSFORM_TYPES[number];
   separator?: string;
   truncate?:string;
+  baseIndex?: string
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -101,21 +119,6 @@ export type TruncateFileNameArgs = {
 }
 export type TruncateFileName = (args: TruncateFileNameArgs) => string ;
 export type TruncateTransform = (args: GenerateRenameListArgs) =>RenameList;
-
-export type OptionKeys =
-  | "preserveOriginal"
-  | "restore"
-  | "dryRun"
-  | "cleanRollback"
-  | "customText"
-  | "dateRename"
-  | "textPosition"
-  | "searchAndReplace"
-  | "detailedDate"
-  | "folderPath"
-  | "numericTransform"
-  | "separator"
-  | "truncate";
 
 export type ProgramOptions = {
   short: string;

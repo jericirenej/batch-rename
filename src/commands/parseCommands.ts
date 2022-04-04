@@ -42,6 +42,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       folderPath,
       numericTransform,
       truncate,
+      baseIndex,
     } = options;
 
     let transformPath: string | undefined;
@@ -80,7 +81,8 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
         | undefined,
       separator: separator as string | undefined,
       textPosition: textPosition as "append" | "prepend" | undefined,
-      truncate: truncate as "string"|undefined,
+      truncate: truncate as "string" | undefined,
+      baseIndex: baseIndex as "string" | undefined,
     };
     return await convertFiles(args);
   } catch (err) {
@@ -90,7 +92,9 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
   }
 };
 
-const transformationCheck = (options: OptionKeysWithValues): TransformTypes[] => {
+const transformationCheck = (
+  options: OptionKeysWithValues
+): TransformTypes[] => {
   const keys = Object.keys(options) as unknown as Array<keyof typeof options>;
   const transformationPicked = keys.filter(
     (key) =>
