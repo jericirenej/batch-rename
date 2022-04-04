@@ -1,7 +1,6 @@
 import type { NumericTransform } from "../types";
 import { VALID_NUMERIC_TRANSFORM_TYPES } from "../constants.js";
 import { composeRenameString } from "./utils.js";
-import { isNumberObject } from "util/types";
 
 /**Return a list of odd|even names, along with original file names */
 export const numericTransform: NumericTransform = (args) => {

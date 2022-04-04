@@ -43,6 +43,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       numericTransform,
       truncate,
       baseIndex,
+      exclude,
     } = options;
 
     let transformPath: string | undefined;
@@ -83,6 +84,7 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       textPosition: textPosition as "append" | "prepend" | undefined,
       truncate: truncate as "string" | undefined,
       baseIndex: baseIndex as "string" | undefined,
+      exclude: exclude as "string" | undefined,
     };
     return await convertFiles(args);
   } catch (err) {

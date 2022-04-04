@@ -4,8 +4,8 @@ import type {
   FileListWithStatsArray,
   ExtractBaseAndExtReturn,
 } from "../types";
-import { rename, writeFile } from "fs/promises";
-import { join, resolve } from "path";
+import { writeFile } from "fs/promises";
+import { resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import { numericTransform } from "./numericTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
@@ -24,9 +24,9 @@ const { DUPLICATE_FILE_NAMES } = ERRORS;
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   if (args.dryRun) return await dryRunTransform(args);
 
-  const { transformPattern, transformPath } = args;
+  const { transformPattern, transformPath, exclude } = args;
   const targetDir = determineDir(transformPath);
-  const splitFileList = await listFiles(targetDir).then((fileList) =>
+  const splitFileList = await listFiles(targetDir, exclude).then((fileList) =>
     extractBaseAndExt(fileList, targetDir)
   );
   let listWithStats!: FileListWithStatsArray;
@@ -80,7 +80,7 @@ export const generateRenameList: GenerateRenameList = (args) => {
 
 export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
   const targetDir = determineDir(args.transformPath);
-  const splitFileList = await listFiles(targetDir).then((fileList) =>
+  const splitFileList = await listFiles(targetDir, args.exclude).then((fileList) =>
     extractBaseAndExt(fileList, targetDir)
   );
   let listWithStats!: FileListWithStatsArray;

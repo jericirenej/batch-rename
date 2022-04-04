@@ -6,7 +6,6 @@ import {
   VALID_TRANSFORM_TYPES,
 } from "./constants";
 
-
 export type OptionKeys =
   | "preserveOriginal"
   | "restore"
@@ -21,7 +20,8 @@ export type OptionKeys =
   | "numericTransform"
   | "separator"
   | "truncate"
-  | "baseIndex";
+  | "baseIndex"
+  | "exclude";
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 export type ExtractBaseAndExtTemplate = {
@@ -72,8 +72,9 @@ export type RenameListArgs = {
   transformPath?: string;
   numericTransform?: typeof VALID_NUMERIC_TRANSFORM_TYPES[number];
   separator?: string;
-  truncate?:string;
-  baseIndex?: string
+  truncate?: string;
+  baseIndex?: string;
+  exclude?: string;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -113,12 +114,12 @@ export type GenerateSearchAndReplaceArgs = (
 export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;
 
 export type TruncateFileNameArgs = {
-  preserveOriginal:boolean,
-  baseName: string,
-  truncate: string,
-}
-export type TruncateFileName = (args: TruncateFileNameArgs) => string ;
-export type TruncateTransform = (args: GenerateRenameListArgs) =>RenameList;
+  preserveOriginal: boolean;
+  baseName: string;
+  truncate: string;
+};
+export type TruncateFileName = (args: TruncateFileNameArgs) => string;
+export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
 
 export type ProgramOptions = {
   short: string;
@@ -162,7 +163,7 @@ export type RestoreOriginalFileNames = (
   args: UtilityFunctionsArgs
 ) => Promise<void>;
 export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
-export type ListFiles = (transformPath?: string) => Promise<string[]>;
+export type ListFiles = (transformPath?: string, excludeFilter?:string) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameLIst: RenameList) => boolean;
 export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
