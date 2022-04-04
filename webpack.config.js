@@ -1,10 +1,6 @@
-import webpack from "webpack";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import ResolveTypescriptPlugin from "resolve-typescript-plugin";
-import WebpackBundleAnalyzer, {
-  BundleAnalyzerPlugin,
-} from "webpack-bundle-analyzer";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputName = "batchRename.mjs";
@@ -44,14 +40,4 @@ export default {
     topLevelAwait: true,
     outputModule: true,
   },
-  plugins:
-    determineMode() === "production"
-      ? []
-      : [
-          new BundleAnalyzerPlugin({
-            analyzerMode: "static",
-            reportFilename: "bundle-analysis.html",
-            openAnalyzer: false,
-          }),
-        ],
 };
