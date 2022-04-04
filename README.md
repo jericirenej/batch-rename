@@ -4,10 +4,10 @@
 <br>
 <hr>
 
-#### **New feature**
-Additional `truncate` transform type added, which takes a number argument. In contrast to other transform types, truncate is *inclusive*, meaning that it can be used on its own, or together with other transform types. 
-
-It will be ignored, if `preserveOriginal` is set to false or if a `customText` is supplied. In `searchAndReplace`, it will only truncate files that match the search. With `numericTransform` and `dateTransform` it will truncate the baseName, but not touch the transformed text.
+#### **Recently added**
+- Additional `baseIndex` option added for numerical transform which specifies the initial number, from which the numerical sequencing will start.
+- Additional `truncate` transform type added, which takes a number argument. Truncate is an *inclusive* transform, meaning that it can be used on its own, or together with other transform types.  
+  - It will be ignored, if `preserveOriginal` is set to false or if a `customText` is supplied. In `searchAndReplace`, it will only truncate files that match the search. With `numericTransform` and `dateTransform` it will truncate the baseName, but not touch the transformed text.
 <hr>
 
 ## How to run
@@ -58,7 +58,8 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-s, --searchAndReplace`|`<filter> <replacer>`|Takes a string *or a regex* filter argument and a replacer string. In contrast to other two types, this transformations works on the entire file name, including the extension.|
 |`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.|
 |`-f, --folderPath`|`<path>`|Folder in which the transformation should take place. If omitted, it will default to current working directory.|
-|`r, --restore`||Restore transformed files to original names, if restore file is available.|
+|`-r, --restore`||Restore transformed files to original names, if restore file is available.|
+|`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
 |`-D, --dryRun`||Run transform operation without writing to disk. Expected output will be logged to console.|
 |`-p, --preserveOriginal`|`boolean`| Preserve original file name. Not relevant for the `searchAndReplace` transform type. Defaults to `true`.|
 |`-c, --customText`|`string`|Text to add to the transformed name. Overwrites the `preserveOriginal` flag.|
