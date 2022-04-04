@@ -5,7 +5,8 @@
 <hr>
 
 #### **Recently added**
-- Additional `baseIndex` option added for numerical transform which specifies the initial number, from which the numerical sequencing will start.
+- `baseIndex` option added for numerical transform which specifies the initial number, from which the numerical sequencing will start.
+- `exclude` option added to preemptively exclude files which match the string or regex supplied from being evaluated by the transform functions. 
 - Additional `truncate` transform type added, which takes a number argument. Truncate is an *inclusive* transform, meaning that it can be used on its own, or together with other transform types.  
   - It will be ignored, if `preserveOriginal` is set to false or if a `customText` is supplied. In `searchAndReplace`, it will only truncate files that match the search. With `numericTransform` and `dateTransform` it will truncate the baseName, but not touch the transformed text.
 <hr>
@@ -55,12 +56,13 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |------|-----------|--------|
 |`-n, -numericTransform`|`sequential \| even \| odd`|Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to `sequence`. To help with file-sorting, the number of digits will always be one more than the (so, a list of 10 files will use three digits: 001, 002 ...) |
 |`-d --dateRename`|`creationDate, lastAccessed, lastModifies`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
-|`-s, --searchAndReplace`|`<filter> <replacer>`|Takes a string *or a regex* filter argument and a replacer string. In contrast to other two types, this transformations works on the entire file name, including the extension.|
+|`-s, --searchAndReplace`|`<string\|regex> <replacer>`|Takes a string or a regex filter argument and a replacer string. In contrast to other two types, this transformations works on the entire file name, including the extension.|
 |`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.|
 |`-f, --folderPath`|`<path>`|Folder in which the transformation should take place. If omitted, it will default to current working directory.|
 |`-r, --restore`||Restore transformed files to original names, if restore file is available.|
-|`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
 |`-D, --dryRun`||Run transform operation without writing to disk. Expected output will be logged to console.|
+|`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
+|`-e, --exclude`|`<string\|regex>`|Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions|
 |`-p, --preserveOriginal`|`boolean`| Preserve original file name. Not relevant for the `searchAndReplace` transform type. Defaults to `true`.|
 |`-c, --customText`|`string`|Text to add to the transformed name. Overwrites the `preserveOriginal` flag.|
 |`--textPosition`|`prepend \| append`|Applies to `preserveOriginal` or `customText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`|

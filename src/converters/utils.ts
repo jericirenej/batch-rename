@@ -7,14 +7,17 @@ import type {
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
-  RenameList,
 } from "../types.js";
 
 import { existsSync } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
 import { join, resolve } from "path";
 
-import { DEFAULT_SEPARATOR, EXT_REGEX, ROLLBACK_FILE_NAME } from "../constants.js";
+import {
+  DEFAULT_SEPARATOR,
+  EXT_REGEX,
+  ROLLBACK_FILE_NAME,
+} from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { truncateFile } from "./truncateTransform.js";
 
@@ -60,14 +63,18 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   });
 };
 
-export const listFiles: ListFiles = async (transformPath) => {
+export const listFiles: ListFiles = async (transformPath, excludeFilter) => {
   const targetDir = determineDir(transformPath);
   const dirContent = await readdir(targetDir, { withFileTypes: true });
-  const files = dirContent
+  let files = dirContent
     .filter(
       (dirEntry) => dirEntry.isFile() && dirEntry.name !== ROLLBACK_FILE_NAME
     )
     .map((fileDirEntry) => fileDirEntry.name);
+  if (excludeFilter) {
+    const regex = new RegExp(excludeFilter);
+    files = files.filter((fileName) => !regex.test(fileName));
+  }
   return files;
 };
 

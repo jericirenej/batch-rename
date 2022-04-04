@@ -53,6 +53,13 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "D",
+    long: "dryRun",
+    type: "",
+    description: "Run transform operation without writing to disk. Expected output will be logged to console.",
+    defaultValue: "",
+  },
+  {
     short: "b",
     long: "baseIndex",
     type: "<number>",
@@ -60,11 +67,10 @@ const programOptions: ProgramOptions[] = [
     defaultValue: ""
   },
   {
-    short: "D",
-    long: "dryRun",
-    type: "",
-    description: "Run transform operation without writing to disk. Expected output will be logged to console.",
-    defaultValue: "",
+    short: "e",
+    long: "exclude",
+    type: "<string|regex>",
+    description:"Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions."
   },
   {
     short: "p",
