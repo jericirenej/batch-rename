@@ -79,7 +79,6 @@ export const generateRenameList: GenerateRenameList = (args) => {
 };
 
 export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
-  console.log("TRANSFORM PATH", args.transformPath);
   const targetDir = determineDir(args.transformPath);
   const splitFileList = await listFiles(targetDir, args.exclude).then((fileList) =>
     extractBaseAndExt(fileList, targetDir)
