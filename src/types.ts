@@ -23,6 +23,15 @@ export type OptionKeys =
   | "baseIndex"
   | "exclude";
 
+export type OptionKeysWithValues = Record<
+  OptionKeys,
+  boolean | string | string[]
+>;
+
+export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {restArgs?: string[]};
+
+export type SetTransformationPath = (folderPath:string|undefined, restARgs: string[]|undefined) => Promise<string|undefined>
+
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 export type ExtractBaseAndExtTemplate = {
   baseName: string;
@@ -129,11 +138,6 @@ export type ProgramOptions = {
   defaultValue?: string | boolean;
   choices?: string[];
 };
-
-export type OptionKeysWithValues = Record<
-  OptionKeys,
-  boolean | string | string[]
->;
 
 export type UtilityActions = typeof UTILITY_ACTIONS[number];
 export type UtilityActionsCheck = (
