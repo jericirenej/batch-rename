@@ -28,9 +28,10 @@ const {
   CHECK_PATH_NO_CHILD_FILES,
 } = ERRORS;
 
-export const cleanUpRollbackFile: CleanUpRollbackFile = async (args) => {
+export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
+  transformPath,
+}) => {
   try {
-    const { transformPath } = args;
     const targetDir = determineDir(transformPath);
     const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
     const rollBackFileExists = existsSync(targetPath);
@@ -106,17 +107,16 @@ export const checkPath: CheckPath = async (path) => {
 export const determineDir: DetermineDir = (transformPath) =>
   transformPath ? transformPath : process.cwd();
 
-export const composeRenameString: ComposeRenameString = (args) => {
-  const {
-    baseName: _baseName,
-    ext,
-    customText,
-    textPosition,
-    separator,
-    preserveOriginal,
-    newName,
-    truncate,
-  } = args;
+export const composeRenameString: ComposeRenameString = ({
+  baseName: _baseName,
+  ext,
+  customText,
+  textPosition,
+  separator,
+  preserveOriginal,
+  newName,
+  truncate,
+}) => {
   const position = textPosition ? textPosition : "append";
   const extension = ext ? ext : "";
   let sep = "";

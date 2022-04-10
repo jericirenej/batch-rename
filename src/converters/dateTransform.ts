@@ -52,17 +52,16 @@ const extractDate = (milliseconds: number): FormattedDate => {
   return { year, month, day, minutes, hours, seconds };
 };
 
-export const dateTransform: DateTransform = (dateTransformArgs) => {
-  const {
-    splitFileList,
-    dateRename,
-    customText,
-    textPosition,
-    preserveOriginal,
-    detailedDate,
-    separator,
-    truncate,
-  } = dateTransformArgs;
+export const dateTransform: DateTransform = ({
+  splitFileList,
+  dateRename,
+  customText,
+  textPosition,
+  preserveOriginal,
+  detailedDate,
+  separator,
+  truncate,
+}) => {
   const statProp = dateTransformCorrespondenceTable[dateRename!];
   let originalFileList = splitFileList as FileListWithStatsArray;
   let fileListWithDates: FileListWithDates[] = originalFileList.map(
@@ -76,7 +75,7 @@ export const dateTransform: DateTransform = (dateTransformArgs) => {
   const transformedNames = fileListWithDates.map((file) => {
     const { baseName, ext, formattedDate, sourcePath } = file;
     const { year, month, day, hours, minutes, seconds } = formattedDate;
-    const sep = (separator && separator.length) ? separator : DEFAULT_SEPARATOR;
+    const sep = separator && separator.length ? separator : DEFAULT_SEPARATOR;
     let datePrefix = [year, month, day].join(sep);
     if (detailedDate) {
       datePrefix += `T${[hours, minutes, seconds].join(sep)}`;

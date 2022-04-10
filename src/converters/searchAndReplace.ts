@@ -5,8 +5,11 @@ import type {
 import { truncateFile } from "./truncateTransform.js";
 import { extractBaseAndExt } from "./utils.js";
 
-export const searchAndReplace: SearchAndReplace = (args) => {
-  const { searchAndReplace, splitFileList, truncate } = args;
+export const searchAndReplace: SearchAndReplace = ({
+  searchAndReplace,
+  splitFileList,
+  truncate,
+}) => {
   const generatedArgs = generateArguments(searchAndReplace!);
   const targetList = splitFileList.map((fileInfo) => {
     const { filter, replace } = generatedArgs;
