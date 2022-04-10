@@ -134,6 +134,7 @@ export const setTransformationPath: SetTransformationPath = async (
   if (Array.isArray(restArgs) && restArgs.length) {
     return await checkPath(restArgs[0]);
   }
+  return undefined;
 };
 
 export const utilityActionsCheck: UtilityActionsCheck = (options) => {
