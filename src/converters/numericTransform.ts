@@ -3,18 +3,16 @@ import { VALID_NUMERIC_TRANSFORM_TYPES } from "../constants.js";
 import { composeRenameString } from "./utils.js";
 
 /**Return a list of odd|even names, along with original file names */
-export const numericTransform: NumericTransform = (args) => {
-  const {
-    splitFileList,
-    customText,
-    textPosition,
-    preserveOriginal,
-    numericTransform,
-    separator,
-    truncate,
-    baseIndex: baseIndexArg,
-  } = args;
-
+export const numericTransform: NumericTransform = ({
+  splitFileList,
+  customText,
+  textPosition,
+  preserveOriginal,
+  numericTransform,
+  separator,
+  truncate,
+  baseIndex: baseIndexArg,
+}) => {
   const baseIndex = checkBaseIndex(baseIndexArg);
   const listLength = baseIndex
     ? (baseIndex + splitFileList.length).toString().length

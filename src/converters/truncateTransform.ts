@@ -1,21 +1,16 @@
-import type {
-  TruncateFileName,
-  TruncateTransform,
-} from "../types.js";
+import type { TruncateFileName, TruncateTransform } from "../types.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { composeRenameString } from "./utils.js";
 const { TRUNCATE_NO_PRESERVE_ORIGINAL, TRUNCATE_INVALID_ARGUMENT } = ERRORS;
 
-export const truncateTransform:TruncateTransform = (args) => {
-  const {
-    splitFileList,
-    customText,
-    preserveOriginal,
-    separator,
-    textPosition,
-    truncate,
-  } = args;
-
+export const truncateTransform: TruncateTransform = ({
+  splitFileList,
+  customText,
+  preserveOriginal,
+  separator,
+  textPosition,
+  truncate,
+}) => {
   if (!preserveOriginal) throw new Error(TRUNCATE_NO_PRESERVE_ORIGINAL);
 
   const limit = Number(truncate);
@@ -32,7 +27,7 @@ export const truncateTransform:TruncateTransform = (args) => {
       textPosition,
       separator,
       // Must set preserveOriginal to false, since we are already including it in newName
-      preserveOriginal:false,
+      preserveOriginal: false,
       newName,
     });
     return {
@@ -43,8 +38,11 @@ export const truncateTransform:TruncateTransform = (args) => {
   });
 };
 
-export const truncateFile: TruncateFileName = (args) => {
-  const { preserveOriginal, baseName, truncate } = args;
+export const truncateFile: TruncateFileName = ({
+  preserveOriginal,
+  baseName,
+  truncate,
+}) => {
   if (!preserveOriginal) {
     return baseName;
   }

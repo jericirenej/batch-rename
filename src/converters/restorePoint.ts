@@ -10,7 +10,12 @@ import { join } from "path";
 
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
-import { cleanUpRollbackFile, createBatchRenameList, determineDir, listFiles } from "./utils.js";
+import {
+  cleanUpRollbackFile,
+  createBatchRenameList,
+  determineDir,
+  listFiles,
+} from "./utils.js";
 
 const {
   RESTORE_COULD_NOT_BE_PARSED,
@@ -49,10 +54,10 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
 };
 
 /**Restore original filenames on the basis of the rollbackFile */
-export const restoreOriginalFileNames: RestoreOriginalFileNames = async (
-  args
-) => {
-  const { dryRun, transformPath } = args;
+export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
+  dryRun,
+  transformPath,
+}) => {
   if (dryRun) return await dryRunRestore(transformPath);
   const targetDir = determineDir(transformPath);
   const restoreBaseData = await restoreBaseFunction(targetDir);
