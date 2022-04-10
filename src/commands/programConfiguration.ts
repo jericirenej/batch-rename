@@ -41,7 +41,7 @@ const programOptions: ProgramOptions[] = [
     long: "folderPath",
     type: "<path>",
     description:
-      "Folder in which the transformation should take place. If omitted, it will default to current working directory.",
+      "Folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
     defaultValue: "",
   },
   {

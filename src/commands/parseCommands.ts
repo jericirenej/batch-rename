@@ -7,6 +7,8 @@ import type {
   DateTransformOptions,
   UtilityActionsCheck,
   UtilityActions,
+  OptionKeysWithValuesAndRestArgs,
+  SetTransformationPath,
 } from "../types";
 import {
   UTILITY_ACTIONS,
@@ -26,7 +28,9 @@ const {
   COMMAND_ONLY_ONE_UTILITY_ACTION,
 } = ERRORS;
 
-export const parseOptions = async (options: OptionKeysWithValues) => {
+export const parseOptions = async (
+  options: OptionKeysWithValuesAndRestArgs
+) => {
   try {
     if (!Object.keys(options).length) return program.help();
 
@@ -44,12 +48,13 @@ export const parseOptions = async (options: OptionKeysWithValues) => {
       truncate,
       baseIndex,
       exclude,
+      restArgs,
     } = options;
 
-    let transformPath: string | undefined;
-    if (folderPath) {
-      transformPath = await checkPath(folderPath as string);
-    }
+    const transformPath = await setTransformationPath(
+      folderPath as string | undefined,
+      restArgs
+    );
     // Run util actions first.
     const utilityActions = utilityActionsCheck(options);
     if (utilityActions) {
@@ -119,7 +124,19 @@ const transformationCheck = (
   return transformationPicked as TransformTypes[];
 };
 
-const utilityActionsCheck: UtilityActionsCheck = (options) => {
+export const setTransformationPath: SetTransformationPath = async (
+  folderPath,
+  restArgs
+) => {
+  if (folderPath) {
+    return await checkPath(folderPath);
+  }
+  if (Array.isArray(restArgs) && restArgs.length) {
+    return await checkPath(restArgs[0]);
+  }
+};
+
+export const utilityActionsCheck: UtilityActionsCheck = (options) => {
   const keys = Object.keys(options) as UtilityActions[];
   const utilityActions = keys.filter((key) =>
     UTILITY_ACTIONS.some((action) => action === key)
