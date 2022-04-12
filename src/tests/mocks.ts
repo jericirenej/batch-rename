@@ -16,13 +16,13 @@ export const expectedSplit = [
   [".startWithDot", ".ext"],
 ];
 
-const identicalRename = "rename1";
+const firstRename = "rename1";
 const sourcePath = examplePath;
 export const originalNames = ["original1", "original2", "original3"];
 export const renameListWithIdenticalNewNames: RenameList = [
-  { original: originalNames[0], rename: identicalRename, sourcePath },
+  { original: originalNames[0], rename: firstRename, sourcePath },
   { original: originalNames[1], rename: "rename2", sourcePath },
-  { original: originalNames[2], rename: identicalRename, sourcePath },
+  { original: originalNames[2], rename: firstRename, sourcePath },
 ];
 
 const renameListWithDistinctNewNames = JSON.parse(JSON.stringify(renameListWithIdenticalNewNames)) as RenameList;

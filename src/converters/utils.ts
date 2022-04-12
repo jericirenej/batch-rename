@@ -7,6 +7,7 @@ import type {
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
+  TruncateFileName,
 } from "../types.js";
 
 import { existsSync } from "fs";
@@ -19,13 +20,13 @@ import {
   ROLLBACK_FILE_NAME,
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
-import { truncateFile } from "./truncateTransform.js";
 
 const {
   CLEAN_ROLLBACK_NO_FILE_EXISTS,
   CHECK_PATH_DOES_NOT_EXIST,
   CHECK_PATH_NOT_A_DIR,
   CHECK_PATH_NO_CHILD_FILES,
+  TRUNCATE_INVALID_ARGUMENT,
 } = ERRORS;
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
@@ -47,8 +48,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
 };
 
 /**Will separate the basename and file extension. If no extension is found, it will
- * return the whole file name under the base property and an empty ext string
- */
+ * return the whole file name under the base property and an empty ext string. */
 export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   const regex = EXT_REGEX;
   return fileList.map((file) => {
@@ -184,4 +184,18 @@ export const createBatchRenameList: CreateBatchRenameList = (
     }
   });
   return batchRename;
+};
+
+export const truncateFile: TruncateFileName = ({
+  preserveOriginal,
+  baseName,
+  truncate,
+}) => {
+  if (!preserveOriginal) {
+    return baseName;
+  }
+  const limit = Number(truncate);
+  if (isNaN(limit)) throw new Error(TRUNCATE_INVALID_ARGUMENT);
+
+  return baseName.slice(0, limit);
 };

@@ -2,8 +2,7 @@ import type {
   GenerateSearchAndReplaceArgs,
   SearchAndReplace,
 } from "../types.js";
-import { truncateFile } from "./truncateTransform.js";
-import { extractBaseAndExt } from "./utils.js";
+import { extractBaseAndExt, truncateFile } from "./utils.js";
 
 export const searchAndReplace: SearchAndReplace = ({
   searchAndReplace,

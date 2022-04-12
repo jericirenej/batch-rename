@@ -1,4 +1,4 @@
-import type { TruncateFileName, TruncateTransform } from "../types.js";
+import type { TruncateTransform } from "../types.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { composeRenameString } from "./utils.js";
 const { TRUNCATE_NO_PRESERVE_ORIGINAL, TRUNCATE_INVALID_ARGUMENT } = ERRORS;
@@ -38,16 +38,4 @@ export const truncateTransform: TruncateTransform = ({
   });
 };
 
-export const truncateFile: TruncateFileName = ({
-  preserveOriginal,
-  baseName,
-  truncate,
-}) => {
-  if (!preserveOriginal) {
-    return baseName;
-  }
-  const limit = Number(truncate);
-  if (isNaN(limit)) throw new Error(TRUNCATE_INVALID_ARGUMENT);
 
-  return baseName.slice(0, limit + 1);
-};
