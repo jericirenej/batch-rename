@@ -146,4 +146,9 @@ describe("Test composeRenameString", () => {
     const expected = `${[newName, customText].join(newSep)}${ext}`;
     expect(composeRenameString({ ...args, separator: newSep })).toBe(expected);
   });
+  it("Should truncate result if truncate argument is truthy and preserveOriginal is true", ()=> {
+    const expected = `${baseName.slice(0,4)}${ext}`;
+    const newArgs = {...args, truncate: "4", customText: "", separator:"", newName:""};
+    expect(composeRenameString(newArgs)).toBe(expected);
+  })
 });

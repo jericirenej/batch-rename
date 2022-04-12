@@ -48,7 +48,7 @@ describe("Test restorePoint functions", () => {
         ERRORS.RESTORE_NO_ROLLBACK_FILE_TO_CONVERT
       );
     });
-    it("Should return configuration file", async () => {
+    /* it("Should return configuration file", async () => {
       mockDetermineDir.mockReturnValueOnce(examplePath);
       mockList.mockResolvedValueOnce(originalNames);
       mockedFs.existsSync.mockReturnValueOnce(true);
@@ -58,6 +58,6 @@ describe("Test restorePoint functions", () => {
       );
       // console.log(await fs.promises.readFile("somePath"));
       console.log(await restoreBaseFunction());
-    });
+    }); */
   });
 });

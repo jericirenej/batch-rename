@@ -84,7 +84,7 @@ const programOptions: ProgramOptions[] = [
   {
     short: "c",
     long: "customText",
-    type: "[name]",
+    type: "<name>",
     description:
       "Text to add to the transformed name. Overwrites the 'preserveOriginal' flag.",
     defaultValue: "",
