@@ -186,6 +186,10 @@ export const createBatchRenameList: CreateBatchRenameList = (
   return batchRename;
 };
 
+/** Will truncate baseName to the length of the supplied truncate argument
+ * If preserveOriginal is false or truncate evaluates to 0, 
+ * it will return the baseName. 
+ */
 export const truncateFile: TruncateFileName = ({
   preserveOriginal,
   baseName,
@@ -196,6 +200,7 @@ export const truncateFile: TruncateFileName = ({
   }
   const limit = Number(truncate);
   if (isNaN(limit)) throw new Error(TRUNCATE_INVALID_ARGUMENT);
+  if(limit === 0)  return baseName;
 
   return baseName.slice(0, limit);
 };

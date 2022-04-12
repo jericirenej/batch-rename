@@ -19,7 +19,7 @@ export const truncateTransform: TruncateTransform = ({
 
   return splitFileList.map((fileInfo) => {
     const { baseName, ext, sourcePath } = fileInfo;
-    const newName = baseName.slice(0, limit + 1);
+    const newName = limit !== 0 ? baseName.slice(0, limit) : baseName;
     const rename = composeRenameString({
       baseName,
       ext,

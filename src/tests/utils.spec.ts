@@ -66,12 +66,17 @@ describe("Test truncateFile", () => {
     const args = { ...generalArgs, preserveOriginal: false };
     expect(truncateFile(args)).toBe(args.baseName);
   });
-  it("Should throw error, if truncate argument is invalid", async () => {
+  it("Should throw error, if truncate argument is invalid", () => {
     const invalidArgs = { ...generalArgs, truncate: "invalid" };
     expect(() => truncateFile(invalidArgs)).toThrowError(
       ERRORS.TRUNCATE_INVALID_ARGUMENT
     );
   });
+  it("Should return baseName, if truncate argument evaluates to zero", () => {
+    const zeroTruncate1 = {...generalArgs, truncate: ""};
+    const zeroTruncate2 = {...generalArgs, truncate: "0"};
+    [zeroTruncate1, zeroTruncate2].forEach(args => expect(truncateFile(args)).toBe(generalArgs.baseName));
+  })
   it("Should return truncated baseName", ()=> {
     expect(truncateFile(generalArgs).length).toBe(truncateNum);
   })
@@ -120,7 +125,7 @@ describe("Test composeRenameString", () => {
       })
     ).toBe(expected);
   });
-  it("Should return just newName-baseName, if extension is undefined", () => {
+  it("Should return newName-baseName only, if extension is undefined", () => {
     const expected = `${newName}${defaultSep}${baseName}`;
     expect(
       composeRenameString({ ...args, customText: undefined, ext: undefined })
@@ -136,7 +141,7 @@ describe("Test composeRenameString", () => {
       expected
     );
   });
-  it("Respects separator setting", () => {
+  it("Should respect separator setting", () => {
     const newSep = "_";
     const expected = `${[newName, customText].join(newSep)}${ext}`;
     expect(composeRenameString({ ...args, separator: newSep })).toBe(expected);
