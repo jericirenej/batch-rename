@@ -7,30 +7,38 @@ import {
   areNewNamesDistinct,
   checkPath,
   composeRenameString,
+  createBatchRenameList,
   determineDir,
   extractBaseAndExt,
   truncateFile,
 } from "../converters/utils.js";
+import { rename, readdir } from "fs/promises";
 import {
   mockFileList,
   expectedSplit,
   examplePath,
   truthyArgument,
-  renameListWithIdenticalNewNames,
-  renameListWithDistinctNewNames,
+  renameWithNewNameRepeat,
+  renameListDistinct,
+  renameListWithSameOriginalAndNew as sameOldAndNew,
 } from "./mocks.js";
 import fs, { existsSync } from "fs";
 import { DEFAULT_SEPARATOR } from "../constants.js";
-import { mocked } from "ts-jest/dist/utils/testing";
-import { idText } from "typescript";
 import { ERRORS } from "../messages/errMessages.js";
-import { basename } from "path";
+import { join } from "path";
 
 jest.mock("fs");
+jest.mock("fs/promises", () => {
+  return {
+    rename: jest.fn(),
+    readdir: jest.fn(),
+  };
+});
 const mockedFs = jest.mocked(fs, true);
+const mockedRename = jest.mocked(rename);
 
-describe("Test utility functions", () => {
-  it("extractBaseAndExt should separate the baseName and extension of differently formatted files", () => {
+describe("extractBaseAndExt", () => {
+  it("Should separate the baseName and extension of differently formatted files", () => {
     const extracted = extractBaseAndExt(mockFileList, examplePath);
     extracted.forEach((extractedData, index) => {
       const targetSplit = expectedSplit[index];
@@ -42,6 +50,8 @@ describe("Test utility functions", () => {
       expect(extractedData).toEqual(expected);
     });
   });
+});
+describe("determineDir", () => {
   it("determineDir should return truthy argument, otherwise call process.cwd", () => {
     const spyOnCwd = jest
       .spyOn(process, "cwd")
@@ -50,12 +60,22 @@ describe("Test utility functions", () => {
     expect(determineDir(undefined)).toBe(examplePath);
     expect(spyOnCwd).toHaveBeenCalledTimes(1);
   });
+});
+describe("areNewNamesDistinct", () => {
   it("areNewNamesDistinct should return false if any of the new names are identical", () => {
-    expect(areNewNamesDistinct(renameListWithDistinctNewNames)).toBe(true);
-    expect(areNewNamesDistinct(renameListWithIdenticalNewNames)).toBe(false);
+    expect(areNewNamesDistinct(renameListDistinct)).toBe(true);
+    expect(areNewNamesDistinct(renameWithNewNameRepeat)).toBe(false);
   });
 });
-describe("Test truncateFile", () => {
+
+/* describe("listFiles", ()=> {
+  
+});
+describe("checkPath", ()=> {
+
+}); */
+
+describe("truncateFile", () => {
   const truncateNum = 4;
   const generalArgs = {
     preserveOriginal: true,
@@ -73,15 +93,17 @@ describe("Test truncateFile", () => {
     );
   });
   it("Should return baseName, if truncate argument evaluates to zero", () => {
-    const zeroTruncate1 = {...generalArgs, truncate: ""};
-    const zeroTruncate2 = {...generalArgs, truncate: "0"};
-    [zeroTruncate1, zeroTruncate2].forEach(args => expect(truncateFile(args)).toBe(generalArgs.baseName));
-  })
-  it("Should return truncated baseName", ()=> {
+    const zeroTruncate1 = { ...generalArgs, truncate: "" };
+    const zeroTruncate2 = { ...generalArgs, truncate: "0" };
+    [zeroTruncate1, zeroTruncate2].forEach((args) =>
+      expect(truncateFile(args)).toBe(generalArgs.baseName)
+    );
+  });
+  it("Should return truncated baseName", () => {
     expect(truncateFile(generalArgs).length).toBe(truncateNum);
-  })
+  });
 });
-describe("Test composeRenameString", () => {
+describe("composeRenameString", () => {
   const [baseName, ext, customText, newName] = [
     "baseName",
     ".ext",
@@ -146,9 +168,118 @@ describe("Test composeRenameString", () => {
     const expected = `${[newName, customText].join(newSep)}${ext}`;
     expect(composeRenameString({ ...args, separator: newSep })).toBe(expected);
   });
-  it("Should truncate result if truncate argument is truthy and preserveOriginal is true", ()=> {
-    const expected = `${baseName.slice(0,4)}${ext}`;
-    const newArgs = {...args, truncate: "4", customText: "", separator:"", newName:""};
+  it("Should truncate result if truncate argument is truthy and preserveOriginal is true", () => {
+    const expected = `${baseName.slice(0, 4)}${ext}`;
+    const newArgs = {
+      ...args,
+      truncate: "4",
+      customText: "",
+      separator: "",
+      newName: "",
+    };
     expect(composeRenameString(newArgs)).toBe(expected);
-  })
+  });
+});
+
+describe("createBatchRenameList", () => {
+  beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
+  afterEach(() => mockedRename.mockReset());
+  it("Should return renameList of appropriate length", () => {
+    const expectedLength = renameListDistinct.length;
+    const batchPromise = createBatchRenameList(renameListDistinct);
+    expect(batchPromise.length).toBe(expectedLength);
+  });
+  it("batchList should contain appropriate data", async () => {
+    const result: [string, string][] = [];
+    mockedRename
+      .mockReset()
+      .mockImplementation(
+        (originalPath, targetPath) =>
+          Promise.resolve(
+            result.push([originalPath as string, targetPath as string])
+          ) as unknown as Promise<void>
+      );
+    createBatchRenameList(renameListDistinct);
+    renameListDistinct.forEach((renameInfo, index) => {
+      const { original, rename, sourcePath } = renameInfo;
+      const expected = [join(sourcePath, original), join(sourcePath, rename)];
+      expect(result[index]).toEqual(expected);
+    });
+  });
+  it("Should return renameList with length corresponding to unique names", () => {
+    const expectedLength = sameOldAndNew.filter(
+      (renameInfo) => renameInfo.original !== renameInfo.rename
+    ).length;
+    const batchPromise = createBatchRenameList(sameOldAndNew);
+    expect(batchPromise.length).toBe(expectedLength);
+  });
+  describe("Revert operations", () => {
+    beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
+    afterEach(() => mockedRename.mockReset());
+    it("If filesToRevert are supplied, return appropriate batchRename list", () => {
+      const revertList = renameListDistinct.map(
+        (renameInfo) => renameInfo.rename
+      );
+      const expectedLength = revertList.length;
+      const batchPromise = createBatchRenameList(
+        renameListDistinct,
+        revertList
+      );
+      expect(batchPromise.length).toBe(expectedLength);
+    });
+    it("batchList should contain appropriate data", async () => {
+      const revertList = renameListDistinct.map(
+        (renameInfo) => renameInfo.rename
+      );
+      const result: [string, string][] = [];
+      mockedRename
+        .mockReset()
+        .mockImplementation(
+          (originalPath, targetPath) =>
+            Promise.resolve(
+              result.push([originalPath as string, targetPath as string])
+            ) as unknown as Promise<void>
+        );
+      createBatchRenameList(renameListDistinct, revertList);
+      renameListDistinct.forEach((renameInfo, index) => {
+        const { original, rename, sourcePath } = renameInfo;
+        const expected = [join(sourcePath, rename), join(sourcePath, original)];
+        expect(result[index]).toEqual(expected);
+      });
+    });
+    it("batchPromise list should not exceed filesToRevert's length", () => {
+      const revertList = renameListDistinct
+        .map((renameInfo) => renameInfo.rename)
+        .slice(0, -1);
+      const expectedLength = revertList.length;
+      const batchPromise = createBatchRenameList(
+        renameListDistinct,
+        revertList
+      );
+      expect(batchPromise.length).toBe(expectedLength);
+    });
+    it("batchPromise list should not contain entries where original and renamed file names are identical", () => {
+      const revertList = sameOldAndNew.map((renameInfo) => renameInfo.rename);
+      const expectedLength = sameOldAndNew.filter(
+        (renameInfo) => renameInfo.original !== renameInfo.rename
+      ).length;
+      const batchPromise = createBatchRenameList(
+        renameListDistinct,
+        revertList
+      );
+      expect(batchPromise.length).toBe(expectedLength);
+    });
+    it("batchPromise list should not include files whose names are not found in renameList", () => {
+      const revertList = renameListDistinct.map(
+        (renameInfo) => renameInfo.rename
+      );
+      const truncatedRenameList = renameListDistinct.slice(0, -1);
+      const expectedLength = truncatedRenameList.length;
+      const batchPromise = createBatchRenameList(
+        truncatedRenameList,
+        revertList
+      );
+      expect(batchPromise.length).toBe(expectedLength);
+    });
+  });
 });
