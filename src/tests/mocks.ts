@@ -1,3 +1,4 @@
+import { Dirent, Stats } from "fs";
 import type { RenameList } from "../types.js";
 
 export const mockFileList = [
@@ -41,3 +42,57 @@ renameListWithSameOriginalAndNew[0] = {
 export { renameListDistinct, renameListWithSameOriginalAndNew };
 
 export const truthyArgument = "argument";
+const madeUpTime = 1318289051000.1;
+const madeUpDate = new Date(madeUpTime);
+
+const exampleStatMethods = {
+  isBlockDevice: () => true,
+  isFile: () => true,
+  isDirectory: () => true,
+  isCharacterDevice: () => true,
+  isFIFO: () => true,
+  isSocket: () => true,
+  isSymbolicLink: () => true,
+};
+export const exampleStats: Stats = {
+  dev: 2114,
+  ino: 48064969,
+  mode: 33188,
+  nlink: 1,
+  uid: 85,
+  gid: 100,
+  rdev: 0,
+  size: 527,
+  blksize: 4096,
+  blocks: 8,
+  atimeMs: madeUpTime,
+  mtimeMs: madeUpTime,
+  ctimeMs: madeUpTime,
+  birthtimeMs: madeUpTime,
+  atime: madeUpDate,
+  mtime: madeUpDate,
+  ctime: madeUpDate,
+  birthtime: madeUpDate,
+  ...exampleStatMethods,
+};
+
+export const exampleDirent: Dirent = { name: "0", ...exampleStatMethods };
+const emptyArray = new Array(10).fill(0);
+
+export const createDirentArray = (
+  length: number,
+  numberOfFiles = 0
+): Dirent[] => {
+  let counter = 1;
+  const arr = new Array(length).fill(0);
+  const filesNum = numberOfFiles > length ? length : numberOfFiles;
+  return arr.map((entry, index) => {
+    const isFileReturn = counter <= filesNum;
+    counter++;
+    return({
+      ...exampleStatMethods,
+      isFile: () => isFileReturn,
+      name: index.toString(),
+    });
+  });
+};

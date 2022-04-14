@@ -12,7 +12,7 @@ import {
   extractBaseAndExt,
   truncateFile,
 } from "../converters/utils.js";
-import { rename, readdir } from "fs/promises";
+import { rename, readdir, lstat } from "fs/promises";
 import {
   mockFileList,
   expectedSplit,
@@ -21,21 +21,28 @@ import {
   renameWithNewNameRepeat,
   renameListDistinct,
   renameListWithSameOriginalAndNew as sameOldAndNew,
+  exampleStats,
+  createDirentArray,
 } from "./mocks.js";
-import fs, { existsSync } from "fs";
+import fs, { Dirent, existsSync, Stats } from "fs";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
-import { join } from "path";
+import { join, resolve } from "path";
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
+  const originalModule = jest.requireActual("fs/promises");
   return {
+    ...originalModule,
     rename: jest.fn(),
     readdir: jest.fn(),
+    lstat: jest.fn(),
   };
 });
 const mockedFs = jest.mocked(fs, true);
 const mockedRename = jest.mocked(rename);
+const mockedLstat = jest.mocked(lstat);
+const mockedReadDir = jest.mocked(readdir);
 
 describe("extractBaseAndExt", () => {
   it("Should separate the baseName and extension of differently formatted files", () => {
@@ -70,10 +77,47 @@ describe("areNewNamesDistinct", () => {
 
 /* describe("listFiles", ()=> {
   
-});
-describe("checkPath", ()=> {
-
 }); */
+describe("checkPath", () => {
+  afterEach(() => jest.resetAllMocks());
+  it("Should throw error, if path does not exist", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(false);
+    await expect(() => checkPath(examplePath)).rejects.toThrowError(
+      ERRORS.CHECK_PATH_DOES_NOT_EXIST
+    );
+  });
+  it("Should throw error if path is not a directory", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(true);
+    mockedLstat.mockResolvedValueOnce({
+      ...exampleStats,
+      isDirectory: () => false,
+    });
+
+    await expect(checkPath(examplePath)).rejects.toThrowError(
+      ERRORS.CHECK_PATH_NOT_A_DIR
+    );
+  });
+  it("Should throw error, if directory has no files", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(true);
+    mockedLstat.mockResolvedValueOnce({
+      ...exampleStats,
+      isDirectory: () => true,
+    });
+    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0));
+    await expect(checkPath(examplePath)).rejects.toThrowError(
+      ERRORS.CHECK_PATH_NO_CHILD_FILES
+    );
+  });
+  it("Should return filePath, if it exists, is a directory, and has children of file type", async()=> {
+    mockedFs.existsSync.mockReturnValueOnce(true);
+    mockedLstat.mockResolvedValueOnce({
+      ...exampleStats,
+      isDirectory: () => true,
+    });
+    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 3));
+    expect(await checkPath(examplePath)).toBe(resolve(examplePath));
+  });
+});
 
 describe("truncateFile", () => {
   const truncateNum = 4;
