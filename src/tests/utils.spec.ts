@@ -1,35 +1,35 @@
+import fs from "fs";
+import { lstat, readdir, rename, unlink } from "fs/promises";
+import { join, resolve } from "path";
 import process from "process";
-import {
-  ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate,
-} from "../types.js";
+import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import {
   areNewNamesDistinct,
   checkPath,
+  cleanUpRollbackFile,
   composeRenameString,
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
   listFiles,
-  truncateFile,
+  truncateFile
 } from "../converters/utils.js";
-import { rename, readdir, lstat } from "fs/promises";
+import { ERRORS } from "../messages/errMessages.js";
 import {
-  mockFileList,
-  expectedSplit,
+  ComposeRenameStringArgs,
+  ExtractBaseAndExtTemplate
+} from "../types.js";
+import {
+  createDirentArray,
   examplePath,
-  truthyArgument,
-  renameWithNewNameRepeat,
+  exampleStats,
+  expectedSplit,
+  mockFileList,
   renameListDistinct,
   renameListWithSameOriginalAndNew as sameOldAndNew,
-  exampleStats,
-  createDirentArray,
-  exampleDirent,
+  renameWithNewNameRepeat,
+  truthyArgument
 } from "./mocks.js";
-import fs, { Dirent, existsSync, Stats } from "fs";
-import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
-import { ERRORS } from "../messages/errMessages.js";
-import { join, resolve } from "path";
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -39,13 +39,34 @@ jest.mock("fs/promises", () => {
     rename: jest.fn(),
     readdir: jest.fn(),
     lstat: jest.fn(),
+    unlink: jest.fn(),
   };
 });
 const mockedFs = jest.mocked(fs, true);
 const mockedRename = jest.mocked(rename);
 const mockedLstat = jest.mocked(lstat);
 const mockedReadDir = jest.mocked(readdir);
+const mockedUnlink = jest.mocked(unlink);
 
+describe("cleanUpRollbackFile", () => {
+  const cleanUpArgs = { transformPath: examplePath };
+  afterEach(() => jest.resetAllMocks());
+  it("Should throw error if rollback file does not exist", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(false);
+    await expect(() => cleanUpRollbackFile(cleanUpArgs)).rejects.toThrowError(
+      ERRORS.CLEAN_ROLLBACK_NO_FILE_EXISTS
+    );
+  });
+  it("Should call unlink with target path, if rollbackFile exists", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(true);
+    mockedUnlink.mockImplementationOnce(() => Promise.resolve());
+    await cleanUpRollbackFile(cleanUpArgs);
+    expect(mockedUnlink).toHaveBeenCalledTimes(1);
+    expect(mockedUnlink).toHaveBeenLastCalledWith(
+      resolve(examplePath, ROLLBACK_FILE_NAME)
+    );
+  });
+});
 describe("extractBaseAndExt", () => {
   it("Should separate the baseName and extension of differently formatted files", () => {
     const extracted = extractBaseAndExt(mockFileList, examplePath);
@@ -58,22 +79,6 @@ describe("extractBaseAndExt", () => {
       };
       expect(extractedData).toEqual(expected);
     });
-  });
-});
-describe("determineDir", () => {
-  it("determineDir should return truthy argument, otherwise call process.cwd", () => {
-    const spyOnCwd = jest
-      .spyOn(process, "cwd")
-      .mockReturnValueOnce(examplePath);
-    expect(determineDir(truthyArgument)).toBe(truthyArgument);
-    expect(determineDir(undefined)).toBe(examplePath);
-    expect(spyOnCwd).toHaveBeenCalledTimes(1);
-  });
-});
-describe("areNewNamesDistinct", () => {
-  it("areNewNamesDistinct should return false if any of the new names are identical", () => {
-    expect(areNewNamesDistinct(renameListDistinct)).toBe(true);
-    expect(areNewNamesDistinct(renameWithNewNameRepeat)).toBe(false);
   });
 });
 
@@ -125,13 +130,19 @@ describe("listFiles", () => {
     );
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundFiles = await listFiles(examplePath, excludeFilter);
-    console.log(foundFiles);
     expect(foundFiles.length).toBe(direntLength - shouldMatch.length);
     expect(foundFiles.filter((name) => shouldMatch.includes(name)).length).toBe(
       0
     );
   });
 });
+describe("areNewNamesDistinct", () => {
+  it("areNewNamesDistinct should return false if any of the new names are identical", () => {
+    expect(areNewNamesDistinct(renameListDistinct)).toBe(true);
+    expect(areNewNamesDistinct(renameWithNewNameRepeat)).toBe(false);
+  });
+});
+
 describe("checkPath", () => {
   afterEach(() => jest.resetAllMocks());
   it("Should throw error, if path does not exist", async () => {
@@ -173,34 +184,17 @@ describe("checkPath", () => {
   });
 });
 
-describe("truncateFile", () => {
-  const truncateNum = 4;
-  const generalArgs = {
-    preserveOriginal: true,
-    baseName: "baseName",
-    truncate: truncateNum.toString(),
-  };
-  it("Should return baseName, if preserveOriginal is false", () => {
-    const args = { ...generalArgs, preserveOriginal: false };
-    expect(truncateFile(args)).toBe(args.baseName);
-  });
-  it("Should throw error, if truncate argument is invalid", () => {
-    const invalidArgs = { ...generalArgs, truncate: "invalid" };
-    expect(() => truncateFile(invalidArgs)).toThrowError(
-      ERRORS.TRUNCATE_INVALID_ARGUMENT
-    );
-  });
-  it("Should return baseName, if truncate argument evaluates to zero", () => {
-    const zeroTruncate1 = { ...generalArgs, truncate: "" };
-    const zeroTruncate2 = { ...generalArgs, truncate: "0" };
-    [zeroTruncate1, zeroTruncate2].forEach((args) =>
-      expect(truncateFile(args)).toBe(generalArgs.baseName)
-    );
-  });
-  it("Should return truncated baseName", () => {
-    expect(truncateFile(generalArgs).length).toBe(truncateNum);
+describe("determineDir", () => {
+  it("determineDir should return truthy argument, otherwise call process.cwd", () => {
+    const spyOnCwd = jest
+      .spyOn(process, "cwd")
+      .mockReturnValueOnce(examplePath);
+    expect(determineDir(truthyArgument)).toBe(truthyArgument);
+    expect(determineDir(undefined)).toBe(examplePath);
+    expect(spyOnCwd).toHaveBeenCalledTimes(1);
   });
 });
+
 describe("composeRenameString", () => {
   const [baseName, ext, customText, newName] = [
     "baseName",
@@ -381,3 +375,33 @@ describe("createBatchRenameList", () => {
     });
   });
 });
+
+describe("truncateFile", () => {
+  const truncateNum = 4;
+  const generalArgs = {
+    preserveOriginal: true,
+    baseName: "baseName",
+    truncate: truncateNum.toString(),
+  };
+  it("Should return baseName, if preserveOriginal is false", () => {
+    const args = { ...generalArgs, preserveOriginal: false };
+    expect(truncateFile(args)).toBe(args.baseName);
+  });
+  it("Should throw error, if truncate argument is invalid", () => {
+    const invalidArgs = { ...generalArgs, truncate: "invalid" };
+    expect(() => truncateFile(invalidArgs)).toThrowError(
+      ERRORS.TRUNCATE_INVALID_ARGUMENT
+    );
+  });
+  it("Should return baseName, if truncate argument evaluates to zero", () => {
+    const zeroTruncate1 = { ...generalArgs, truncate: "" };
+    const zeroTruncate2 = { ...generalArgs, truncate: "0" };
+    [zeroTruncate1, zeroTruncate2].forEach((args) =>
+      expect(truncateFile(args)).toBe(generalArgs.baseName)
+      );
+    });
+  it("Should return truncated baseName", () => {
+    expect(truncateFile(generalArgs).length).toBe(truncateNum);
+  });
+});
+

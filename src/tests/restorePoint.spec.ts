@@ -10,7 +10,6 @@ import {
   examplePath,
   mockFileList,
   originalNames,
-  renameListWithDistinctNewNames,
 } from "./mocks.js";
 import { ERRORS } from "../messages/errMessages.js";
 jest.mock("fs");
