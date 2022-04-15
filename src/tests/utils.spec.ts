@@ -49,7 +49,11 @@ const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
 describe("cleanUpRollbackFile", () => {
+  const suppressStdOut = jest
+    .spyOn(process.stdout, "write")
+    .mockImplementation();
   const cleanUpArgs = { transformPath: examplePath };
+  afterAll(() => suppressStdOut.mockRestore());
   afterEach(() => jest.resetAllMocks());
   it("Should throw error if rollback file does not exist", async () => {
     mockedFs.existsSync.mockReturnValueOnce(false);
@@ -398,10 +402,9 @@ describe("truncateFile", () => {
     const zeroTruncate2 = { ...generalArgs, truncate: "0" };
     [zeroTruncate1, zeroTruncate2].forEach((args) =>
       expect(truncateFile(args)).toBe(generalArgs.baseName)
-      );
-    });
+    );
+  });
   it("Should return truncated baseName", () => {
     expect(truncateFile(generalArgs).length).toBe(truncateNum);
   });
 });
-
