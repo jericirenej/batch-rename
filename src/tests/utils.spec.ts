@@ -10,6 +10,7 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
+  listFiles,
   truncateFile,
 } from "../converters/utils.js";
 import { rename, readdir, lstat } from "fs/promises";
@@ -23,9 +24,10 @@ import {
   renameListWithSameOriginalAndNew as sameOldAndNew,
   exampleStats,
   createDirentArray,
+  exampleDirent,
 } from "./mocks.js";
 import fs, { Dirent, existsSync, Stats } from "fs";
-import { DEFAULT_SEPARATOR } from "../constants.js";
+import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { join, resolve } from "path";
 
@@ -75,9 +77,61 @@ describe("areNewNamesDistinct", () => {
   });
 });
 
-/* describe("listFiles", ()=> {
-  
-}); */
+describe("listFiles", () => {
+  afterEach(() => jest.resetAllMocks());
+  it("Should return list of names", async () => {
+    const listLength = mockFileList.length;
+    let exampleDirentArray = createDirentArray(listLength, listLength);
+    exampleDirentArray = exampleDirentArray.map((dirent, index) => {
+      dirent.name = mockFileList[index];
+      return dirent;
+    });
+    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
+    expect(await listFiles(examplePath)).toEqual(mockFileList);
+  });
+  it("Should exclude rollback file from list", async () => {
+    const listLength = mockFileList.length + 1;
+    let exampleDirentArray = createDirentArray(listLength, listLength);
+    exampleDirentArray = exampleDirentArray.map((dirent, index) => {
+      if (index >= mockFileList.length) {
+        dirent.name = ROLLBACK_FILE_NAME;
+      } else {
+        dirent.name = mockFileList[index];
+      }
+      dirent.isFile = () => true;
+      return dirent;
+    });
+    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
+    const foundFiles = await listFiles(examplePath);
+    const isRollbackPresent =
+      foundFiles.filter((file) => file === ROLLBACK_FILE_NAME).length > 0;
+    expect(isRollbackPresent).toBe(false);
+  });
+  it("Should not include directories", async () => {
+    const listLength = mockFileList.length;
+    let exampleDirentArray = createDirentArray(listLength, listLength);
+    exampleDirentArray[0].isFile = () => false;
+    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
+    const foundFiles = await listFiles(examplePath);
+    expect(foundFiles.length).toBe(listLength - 1);
+  });
+  it("Should exclude files that match the exclude filter", async () => {
+    const excludeFilter = "John";
+    const direntLength = 10;
+    const exampleDirentArray = createDirentArray(direntLength, direntLength);
+    const shouldMatch = ["John", "Johnny", "Johnson"];
+    shouldMatch.forEach(
+      (entry, index) => (exampleDirentArray[index].name = entry)
+    );
+    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
+    const foundFiles = await listFiles(examplePath, excludeFilter);
+    console.log(foundFiles);
+    expect(foundFiles.length).toBe(direntLength - shouldMatch.length);
+    expect(foundFiles.filter((name) => shouldMatch.includes(name)).length).toBe(
+      0
+    );
+  });
+});
 describe("checkPath", () => {
   afterEach(() => jest.resetAllMocks());
   it("Should throw error, if path does not exist", async () => {
@@ -108,7 +162,7 @@ describe("checkPath", () => {
       ERRORS.CHECK_PATH_NO_CHILD_FILES
     );
   });
-  it("Should return filePath, if it exists, is a directory, and has children of file type", async()=> {
+  it("Should return filePath, if it exists, is a directory, and has children of file type", async () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
     mockedLstat.mockResolvedValueOnce({
       ...exampleStats,
