@@ -1,5 +1,5 @@
-import type { NumericTransform } from "../types";
 import { VALID_NUMERIC_TRANSFORM_TYPES } from "../constants.js";
+import type { NumericTransform } from "../types";
 import { composeRenameString } from "./utils.js";
 
 /**Return a list of odd|even names, along with original file names */
@@ -46,7 +46,7 @@ export const generateSequenceNumber = (
 ): number => {
   if (transformType === "odd") return 2 * index + 1;
   if (transformType === "even") return 2 * (index + 1);
-  return index + 1;
+  return index;
 };
 
 export const generatePaddedNumber = (
@@ -62,7 +62,8 @@ export const checkBaseIndex = (
   providedIndex: string | undefined
 ): number | null => {
   if (!(providedIndex && providedIndex.length)) return null;
-  const stringToNum = Number(providedIndex);
-  if (Number.isNaN(stringToNum)) return null;
-  return Math.floor(stringToNum);
+  const baseNumber = Number(providedIndex);
+  if (Number.isNaN(baseNumber)) return null;
+  if (baseNumber < 0) return null;
+  return Math.floor(baseNumber);
 };
