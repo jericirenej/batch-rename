@@ -1,5 +1,5 @@
-import type { TruncateTransform } from "../types.js";
 import { ERRORS } from "../messages/errMessages.js";
+import type { TruncateTransform } from "../types.js";
 import { composeRenameString } from "./utils.js";
 const { TRUNCATE_NO_PRESERVE_ORIGINAL, TRUNCATE_INVALID_ARGUMENT } = ERRORS;
 
@@ -37,5 +37,3 @@ export const truncateTransform: TruncateTransform = ({
     };
   });
 };
-
-

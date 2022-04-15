@@ -1,5 +1,5 @@
 import { Dirent, Stats } from "fs";
-import type { RenameList } from "../types.js";
+import type { ExtractBaseAndExtTemplate, RenameList } from "../types.js";
 
 export const mockFileList = [
   "someFile.with.extra.dots.ext",
@@ -77,7 +77,6 @@ export const exampleStats: Stats = {
 };
 
 export const exampleDirent: Dirent = { name: "0", ...exampleStatMethods };
-const emptyArray = new Array(10).fill(0);
 
 export const createDirentArray = (
   length: number,
@@ -89,10 +88,26 @@ export const createDirentArray = (
   return arr.map((entry, index) => {
     const isFileReturn = counter <= filesNum;
     counter++;
-    return({
+    return {
       ...exampleStatMethods,
       isFile: () => isFileReturn,
       name: index.toString(),
-    });
+    };
+  });
+};
+
+export const mockSplitFileList: ExtractBaseAndExtTemplate = {
+  baseName: "baseName",
+  ext: "ext",
+  sourcePath: "sourcePath",
+};
+
+export const generateMockSplitFileList = (length: number) => {
+  return new Array(length).fill(0).map((entry, index) => {
+    const singleEntry = {
+      ...mockSplitFileList,
+      baseName: `baseName${index + 1}`,
+    };
+    return singleEntry;
   });
 };
