@@ -24,7 +24,10 @@ export const ERRORS = {
   COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM: `You can only pick one exclusive (${EXCLUSIVE_TRANSFORM_TYPES.join(
     ", "
   )}) transformation type!`,
-  COMMAND_ONLY_ONE_UTILITY_ACTION: "Only one type of utility action can be executed at the time!",
-  TRUNCATE_NO_PRESERVE_ORIGINAL:"Truncate-only transformation cannot be exxecuted if preserveOriginal is set to false!",
-  TRUNCATE_INVALID_ARGUMENT: "Truncate error: passed argument is not a valid number!",
+  COMMAND_ONLY_ONE_UTILITY_ACTION:
+    "Only one type of utility action can be executed at the time!",
+  TRUNCATE_NO_PRESERVE_ORIGINAL:
+    "Truncate-only transformation cannot be executed if preserveOriginal is set to false!",
+  TRUNCATE_INVALID_ARGUMENT:
+    "Truncate error: passed argument is not a valid number!",
 };
