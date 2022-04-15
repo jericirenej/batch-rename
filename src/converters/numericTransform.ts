@@ -1,5 +1,5 @@
-import type { NumericTransform } from "../types";
 import { VALID_NUMERIC_TRANSFORM_TYPES } from "../constants.js";
+import type { NumericTransform } from "../types";
 import { composeRenameString } from "./utils.js";
 
 /**Return a list of odd|even names, along with original file names */
@@ -22,7 +22,8 @@ export const numericTransform: NumericTransform = ({
     const { ext, baseName, sourcePath } = splitFile;
     let sequenceNumber = generateSequenceNumber(
       numericTransform!,
-      indexWithBase
+      indexWithBase,
+      baseIndex
     );
 
     const stringifiedNum = generatePaddedNumber(sequenceNumber, listLength);
@@ -42,11 +43,15 @@ export const numericTransform: NumericTransform = ({
 
 export const generateSequenceNumber = (
   transformType: typeof VALID_NUMERIC_TRANSFORM_TYPES[number],
-  index: number
+  sequenceNumber: number,
+  baseIndex: number | null
 ): number => {
-  if (transformType === "odd") return 2 * index + 1;
-  if (transformType === "even") return 2 * (index + 1);
-  return index + 1;
+  if (transformType === "odd") return 2 * sequenceNumber + 1;
+  if (transformType === "even") return 2 * (sequenceNumber + 1);
+  if (baseIndex === null) {
+    return sequenceNumber + 1;
+  }
+  return sequenceNumber;
 };
 
 export const generatePaddedNumber = (
@@ -62,7 +67,8 @@ export const checkBaseIndex = (
   providedIndex: string | undefined
 ): number | null => {
   if (!(providedIndex && providedIndex.length)) return null;
-  const stringToNum = Number(providedIndex);
-  if (Number.isNaN(stringToNum)) return null;
-  return Math.floor(stringToNum);
+  const baseNumber = Number(providedIndex);
+  if (Number.isNaN(baseNumber)) return null;
+  if (baseNumber < 0) return null;
+  return Math.floor(baseNumber);
 };
