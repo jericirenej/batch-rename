@@ -22,7 +22,8 @@ export const numericTransform: NumericTransform = ({
     const { ext, baseName, sourcePath } = splitFile;
     let sequenceNumber = generateSequenceNumber(
       numericTransform!,
-      indexWithBase
+      indexWithBase,
+      baseIndex
     );
 
     const stringifiedNum = generatePaddedNumber(sequenceNumber, listLength);
@@ -42,11 +43,15 @@ export const numericTransform: NumericTransform = ({
 
 export const generateSequenceNumber = (
   transformType: typeof VALID_NUMERIC_TRANSFORM_TYPES[number],
-  index: number
+  sequenceNumber: number,
+  baseIndex: number | null
 ): number => {
-  if (transformType === "odd") return 2 * index + 1;
-  if (transformType === "even") return 2 * (index + 1);
-  return index;
+  if (transformType === "odd") return 2 * sequenceNumber + 1;
+  if (transformType === "even") return 2 * (sequenceNumber + 1);
+  if (baseIndex === null) {
+    return sequenceNumber + 1;
+  }
+  return sequenceNumber;
 };
 
 export const generatePaddedNumber = (
