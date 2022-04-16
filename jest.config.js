@@ -8,10 +8,12 @@ export default {
   globals: {
     "ts-jest": {
       useEDM: true,
+      isolatedModules: true,
     },
   },
   moduleNameMapper: {
     "(.+)\\.js": "$1",
   },
   extensionsToTreatAsEsm: [".ts"],
+  maxWorkers: 1,
 };
