@@ -15,9 +15,9 @@ import {
   truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
-import {
+import type {
   ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate
+  ExtractBaseAndExtTemplate,
 } from "../types.js";
 import {
   createDirentArray,

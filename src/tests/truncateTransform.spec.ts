@@ -2,8 +2,9 @@ import { DEFAULT_SEPARATOR } from "../constants.js";
 import { truncateTransform } from "../converters/truncateTransform.js";
 import { composeRenameString } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
-import { GenerateRenameListArgs, RenameList } from "../types.js";
+import type { GenerateRenameListArgs, RenameList } from "../types.js";
 import { generateMockSplitFileList } from "./mocks.js";
+
 jest.mock("../converters/utils.js", () => {
   const originalModule = jest.requireActual("../converters/utils.js");
   return {
