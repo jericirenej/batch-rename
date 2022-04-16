@@ -7,8 +7,7 @@ export default {
   },
   globals: {
     "ts-jest": {
-      useEDM: true,
-      isolatedModules: true,
+      useESM: true,
     },
   },
   moduleNameMapper: {
@@ -16,4 +15,5 @@ export default {
   },
   extensionsToTreatAsEsm: [".ts"],
   maxWorkers: 1,
+  coveragePathIgnorePatterns: ["mocks.ts"],
 };
