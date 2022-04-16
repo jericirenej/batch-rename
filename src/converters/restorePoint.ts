@@ -88,7 +88,8 @@ export const dryRunRestore = async (transformPath?: string): Promise<void> => {
   if (!filesToRestore.length) {
     throw new Error(RESTORE_COULD_NOT_BE_PARSED);
   }
-  console.log("Will convert", filesToRestore.length, "files...");
+  const revertMessage = `Will revert ${filesToRestore.length} files...`;
+  console.log(revertMessage);
   filesToRestore.forEach((file) => {
     const target = rollbackData.find((restore) => restore.rename === file);
     if (target) {
@@ -98,7 +99,6 @@ export const dryRunRestore = async (transformPath?: string): Promise<void> => {
 
   if (missingFiles.length) {
     console.log("The following files did not have restore data available:");
-    missingFiles.map((file) => console.log(file));
-    return;
+    missingFiles.forEach((file) => console.log(file));
   }
 };
