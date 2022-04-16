@@ -1,15 +1,13 @@
+import { existsSync } from "fs";
+import { readFile } from "fs/promises";
+import { join } from "path";
+import { ROLLBACK_FILE_NAME } from "../constants.js";
+import { ERRORS } from "../messages/errMessages.js";
 import type {
   RenameList,
   RestoreBaseFunction,
   RestoreOriginalFileNames,
 } from "../types";
-
-import { existsSync } from "fs";
-import { readFile, rename } from "fs/promises";
-import { join } from "path";
-
-import { ROLLBACK_FILE_NAME } from "../constants.js";
-import { ERRORS } from "../messages/errMessages.js";
 import {
   cleanUpRollbackFile,
   createBatchRenameList,
@@ -77,7 +75,8 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     }
   }
   if (batchRename.length) {
-    console.log("Will convert", batchRename.length, "files...");
+    const revertMessage = `Will revert ${batchRename.length} files...`;
+    console.log(revertMessage);
     await Promise.all(batchRename);
     await cleanUpRollbackFile({ transformPath });
   }
