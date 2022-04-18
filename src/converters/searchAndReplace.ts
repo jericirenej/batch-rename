@@ -30,7 +30,7 @@ export const searchAndReplace: SearchAndReplace = ({
 
 export const generateArguments: GenerateSearchAndReplaceArgs = (args) => {
   if (args.length === 1) return { filter: null, replace: args[0] };
-  return { filter: new RegExp(args[0], "g"), replace: args[1] };
+  return { filter: new RegExp(args[0], "gu"), replace: args[1] };
 };
 
 /** Will try and separate baseName and ext, before calling truncateFile */
