@@ -7,6 +7,8 @@ export const mockFileList = [
   "fileWithoutExt",
   ".startWithDot",
   ".startWithDot.ext",
+  "UTF-čšžäöüéŁ.ext",
+  "12345-and-chars.ext",
 ];
 export const examplePath = "A:/path/to/file";
 export const expectedSplit = [
@@ -15,6 +17,8 @@ export const expectedSplit = [
   ["fileWithoutExt", ""],
   [".startWithDot", ""],
   [".startWithDot", ".ext"],
+  ["UTF-čšžäöüéŁ", ".ext"],
+  ["12345-and-chars", ".ext"],
 ];
 
 const firstRename = "rename1";

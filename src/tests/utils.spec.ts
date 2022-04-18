@@ -12,7 +12,7 @@ import {
   determineDir,
   extractBaseAndExt,
   listFiles,
-  truncateFile
+  truncateFile,
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
@@ -28,7 +28,7 @@ import {
   renameListDistinct,
   renameListWithSameOriginalAndNew as sameOldAndNew,
   renameWithNewNameRepeat,
-  truthyArgument
+  truthyArgument,
 } from "./mocks.js";
 
 jest.mock("fs");
