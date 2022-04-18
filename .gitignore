@@ -4,4 +4,3 @@ workspace*
 .vscode
 coverage
 src/converters/helpers.ts
-.husky
