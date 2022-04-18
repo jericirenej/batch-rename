@@ -100,16 +100,16 @@ export const createDirentArray = (
   });
 };
 
-export const mockSplitFileList: ExtractBaseAndExtTemplate = {
+export const mockSplitFile: ExtractBaseAndExtTemplate = {
   baseName: "baseName",
-  ext: "ext",
+  ext: ".ext",
   sourcePath: "sourcePath",
 };
 
 export const generateMockSplitFileList = (length: number) => {
   return new Array(length).fill(0).map((entry, index) => {
     const singleEntry = {
-      ...mockSplitFileList,
+      ...mockSplitFile,
       baseName: `baseName${index + 1}`,
     };
     return singleEntry;
