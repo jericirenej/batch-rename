@@ -1,14 +1,17 @@
-import type {
-  GenerateRenameList,
-  RenameListArgs,
-  FileListWithStatsArray,
-  ExtractBaseAndExtReturn,
-} from "../types";
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
-import { numericTransform } from "./numericTransform.js";
+import { ERRORS } from "../messages/errMessages.js";
+import type {
+  ExtractBaseAndExtReturn,
+  FileListWithStatsArray,
+  GenerateRenameList,
+  RenameListArgs,
+} from "../types";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
+import { numericTransform } from "./numericTransform.js";
+import { searchAndReplace } from "./searchAndReplace.js";
+import { truncateTransform } from "./truncateTransform.js";
 import {
   areNewNamesDistinct,
   createBatchRenameList,
@@ -16,9 +19,6 @@ import {
   extractBaseAndExt,
   listFiles,
 } from "./utils.js";
-import { searchAndReplace } from "./searchAndReplace.js";
-import { ERRORS } from "../messages/errMessages.js";
-import { truncateTransform } from "./truncateTransform.js";
 const { DUPLICATE_FILE_NAMES } = ERRORS;
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
@@ -74,14 +74,13 @@ export const generateRenameList: GenerateRenameList = (args) => {
   if (transformPattern.includes("searchAndReplace")) {
     return searchAndReplace(args);
   }
-  console.log("No transform function available for the chosen option!");
-  process.exit(0);
+  throw new Error(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
 };
 
 export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
   const targetDir = determineDir(args.transformPath);
-  const splitFileList = await listFiles(targetDir, args.exclude).then((fileList) =>
-    extractBaseAndExt(fileList, targetDir)
+  const splitFileList = await listFiles(targetDir, args.exclude).then(
+    (fileList) => extractBaseAndExt(fileList, targetDir)
   );
   let listWithStats!: FileListWithStatsArray;
 

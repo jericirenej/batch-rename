@@ -24,6 +24,7 @@ export const ERRORS = {
   COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM: `You can only pick one exclusive (${EXCLUSIVE_TRANSFORM_TYPES.join(
     ", "
   )}) transformation type!`,
+  TRANSFORM_NO_FUNCTION_AVAILABLE: `No transform function available for the chosen option!`,
   COMMAND_ONLY_ONE_UTILITY_ACTION:
     "Only one type of utility action can be executed at the time!",
   TRUNCATE_NO_PRESERVE_ORIGINAL:
