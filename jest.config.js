@@ -15,5 +15,5 @@ export default {
   },
   extensionsToTreatAsEsm: [".ts"],
   maxWorkers: 1,
-  coveragePathIgnorePatterns: ["mocks.ts"],
+  coveragePathIgnorePatterns: ["tests/"],
 };
