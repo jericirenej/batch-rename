@@ -3,9 +3,11 @@ import { resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
+  DryRunTransform,
   ExtractBaseAndExtReturn,
   FileListWithStatsArray,
   GenerateRenameList,
+  GenerateRenameListArgs,
   RenameListArgs,
 } from "../types";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
@@ -22,8 +24,6 @@ import {
 const { DUPLICATE_FILE_NAMES } = ERRORS;
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
-  if (args.dryRun) return await dryRunTransform(args);
-
   const { transformPattern, transformPath, exclude } = args;
   const targetDir = determineDir(transformPath);
   const splitFileList = await listFiles(targetDir, exclude).then((fileList) =>
@@ -38,10 +38,19 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const fileList: ExtractBaseAndExtReturn | FileListWithStatsArray =
     listWithStats ? listWithStats : splitFileList;
 
-  const transformedNames = generateRenameList({
+  const transformArgs: GenerateRenameListArgs = {
     ...args,
     splitFileList: fileList,
-  });
+    transformPath: targetDir,
+  };
+  const transformedNames = generateRenameList(transformArgs);
+
+  if (args.dryRun)
+    return await dryRunTransform({
+      transformPath: targetDir,
+      transformedNames,
+      transformPattern,
+    });
 
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(DUPLICATE_FILE_NAMES);
@@ -77,28 +86,16 @@ export const generateRenameList: GenerateRenameList = (args) => {
   throw new Error(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
 };
 
-export const dryRunTransform = async (args: RenameListArgs): Promise<void> => {
-  const targetDir = determineDir(args.transformPath);
-  const splitFileList = await listFiles(targetDir, args.exclude).then(
-    (fileList) => extractBaseAndExt(fileList, targetDir)
-  );
-  let listWithStats!: FileListWithStatsArray;
-
-  if (args.transformPattern.includes("dateRename")) {
-    listWithStats = await provideFileStats(splitFileList);
-  }
-
-  const fileList: ExtractBaseAndExtReturn | FileListWithStatsArray =
-    listWithStats ? listWithStats : splitFileList;
-  const transformedNames = generateRenameList({
-    ...args,
-    splitFileList: fileList,
-  });
+export const dryRunTransform: DryRunTransform = ({
+  transformPath,
+  transformPattern,
+  transformedNames,
+}): void => {
   console.log(
     "Transformation of type",
-    args.transformPattern,
+    transformPattern,
     "in folder",
-    targetDir,
+    transformPath,
     "would result in:"
   );
   transformedNames.forEach((name) =>

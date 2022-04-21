@@ -28,9 +28,14 @@ export type OptionKeysWithValues = Record<
   boolean | string | string[]
 >;
 
-export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {restArgs?: string[]};
+export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {
+  restArgs?: string[];
+};
 
-export type SetTransformationPath = (folderPath:string|undefined, restARgs: string[]|undefined) => Promise<string|undefined>
+export type SetTransformationPath = (
+  folderPath: string | undefined,
+  restARgs: string[] | undefined
+) => Promise<string | undefined>;
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
 export type ExtractBaseAndExtTemplate = {
@@ -89,6 +94,13 @@ export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
 };
 export type GenerateRenameList = (args: GenerateRenameListArgs) => RenameList;
+
+export type DryRunTransformArgs = {
+  transformedNames: RenameList;
+  transformPattern: TransformTypes[];
+  transformPath: string;
+};
+export type DryRunTransform = (args: DryRunTransformArgs) => void;
 
 export type GeneralTransformReturn = {
   rename: string;
@@ -167,7 +179,10 @@ export type RestoreOriginalFileNames = (
   args: UtilityFunctionsArgs
 ) => Promise<void>;
 export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
-export type ListFiles = (transformPath?: string, excludeFilter?:string) => Promise<string[]>;
+export type ListFiles = (
+  transformPath?: string,
+  excludeFilter?: string
+) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameLIst: RenameList) => boolean;
 export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
