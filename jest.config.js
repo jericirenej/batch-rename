@@ -15,5 +15,6 @@ export default {
   },
   extensionsToTreatAsEsm: [".ts"],
   maxWorkers: 1,
-  coveragePathIgnorePatterns: ["tests/"],
+  coveragePathIgnorePatterns: ["tests/", "programConfiguration"],
+  collectCoverageFrom: ["**/*.ts"],
 };
