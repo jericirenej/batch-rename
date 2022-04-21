@@ -34,16 +34,16 @@ const renameListDistinct = JSON.parse(
   JSON.stringify(renameWithNewNameRepeat)
 ) as RenameList;
 renameListDistinct[2].rename = "rename3";
-const renameListWithSameOriginalAndNew = JSON.parse(
+const renameListWithDuplicateOldAndNew = JSON.parse(
   JSON.stringify(renameListDistinct)
 ) as RenameList;
-renameListWithSameOriginalAndNew[0] = {
+renameListWithDuplicateOldAndNew[0] = {
   original: renameListDistinct[0].original,
   rename: renameListDistinct[0].original,
   sourcePath,
 };
 
-export { renameListDistinct, renameListWithSameOriginalAndNew };
+export { renameListDistinct, renameListWithDuplicateOldAndNew };
 
 export const truthyArgument = "argument";
 const madeUpTime = 1318289051000.1;

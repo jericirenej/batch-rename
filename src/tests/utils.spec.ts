@@ -26,7 +26,7 @@ import {
   expectedSplit,
   mockFileList,
   renameListDistinct,
-  renameListWithSameOriginalAndNew as sameOldAndNew,
+  renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
   truthyArgument,
 } from "./mocks.js";
@@ -303,10 +303,12 @@ describe("createBatchRenameList", () => {
     });
   });
   it("Should return renameList with length corresponding to unique names", () => {
-    const expectedLength = sameOldAndNew.filter(
+    const expectedLength = renameListWithDuplicateOldAndNew.filter(
       (renameInfo) => renameInfo.original !== renameInfo.rename
     ).length;
-    const batchPromise = createBatchRenameList(sameOldAndNew);
+    const batchPromise = createBatchRenameList(
+      renameListWithDuplicateOldAndNew
+    );
     expect(batchPromise.length).toBe(expectedLength);
   });
   describe("Revert operations", () => {
@@ -355,8 +357,10 @@ describe("createBatchRenameList", () => {
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchPromise list should not contain entries where original and renamed file names are identical", () => {
-      const revertList = sameOldAndNew.map((renameInfo) => renameInfo.rename);
-      const expectedLength = sameOldAndNew.filter(
+      const revertList = renameListWithDuplicateOldAndNew.map(
+        (renameInfo) => renameInfo.rename
+      );
+      const expectedLength = renameListWithDuplicateOldAndNew.filter(
         (renameInfo) => renameInfo.original !== renameInfo.rename
       ).length;
       const batchPromise = createBatchRenameList(
