@@ -103,7 +103,7 @@ export const dryRunTransform: DryRunTransform = ({
   );
   const areNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!areNamesDistinct) {
-    console.warn(
+    console.log(
       "\n\nWARNING: Running the transform on these files with the given parameters would result in duplicated names and throw an error!"
     );
   }
