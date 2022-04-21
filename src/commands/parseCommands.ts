@@ -1,26 +1,22 @@
-import { convertFiles } from "../converters/converter.js";
-import program from "./generateCommands.js";
-import type {
-  RenameListArgs,
-  TransformTypes,
-  OptionKeysWithValues,
-  DateTransformOptions,
-  UtilityActionsCheck,
-  UtilityActions,
-  OptionKeysWithValuesAndRestArgs,
-  SetTransformationPath,
-} from "../types";
 import {
+  INCLUSIVE_TRANSFORM_TYPES,
   UTILITY_ACTIONS,
   VALID_TRANSFORM_TYPES,
-  VALID_NUMERIC_TRANSFORM_TYPES,
-  INCLUSIVE_TRANSFORM_TYPES,
 } from "../constants.js";
-
-import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
-
+import { convertFiles } from "../converters/converter.js";
 import { checkPath } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
+import type {
+  OptionKeysWithValues,
+  OptionKeysWithValuesAndRestArgs,
+  RenameListArgs,
+  SetTransformationPath,
+  TransformTypes,
+  UtilityActions,
+  UtilityActionsCheck,
+} from "../types";
+import program from "./generateCommands.js";
+import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
 
 const {
   COMMAND_NO_TRANSFORMATION_PICKED,
@@ -33,7 +29,6 @@ export const parseOptions = async (
 ) => {
   try {
     if (!Object.keys(options).length) return program.help();
-
     const {
       customText,
       separator,
@@ -73,24 +68,22 @@ export const parseOptions = async (
     } catch {
       transformedPreserve = true;
     }
-    const args: RenameListArgs = {
-      customText: customText as string | undefined,
+    const args = {
+      customText,
       transformPattern,
       preserveOriginal: transformedPreserve,
-      dateRename: dateRename as DateTransformOptions,
-      detailedDate: detailedDate as boolean | undefined,
-      dryRun: dryRun as boolean | undefined,
-      searchAndReplace: searchAndReplace as string[] | undefined,
+      dateRename,
+      detailedDate,
+      dryRun,
+      searchAndReplace,
       transformPath,
-      numericTransform: numericTransform as
-        | typeof VALID_NUMERIC_TRANSFORM_TYPES[number]
-        | undefined,
-      separator: separator as string | undefined,
-      textPosition: textPosition as "append" | "prepend" | undefined,
-      truncate: truncate as "string" | undefined,
-      baseIndex: baseIndex as "string" | undefined,
-      exclude: exclude as "string" | undefined,
-    };
+      numericTransform,
+      separator,
+      textPosition,
+      truncate,
+      baseIndex,
+      exclude,
+    } as RenameListArgs;
     return await convertFiles(args);
   } catch (err) {
     const error = err as Error;
