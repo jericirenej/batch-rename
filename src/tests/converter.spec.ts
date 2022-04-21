@@ -6,13 +6,18 @@ import * as searchAndReplaceTransformFunctions from "../converters/searchAndRepl
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type { RenameListArgs, TransformTypes } from "../types.js";
+import type {
+  DryRunTransformArgs,
+  RenameListArgs,
+  TransformTypes,
+} from "../types.js";
 import {
   examplePath,
   exampleStats,
   generateMockSplitFileList,
   mockFileList,
   renameListDistinct,
+  renameWithNewNameRepeat,
 } from "./mocks.js";
 
 jest.mock("fs/promises", () => {
@@ -63,9 +68,6 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
     .spyOn(utils, "createBatchRenameList")
     .mockReturnValue([Promise.resolve()]),
   sypOnDetermineDir = jest.spyOn(utils, "determineDir"),
-  spyOnAreNewNamesDistinct = jest
-    .spyOn(utils, "areNewNamesDistinct")
-    .mockReturnValue(true),
   spyOnListFiles = jest
     .spyOn(utils, "listFiles")
     .mockResolvedValue(mockFileList),
@@ -86,14 +88,17 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
 );
 
 describe("convertFiles", () => {
+  let spyOnProcessWrite: jest.SpyInstance;
+  let spyOnConsole: jest.SpyInstance;
+  const spyOnAreNewNamesDistinct = jest
+    .spyOn(utils, "areNewNamesDistinct")
+    .mockReturnValue(true);
   const exampleArgs: RenameListArgs = {
     transformPattern: ["numericTransform"],
     transformPath: examplePath,
     exclude: "exclude",
     dryRun: false,
   };
-  let spyOnProcessWrite: jest.SpyInstance;
-  let spyOnConsole: jest.SpyInstance;
   beforeEach(() => {
     spyOnGenerateRenameList.mockImplementation();
     [spyOnProcessWrite, spyOnConsole] = [
@@ -102,9 +107,10 @@ describe("convertFiles", () => {
     ];
   });
   afterEach(() => {
-    [spyOnProcessWrite, spyOnConsole].forEach((spy) => spy.mockRestore());
     jest.clearAllMocks();
+    [spyOnProcessWrite, spyOnConsole].forEach((spy) => spy.mockRestore());
   });
+  afterAll(() => spyOnAreNewNamesDistinct.mockRestore());
   it("Should dryRunTransform, if dryRun is true", async () => {
     spyOnDryRunTransform.mockImplementation();
     await convertFiles(exampleArgs);
@@ -236,5 +242,30 @@ describe("generateRenameList", () => {
     expect(() =>
       generateRenameList({ transformPattern, splitFileList })
     ).toThrowError(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
+  });
+});
+
+describe("dryRunTransform", () => {
+  it("Should call console log appropriate number of times", () => {
+    const spyOnAreNewNamesDistinct = jest.spyOn(utils, "areNewNamesDistinct");
+    const spyOnConsole = createSpyOnLog();
+    const exampleArgs: DryRunTransformArgs = {
+      transformPath: examplePath,
+      transformPattern: ["searchAndReplace"],
+      transformedNames: renameListDistinct,
+    };
+    dryRunTransform(exampleArgs);
+    const expected = renameListDistinct.length + 1;
+    expect(spyOnConsole).toHaveBeenCalledTimes(expected);
+
+    spyOnConsole.mockClear();
+
+    dryRunTransform({
+      ...exampleArgs,
+      transformedNames: renameWithNewNameRepeat,
+    });
+    expect(spyOnConsole).toHaveBeenCalledTimes(expected + 1);
+    expect(spyOnAreNewNamesDistinct).toHaveBeenCalledTimes(2);
+    spyOnConsole.mockRestore();
   });
 });
