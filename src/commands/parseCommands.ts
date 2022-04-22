@@ -92,7 +92,7 @@ export const parseOptions = async (
   }
 };
 
-const transformationCheck = (
+export const transformationCheck = (
   options: OptionKeysWithValues
 ): TransformTypes[] => {
   const keys = Object.keys(options) as unknown as Array<keyof typeof options>;
