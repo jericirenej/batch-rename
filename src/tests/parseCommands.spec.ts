@@ -1,3 +1,4 @@
+import process from "process";
 import program from "../commands/generateCommands.js";
 import * as parseCommands from "../commands/parseCommands.js";
 import {
@@ -7,7 +8,10 @@ import {
 import * as converters from "../converters/converter.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type { OptionKeysWithValues } from "../types.js";
+import type {
+  OptionKeysWithValues,
+  OptionKeysWithValuesAndRestArgs,
+} from "../types.js";
 import { examplePath } from "./mocks.js";
 
 const {
@@ -17,12 +21,92 @@ const {
   transformationCheck,
 } = parseCommands;
 const spyOnProgramHelp = jest.spyOn(program, "help"),
+  spyOnProcessExit = jest.spyOn(process, "exit"),
   spyOnConvertFiles = jest.spyOn(converters, "convertFiles"),
   spyOnUtilityActionsCheck = jest.spyOn(parseCommands, "utilityActionsCheck"),
   spyOnSetTransformationPath = jest.spyOn(
     parseCommands,
     "setTransformationPath"
-  );
+  ),
+  spyOnTransformationCheck = jest.spyOn(parseCommands, "transformationCheck"),
+  spyOnConsoleError = jest.spyOn(console, "error");
+
+describe("parseOptions", () => {
+  const exampleArgs = {
+    preserveOriginal: true,
+    customText: false,
+    numericTransform: true,
+    folderPath: examplePath,
+  } as OptionKeysWithValuesAndRestArgs;
+  beforeEach(() => {
+    spyOnSetTransformationPath.mockResolvedValue(examplePath);
+    spyOnUtilityActionsCheck.mockReturnValue(undefined);
+    spyOnTransformationCheck.mockReturnValue(["numericTransform"]);
+    spyOnConvertFiles.mockResolvedValue();
+    spyOnConsoleError.mockImplementation();
+  });
+  afterEach(() => jest.clearAllMocks());
+  afterAll(() => {
+    jest.resetAllMocks();
+    spyOnConsoleError.mockRestore();
+  });
+  it("Should call program help, if no arguments are supplied", async () => {
+    const spyOnProcessStdOut = jest
+      .spyOn(process.stdout, "write")
+      .mockImplementation();
+    program.exitOverride();
+
+    spyOnProcessExit.mockImplementationOnce((code?: number) => {
+      throw new Error(code ? code.toString() : undefined);
+    });
+    await expect(() =>
+      parseOptions({} as OptionKeysWithValuesAndRestArgs)
+    ).rejects.toThrow();
+    spyOnProcessExit.mockRestore();
+    spyOnProcessStdOut.mockRestore();
+  });
+  it("Should call appropriate methods", async () => {
+    program.exitOverride();
+    await parseOptions(exampleArgs);
+    [
+      spyOnSetTransformationPath,
+      spyOnUtilityActionsCheck,
+      spyOnTransformationCheck,
+      spyOnConvertFiles,
+    ].forEach((method) => expect(method).toHaveBeenCalledTimes(1));
+  });
+  it("If evaluating preserveOriginal fails, preserveOriginal should be set to true (if preserveOriginal is not specified, it is implicitly respected)", async () => {
+    const spyOnToLowerCase = jest
+      .spyOn(String.prototype, "toLowerCase")
+      .mockImplementationOnce(() => {
+        throw new TypeError();
+      });
+
+    await parseOptions({
+      ...exampleArgs,
+      preserveOriginal: undefined as unknown as string,
+    });
+    const preserveOriginal =
+      spyOnConvertFiles.mock.calls.flat()[0].preserveOriginal;
+    expect(preserveOriginal).toBe(true);
+    spyOnToLowerCase.mockRestore();
+  });
+  it("Should properly evaluate a stringified preserveOriginal argument", async () => {
+    spyOnConvertFiles.mockClear();
+    [
+      { value: "true", expected: true },
+      { value: "false", expected: false },
+      { value: "TrUe", expected: true },
+      { value: "fAlSe", expected: false },
+    ].forEach(async (preserveConfig, index) => {
+      const { value, expected } = preserveConfig;
+      await parseOptions({ ...exampleArgs, preserveOriginal: value });
+      const preserveOriginal =
+        spyOnConvertFiles.mock.calls.flat()[index].preserveOriginal;
+      expect(preserveOriginal).toBe(expected);
+    });
+  });
+});
 
 describe("utilityActionsCheck", () => {
   const utilityActionsList = {
@@ -122,7 +206,6 @@ describe("transformationCheck", () => {
           inclusiveTypes[INCLUSIVE_TRANSFORM_TYPES[0]]!,
       },
     ];
-    console.log(variants);
     variants.forEach((variant) => {
       const expected = Object.keys(variant);
       const result = transformationCheck({ ...exampleArg, ...variant });

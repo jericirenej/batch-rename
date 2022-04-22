@@ -151,7 +151,7 @@ export type ProgramOptions = {
   choices?: string[];
 };
 
-export type UtilityActions = typeof UTILITY_ACTIONS[number];
+export type UtilityActions = typeof UTILITY_ACTIONS[number] | undefined;
 export type UtilityActionsCheck = (
   options: Partial<OptionKeysWithValues>
 ) => UtilityActions;
