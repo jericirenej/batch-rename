@@ -1,6 +1,6 @@
 import { dirname, resolve } from "path";
-import { fileURLToPath } from "url";
 import ResolveTypescriptPlugin from "resolve-typescript-plugin";
+import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputName = "batchRename.mjs";
@@ -21,7 +21,7 @@ export default {
       {
         test: /\.ts$/,
         use: "ts-loader",
-        exclude: [/node_modules/],
+        exclude: [/node_modules/, /tests/],
       },
     ],
   },

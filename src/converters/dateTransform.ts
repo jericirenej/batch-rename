@@ -1,3 +1,8 @@
+import { Stats } from "fs";
+import { stat } from "fs/promises";
+import { join } from "path";
+import { DEFAULT_SEPARATOR } from "../constants.js";
+import { ERRORS } from "../messages/errMessages.js";
 import type {
   DateTransform,
   DateTransformCorrespondenceTable,
@@ -6,13 +11,7 @@ import type {
   FormattedDate,
   ProvideFileStats,
 } from "../types";
-
-import { Stats } from "fs";
-import { stat } from "fs/promises";
-import { join } from "path";
 import { areNewNamesDistinct, composeRenameString } from "./utils.js";
-import { DEFAULT_SEPARATOR } from "../constants.js";
-import { ERRORS } from "../messages/errMessages.js";
 
 const { DUPLICATE_FILE_NAMES } = ERRORS;
 
@@ -28,13 +27,14 @@ export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   return splitFileListWithStats;
 };
 
-const dateTransformCorrespondenceTable: DateTransformCorrespondenceTable = {
-  creationDate: "birthtimeMs",
-  lastAccessed: "atimeMs",
-  lastModified: "mtimeMs",
-};
+export const dateTransformCorrespondenceTable: DateTransformCorrespondenceTable =
+  {
+    creationDate: "birthtimeMs",
+    lastAccessed: "atimeMs",
+    lastModified: "mtimeMs",
+  };
 
-const extractDate = (milliseconds: number): FormattedDate => {
+export const extractDate = (milliseconds: number): FormattedDate => {
   const formatDate = (date: string, minLength = 2): string => {
     if (date.length >= minLength) return date.toString();
     return [...new Array(minLength - date.length).fill(0), date].join("");

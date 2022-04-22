@@ -1,4 +1,4 @@
-import { VALID_NUMERIC_TRANSFORM_TYPES } from "../constants.js";
+import { VALID_NUMERIC_TRANSFORM_TYPES as numericTransformFunctions } from "../constants.js";
 import type { NumericTransform } from "../types";
 import { composeRenameString } from "./utils.js";
 
@@ -42,7 +42,7 @@ export const numericTransform: NumericTransform = ({
 };
 
 export const generateSequenceNumber = (
-  transformType: typeof VALID_NUMERIC_TRANSFORM_TYPES[number],
+  transformType: typeof numericTransformFunctions[number],
   sequenceNumber: number,
   baseIndex: number | null
 ): number => {

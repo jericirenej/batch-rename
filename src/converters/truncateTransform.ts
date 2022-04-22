@@ -1,5 +1,5 @@
-import type { TruncateFileName, TruncateTransform } from "../types.js";
 import { ERRORS } from "../messages/errMessages.js";
+import type { TruncateTransform } from "../types.js";
 import { composeRenameString } from "./utils.js";
 const { TRUNCATE_NO_PRESERVE_ORIGINAL, TRUNCATE_INVALID_ARGUMENT } = ERRORS;
 
@@ -19,7 +19,7 @@ export const truncateTransform: TruncateTransform = ({
 
   return splitFileList.map((fileInfo) => {
     const { baseName, ext, sourcePath } = fileInfo;
-    const newName = baseName.slice(0, limit + 1);
+    const newName = limit !== 0 ? baseName.slice(0, limit) : baseName;
     const rename = composeRenameString({
       baseName,
       ext,
@@ -36,18 +36,4 @@ export const truncateTransform: TruncateTransform = ({
       sourcePath,
     };
   });
-};
-
-export const truncateFile: TruncateFileName = ({
-  preserveOriginal,
-  baseName,
-  truncate,
-}) => {
-  if (!preserveOriginal) {
-    return baseName;
-  }
-  const limit = Number(truncate);
-  if (isNaN(limit)) throw new Error(TRUNCATE_INVALID_ARGUMENT);
-
-  return baseName.slice(0, limit + 1);
 };

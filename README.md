@@ -49,8 +49,8 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 
 |Flag|Arguments|Description|
 |------|-----------|--------|
-|`-n, -numericTransform`|`sequential \| even \| odd`|Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to `sequence`. To help with file-sorting, the number of digits will always be one more than the (so, a list of 10 files will use three digits: 001, 002 ...) |
-|`-d --dateRename`|`creationDate, lastAccessed, lastModifies`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
+|`-n, -numericTransform`|`[sequential \| even \| odd]`|Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to `sequence`. To help with file-sorting, the number of digits will always be one more than the (so, a list of 10 files will use three digits: 001, 002 ...) |
+|`-d --dateRename`|`<creationDate, lastAccessed, lastModifies>`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
 |`-s, --searchAndReplace`|`<string\|regex> <replacer>`|Takes a string or a regex filter argument and a replacer string. In contrast to other two types, this transformations works on the entire file name, including the extension.|
 |`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.|
 |`-f, --folderPath`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
@@ -58,11 +58,11 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-D, --dryRun`||Run transform operation without writing to disk. Expected output will be logged to console.|
 |`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
 |`-e, --exclude`|`<string\|regex>`|Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions|
-|`-p, --preserveOriginal`|`boolean`| Preserve original file name. Not relevant for the `searchAndReplace` transform type. Defaults to `true`.|
-|`-c, --customText`|`string`|Text to add to the transformed name. Overwrites the `preserveOriginal` flag.|
-|`--textPosition`|`prepend \| append`|Applies to `preserveOriginal` or `customText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`|
+|`-p, --preserveOriginal`|`[boolean]`| Preserve original file name. Not relevant for the `searchAndReplace` transform type. Defaults to `true`.|
+|`-c, --customText`|`<string>`|Text to add to the transformed name. Overwrites the `preserveOriginal` flag.|
+|`--textPosition`|`[prepend \| append]`|Applies to `preserveOriginal` or `customText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`|
 |`--detailedDate`||Appends time information (`T hh:mm:ss`) to date transformations.|
-|`--separator`|`character`|Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen (`-`).|
+|`--separator`|`<character>`|Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen (`-`).|
 |`--cleanRollback`||Remove rollback file.|
 |`-h, --help`||Show help.|
 |`-V, --version`||ShowScript version.|

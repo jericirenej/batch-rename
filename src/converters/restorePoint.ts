@@ -1,15 +1,13 @@
+import { existsSync } from "fs";
+import { readFile } from "fs/promises";
+import { join } from "path";
+import { ROLLBACK_FILE_NAME } from "../constants.js";
+import { ERRORS } from "../messages/errMessages.js";
 import type {
   RenameList,
   RestoreBaseFunction,
   RestoreOriginalFileNames,
 } from "../types";
-
-import { existsSync } from "fs";
-import { readFile, rename } from "fs/promises";
-import { join } from "path";
-
-import { ROLLBACK_FILE_NAME } from "../constants.js";
-import { ERRORS } from "../messages/errMessages.js";
 import {
   cleanUpRollbackFile,
   createBatchRenameList,
@@ -37,9 +35,8 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
   if (!rollBackFileExists) {
     throw new Error(RESTORE_NO_ROLLBACK_FILE_TO_CONVERT);
   }
-  const rollbackData = JSON.parse(
-    await readFile(targetPath, "utf8")
-  ) as RenameList;
+  const readRollback = await readFile(targetPath, "utf8");
+  const rollbackData = JSON.parse(readRollback) as RenameList;
 
   const missingFiles: string[] = [];
   existingFiles.forEach((file) => {
@@ -78,7 +75,8 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     }
   }
   if (batchRename.length) {
-    console.log("Will convert", batchRename.length, "files...");
+    const revertMessage = `Will revert ${batchRename.length} files...`;
+    console.log(revertMessage);
     await Promise.all(batchRename);
     await cleanUpRollbackFile({ transformPath });
   }
@@ -90,7 +88,8 @@ export const dryRunRestore = async (transformPath?: string): Promise<void> => {
   if (!filesToRestore.length) {
     throw new Error(RESTORE_COULD_NOT_BE_PARSED);
   }
-  console.log("Will convert", filesToRestore.length, "files...");
+  const revertMessage = `Will revert ${filesToRestore.length} files...`;
+  console.log(revertMessage);
   filesToRestore.forEach((file) => {
     const target = rollbackData.find((restore) => restore.rename === file);
     if (target) {
@@ -100,7 +99,6 @@ export const dryRunRestore = async (transformPath?: string): Promise<void> => {
 
   if (missingFiles.length) {
     console.log("The following files did not have restore data available:");
-    missingFiles.map((file) => console.log(file));
-    return;
+    missingFiles.forEach((file) => console.log(file));
   }
 };

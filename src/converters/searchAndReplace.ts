@@ -2,8 +2,7 @@ import type {
   GenerateSearchAndReplaceArgs,
   SearchAndReplace,
 } from "../types.js";
-import { truncateFile } from "./truncateTransform.js";
-import { extractBaseAndExt } from "./utils.js";
+import { extractBaseAndExt, truncateFile } from "./utils.js";
 
 export const searchAndReplace: SearchAndReplace = ({
   searchAndReplace,
@@ -29,12 +28,13 @@ export const searchAndReplace: SearchAndReplace = ({
   return targetList;
 };
 
-const generateArguments: GenerateSearchAndReplaceArgs = (args) => {
+export const generateArguments: GenerateSearchAndReplaceArgs = (args) => {
   if (args.length === 1) return { filter: null, replace: args[0] };
-  return { filter: new RegExp(args[0], "g"), replace: args[1] };
+  return { filter: new RegExp(args[0], "gu"), replace: args[1] };
 };
 
-const optionalTruncate = (
+/** Will try and separate baseName and ext, before calling truncateFile */
+export const optionalTruncate = (
   truncate: string,
   modifiedName: string,
   sourcePath: string
