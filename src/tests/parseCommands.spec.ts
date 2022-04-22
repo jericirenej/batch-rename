@@ -28,10 +28,10 @@ const spyOnProgramHelp = jest.spyOn(program, "help"),
     parseCommands,
     "setTransformationPath"
   ),
-  spyOnTransformationCheck = jest.spyOn(parseCommands, "transformationCheck"),
-  spyOnConsoleError = jest.spyOn(console, "error");
+  spyOnTransformationCheck = jest.spyOn(parseCommands, "transformationCheck");
 
 describe("parseOptions", () => {
+  const spyOnConsoleError = jest.spyOn(console, "error");
   const exampleArgs = {
     preserveOriginal: true,
     customText: false,
@@ -62,6 +62,7 @@ describe("parseOptions", () => {
     await expect(() =>
       parseOptions({} as OptionKeysWithValuesAndRestArgs)
     ).rejects.toThrow();
+    expect(spyOnProgramHelp).toHaveBeenCalled();
     spyOnProcessExit.mockRestore();
     spyOnProcessStdOut.mockRestore();
   });
@@ -75,7 +76,7 @@ describe("parseOptions", () => {
       spyOnConvertFiles,
     ].forEach((method) => expect(method).toHaveBeenCalledTimes(1));
   });
-  it("If evaluating preserveOriginal fails, preserveOriginal should be set to true (if preserveOriginal is not specified, it is implicitly respected)", async () => {
+  it("If evaluating preserveOriginal fails, preserveOriginal should be set to true", async () => {
     const spyOnToLowerCase = jest
       .spyOn(String.prototype, "toLowerCase")
       .mockImplementationOnce(() => {
