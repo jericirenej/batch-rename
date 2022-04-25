@@ -112,6 +112,35 @@ describe("searchAndReplace", () => {
     const response = searchAndReplace(newArgs);
     expect(response[0].rename).toBe("ultra-ultra.ext");
   });
+  it.only("Should preserve extension, except if noPreserveExtension is specified", () => {
+    const customMocksList = generateMockSplitFileList(2).map(
+      (fileInfo, index) => ({ ...fileInfo, baseName: `exterior${index + 1}` })
+    );
+    const newArgs: GenerateRenameListArgs = {
+      ...exampleArgs,
+      searchAndReplace: ["ext", "int"],
+      splitFileList: customMocksList,
+    };
+    const noExtension: GenerateRenameListArgs = {
+      ...newArgs,
+      noExtensionPreserve: true,
+    };
+    const [extensionPreserve, noExtensionPreserve] = [
+      searchAndReplace(newArgs),
+      searchAndReplace(noExtension),
+    ];
+    extensionPreserve.forEach((renamedFile, index) => {
+      const { rename, sourcePath } = renamedFile;
+      const extract = extractBaseAndExt([rename], sourcePath);
+      const { baseName, ext } = extract[0];
+      expect(ext).toBe(".ext");
+      expect(baseName).toBe(`interior${index + 1}`);
+    });
+    noExtensionPreserve.forEach((renamedFile, index) => {
+      const { rename } = renamedFile;
+      expect(rename).toBe(`interior${index + 1}.int`);
+    });
+  });
   it("Should return original name, if returned filter is empty", () => {
     spyOnGenerateArguments.mockReturnValueOnce({
       filter: null,

@@ -8,6 +8,7 @@ import {
 
 export type OptionKeys =
   | "preserveOriginal"
+  | "noExtensionPreserve"
   | "restore"
   | "dryRun"
   | "cleanRollback"
@@ -79,6 +80,7 @@ export type RenameListArgs = {
   customText?: string;
   textPosition?: "append" | "prepend";
   preserveOriginal?: boolean;
+  noExtensionPreserve?: boolean;
   dateRename?: DateTransformOptions;
   detailedDate?: boolean;
   dryRun?: boolean;
