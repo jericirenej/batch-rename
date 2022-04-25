@@ -6,6 +6,7 @@ import { extractBaseAndExt, truncateFile } from "./utils.js";
 
 export const searchAndReplace: SearchAndReplace = ({
   searchAndReplace,
+  noExtensionPreserve,
   splitFileList,
   truncate,
 }) => {
@@ -13,10 +14,14 @@ export const searchAndReplace: SearchAndReplace = ({
   const targetList = splitFileList.map((fileInfo) => {
     const { filter, replace } = generatedArgs;
     let { baseName, sourcePath, ext } = fileInfo;
-    const original = `${baseName}${ext}`;
+    let original = noExtensionPreserve ? `${baseName}${ext}` : baseName;
     let rename = original;
     if (filter && filter.test(original)) {
       rename = original.replaceAll(filter, replace);
+    }
+    // Re-add extension, if noExtensionPreserve is not specified.
+    if (!noExtensionPreserve) {
+      rename += ext;
     }
     if (truncate && !isNaN(Number(truncate))) {
       if (rename !== original) {

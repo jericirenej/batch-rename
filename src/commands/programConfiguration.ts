@@ -7,7 +7,8 @@ const programOptions: ProgramOptions[] = [
   {
     short: "n",
     long: "numericTransform",
-    description: "Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to 'sequence'",
+    description:
+      "Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to 'sequence'",
     type: "[type]",
     choices: ["sequence", "odd", "even"],
     defaultValue: "sequence",
@@ -17,7 +18,7 @@ const programOptions: ProgramOptions[] = [
     long: "dateRename",
     type: "[dateOption]",
     description:
-    "Use date-related file information to rename a file. Defaults to 'creationDate'. Can be used together wit the '--detailedDate' flag to add time information.",
+      "Use date-related file information to rename a file. Defaults to 'creationDate'. Can be used together wit the '--detailedDate' flag to add time information.",
     defaultValue: "creationDate",
     choices: VALID_DATE_TRANSFORM_TYPES as unknown as string[],
   },
@@ -32,7 +33,8 @@ const programOptions: ProgramOptions[] = [
   {
     short: "t",
     long: "truncate",
-    description: "Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.",
+    description:
+      "Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.",
     type: "<number>",
     defaultValue: "",
   },
@@ -56,21 +58,24 @@ const programOptions: ProgramOptions[] = [
     short: "D",
     long: "dryRun",
     type: "",
-    description: "Run transform operation without writing to disk. Expected output will be logged to console.",
+    description:
+      "Run transform operation without writing to disk. Expected output will be logged to console.",
     defaultValue: "",
   },
   {
     short: "b",
     long: "baseIndex",
     type: "<number>",
-    description: "For numeric transform, optional argument to specify the base index from which sequencing will begin.",
-    defaultValue: ""
+    description:
+      "For numeric transform, optional argument to specify the base index from which sequencing will begin.",
+    defaultValue: "",
   },
   {
     short: "e",
     long: "exclude",
     type: "<string|regex>",
-    description:"Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions."
+    description:
+      "Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions.",
   },
   {
     short: "p",
@@ -80,6 +85,14 @@ const programOptions: ProgramOptions[] = [
       "Preserve original filename. Not relevant for the 'searchAndReplace' transform type. Defaults to 'true'.",
     defaultValue: "true",
     choices: ["true", "false"],
+  },
+  {
+    short: "",
+    long: "noExtensionPreserve",
+    type: "",
+    description:
+      "A 'searchAndPreserve' option. By default, extension will not be included in the transform. Specify this option to include it.",
+    defaultValue: "",
   },
   {
     short: "c",
@@ -92,10 +105,11 @@ const programOptions: ProgramOptions[] = [
   {
     short: "",
     long: "textPosition",
-    description: "Applies to 'preserveOriginal' or 'customText'. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to 'append'",
+    description:
+      "Applies to 'preserveOriginal' or 'customText'. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to 'append'",
     type: "[position]",
     choices: ["prepend", "append"],
-    defaultValue: "append"
+    defaultValue: "append",
   },
   {
     short: "",
@@ -118,7 +132,6 @@ const programOptions: ProgramOptions[] = [
     description: "Remove rollback file.",
     defaultValue: "",
   },
-  
 ];
 
 const programDescription =
