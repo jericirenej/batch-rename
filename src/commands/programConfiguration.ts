@@ -27,7 +27,7 @@ const programOptions: ProgramOptions[] = [
     long: "searchAndReplace",
     type: "<search, filter...>",
     description:
-      "Takes a string|regex filter argument and a replacer string. In contrast to other two types, this transformations works on the entire file name, including the extension.",
+      "Takes a string|regex filter argument and a replacer string.  By default, the transform will preserve file extensions, unless a '--noPreserveExtension' option is supplied",
     defaultValue: "",
   },
   {
@@ -91,7 +91,7 @@ const programOptions: ProgramOptions[] = [
     long: "noExtensionPreserve",
     type: "",
     description:
-      "A 'searchAndPreserve' option. By default, extension will not be included in the transform. Specify this option to include it.",
+      "An option for the 'searchAndPreserve' transform which includes the file extension in the transform operation.",
     defaultValue: "",
   },
   {
