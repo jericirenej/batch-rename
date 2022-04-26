@@ -56,7 +56,6 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(DUPLICATE_FILE_NAMES);
 
-
   process.stdout.write("Writing rollback file...");
   await writeFile(
     resolve(targetDir, ROLLBACK_FILE_NAME),
@@ -78,9 +77,7 @@ export const generateRenameList: GenerateRenameList = (args) => {
     if (pattern === "truncate") {
       return truncateTransform(args);
     }
-    if(pattern === "addText") {
-      const addTextTrans = addTextTransform(args)
-      console.log("NEW DISTINCT", areNewNamesDistinct(addTextTrans));
+    if (pattern === "addText") {
       return addTextTransform(args);
     }
   }
@@ -108,9 +105,20 @@ export const dryRunTransform: DryRunTransform = ({
     transformPath,
     "would result in:"
   );
-  transformedNames.forEach((name) =>
+  const noChange = transformedNames
+    .filter((renameInfo) => renameInfo.original === renameInfo.rename)
+    .map((renameInfo) => renameInfo.original);
+  const changedNames = transformedNames.filter(
+    (name) => !noChange.includes(name.original)
+  );
+
+
+  changedNames.forEach((name) =>
     console.log(`${name.original} --> ${name.rename}`)
   );
+  if (noChange.length) {
+    console.log(`Number of unchanged files: ${noChange.length}.`);
+  }
   const areNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!areNamesDistinct) {
     console.log(
