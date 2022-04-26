@@ -1,6 +1,6 @@
 import type {
   GenerateSearchAndReplaceArgs,
-  SearchAndReplace,
+  SearchAndReplace
 } from "../types.js";
 import { extractBaseAndExt, truncateFile } from "./utils.js";
 
@@ -14,10 +14,10 @@ export const searchAndReplace: SearchAndReplace = ({
   const targetList = splitFileList.map((fileInfo) => {
     const { filter, replace } = generatedArgs;
     let { baseName, sourcePath, ext } = fileInfo;
-    let original = noExtensionPreserve ? `${baseName}${ext}` : baseName;
-    let rename = original;
+    const original = `${baseName}${ext}`;
+    let rename = noExtensionPreserve ? original : baseName;
     if (filter && filter.test(original)) {
-      rename = original.replaceAll(filter, replace);
+      rename = rename.replaceAll(filter, replace);
     }
     // Re-add extension, if noExtensionPreserve is not specified.
     if (!noExtensionPreserve) {
