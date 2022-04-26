@@ -144,6 +144,8 @@ export type TruncateFileNameArgs = {
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
 export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
 
+export type AddTextTransform = (args: GenerateRenameListArgs) => RenameList;
+
 export type ProgramOptions = {
   short: string;
   long: OptionKeys;

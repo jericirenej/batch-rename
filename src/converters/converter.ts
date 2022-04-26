@@ -8,8 +8,9 @@ import type {
   FileListWithStatsArray,
   GenerateRenameList,
   GenerateRenameListArgs,
-  RenameListArgs,
+  RenameListArgs
 } from "../types";
+import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
@@ -19,7 +20,7 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
-  listFiles,
+  listFiles
 } from "./utils.js";
 const { DUPLICATE_FILE_NAMES } = ERRORS;
 
@@ -55,6 +56,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(DUPLICATE_FILE_NAMES);
 
+
   process.stdout.write("Writing rollback file...");
   await writeFile(
     resolve(targetDir, ROLLBACK_FILE_NAME),
@@ -71,8 +73,16 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
 /**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (args) => {
   const { transformPattern } = args;
-  if (transformPattern.length === 1 && transformPattern[0] === "truncate") {
-    return truncateTransform(args);
+  if (transformPattern.length === 1) {
+    const pattern = transformPattern[0];
+    if (pattern === "truncate") {
+      return truncateTransform(args);
+    }
+    if(pattern === "addText") {
+      const addTextTrans = addTextTransform(args)
+      console.log("NEW DISTINCT", areNewNamesDistinct(addTextTrans));
+      return addTextTransform(args);
+    }
   }
   if (transformPattern.includes("numericTransform")) {
     return numericTransform(args);
