@@ -5,11 +5,11 @@ import * as dateTransforms from "../converters/dateTransform.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-  ComposeRenameStringArgs,
-  DateTransformCorrespondenceTable,
-  FileListWithStatsArray,
-  FormattedDate,
-  GenerateRenameListArgs,
+    ComposeRenameStringArgs,
+    DateTransformCorrespondenceTable,
+    FileListWithStatsArray,
+    FormattedDate,
+    GenerateRenameListArgs
 } from "../types.js";
 import { exampleStats as stats, generateMockSplitFileList } from "./mocks.js";
 
@@ -165,7 +165,7 @@ describe("dateTransform", () => {
     const argsToWatch = {
       textPosition: "append" as const,
       preserveOriginal: false,
-      customText: "customText",
+      addText: "addText",
       separator: "|",
       truncate: "5",
     };

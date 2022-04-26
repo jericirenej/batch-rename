@@ -5,7 +5,7 @@ const { TRUNCATE_NO_PRESERVE_ORIGINAL, TRUNCATE_INVALID_ARGUMENT } = ERRORS;
 
 export const truncateTransform: TruncateTransform = ({
   splitFileList,
-  customText,
+  addText,
   preserveOriginal,
   separator,
   textPosition,
@@ -23,7 +23,7 @@ export const truncateTransform: TruncateTransform = ({
     const rename = composeRenameString({
       baseName,
       ext,
-      customText,
+      addText,
       textPosition,
       separator,
       // Must set preserveOriginal to false, since we are already including it in newName

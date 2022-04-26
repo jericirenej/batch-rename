@@ -1,6 +1,8 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import { ROLLBACK_FILE_NAME } from "../constants.js";
+import {
+  ROLLBACK_FILE_NAME, VALID_TRANSFORM_TYPES
+} from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   DryRunTransform,
@@ -8,8 +10,9 @@ import type {
   FileListWithStatsArray,
   GenerateRenameList,
   GenerateRenameListArgs,
-  RenameListArgs,
+  RenameListArgs
 } from "../types";
+import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
@@ -19,9 +22,20 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
-  listFiles,
+  listFiles
 } from "./utils.js";
 const { DUPLICATE_FILE_NAMES } = ERRORS;
+
+const TRANSFORM_CORRESPONDENCE_TABLE: Record<
+  typeof VALID_TRANSFORM_TYPES[number],
+  Function
+> = {
+  addText: addTextTransform,
+  dateRename: dateTransform,
+  numericTransform,
+  searchAndReplace,
+  truncate: truncateTransform,
+};
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const { transformPattern, transformPath, exclude } = args;
@@ -46,7 +60,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const transformedNames = generateRenameList(transformArgs);
 
   if (args.dryRun)
-    return await dryRunTransform({
+    return dryRunTransform({
       transformPath: targetDir,
       transformedNames,
       transformPattern,
@@ -68,20 +82,11 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   console.log("Completed!");
 };
 
-/**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (args) => {
   const { transformPattern } = args;
-  if (transformPattern.length === 1 && transformPattern[0] === "truncate") {
-    return truncateTransform(args);
-  }
-  if (transformPattern.includes("numericTransform")) {
-    return numericTransform(args);
-  }
-  if (transformPattern.includes("dateRename")) {
-    return dateTransform(args);
-  }
-  if (transformPattern.includes("searchAndReplace")) {
-    return searchAndReplace(args);
+  const primaryTransform = transformPattern[0];
+ if (Object.keys(TRANSFORM_CORRESPONDENCE_TABLE).includes(primaryTransform)) {
+    return TRANSFORM_CORRESPONDENCE_TABLE[primaryTransform](args);
   }
   throw new Error(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
 };
@@ -98,9 +103,19 @@ export const dryRunTransform: DryRunTransform = ({
     transformPath,
     "would result in:"
   );
-  transformedNames.forEach((name) =>
+  const noChange = transformedNames
+    .filter((renameInfo) => renameInfo.original === renameInfo.rename)
+    .map((renameInfo) => renameInfo.original);
+  const changedNames = transformedNames.filter(
+    (name) => !noChange.includes(name.original)
+  );
+
+  changedNames.forEach((name) =>
     console.log(`${name.original} --> ${name.rename}`)
   );
+  if (noChange.length) {
+    console.log(`Number of unaffected files: ${noChange.length}.`);
+  }
   const areNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!areNamesDistinct) {
     console.log(

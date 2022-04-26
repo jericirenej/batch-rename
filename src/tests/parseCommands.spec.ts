@@ -3,14 +3,14 @@ import program from "../commands/generateCommands.js";
 import * as parseCommands from "../commands/parseCommands.js";
 import {
   EXCLUSIVE_TRANSFORM_TYPES,
-  INCLUSIVE_TRANSFORM_TYPES,
+  INCLUSIVE_TRANSFORM_TYPES
 } from "../constants.js";
 import * as converters from "../converters/converter.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   OptionKeysWithValues,
-  OptionKeysWithValuesAndRestArgs,
+  OptionKeysWithValuesAndRestArgs
 } from "../types.js";
 import { examplePath } from "./mocks.js";
 
@@ -34,7 +34,7 @@ describe("parseOptions", () => {
   const spyOnConsoleError = jest.spyOn(console, "error");
   const exampleArgs = {
     preserveOriginal: true,
-    customText: false,
+    addText: false,
     numericTransform: true,
     folderPath: examplePath,
   } as OptionKeysWithValuesAndRestArgs;

@@ -4,12 +4,12 @@ import { join } from "path";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-  DateTransform,
-  DateTransformCorrespondenceTable,
-  FileListWithDates,
-  FileListWithStatsArray,
-  FormattedDate,
-  ProvideFileStats,
+    DateTransform,
+    DateTransformCorrespondenceTable,
+    FileListWithDates,
+    FileListWithStatsArray,
+    FormattedDate,
+    ProvideFileStats
 } from "../types";
 import { areNewNamesDistinct, composeRenameString } from "./utils.js";
 
@@ -55,7 +55,7 @@ export const extractDate = (milliseconds: number): FormattedDate => {
 export const dateTransform: DateTransform = ({
   splitFileList,
   dateRename,
-  customText,
+  addText,
   textPosition,
   preserveOriginal,
   detailedDate,
@@ -85,7 +85,7 @@ export const dateTransform: DateTransform = ({
       ext,
       preserveOriginal,
       newName: datePrefix,
-      customText,
+      addText,
       textPosition,
       separator,
       truncate,

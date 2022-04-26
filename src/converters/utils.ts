@@ -104,7 +104,7 @@ export const determineDir: DetermineDir = (transformPath) =>
 export const composeRenameString: ComposeRenameString = ({
   baseName: _baseName,
   ext,
-  customText,
+  addText,
   textPosition,
   separator,
   preserveOriginal,
@@ -126,8 +126,8 @@ export const composeRenameString: ComposeRenameString = ({
       preserveOriginal,
       truncate: truncate!,
     });
-  const additionalText = customText
-    ? customText
+  const additionalText = addText
+    ? addText
     : preserveOriginal
     ? baseName
     : "";

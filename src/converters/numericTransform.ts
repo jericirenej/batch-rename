@@ -5,7 +5,7 @@ import { composeRenameString } from "./utils.js";
 /**Return a list of odd|even names, along with original file names */
 export const numericTransform: NumericTransform = ({
   splitFileList,
-  customText,
+  addText,
   textPosition,
   preserveOriginal,
   numericTransform,
@@ -32,7 +32,7 @@ export const numericTransform: NumericTransform = ({
       ext,
       newName: stringifiedNum,
       preserveOriginal,
-      customText,
+      addText,
       textPosition,
       separator,
       truncate,
