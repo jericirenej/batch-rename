@@ -112,7 +112,7 @@ describe("searchAndReplace", () => {
     const response = searchAndReplace(newArgs);
     expect(response[0].rename).toBe("ultra-ultra.ext");
   });
-  it.only("Should preserve extension, except if noPreserveExtension is specified", () => {
+  it("Should preserve extension, except if noPreserveExtension is specified", () => {
     const customMocksList = generateMockSplitFileList(2).map(
       (fileInfo, index) => ({ ...fileInfo, baseName: `exterior${index + 1}` })
     );
@@ -147,7 +147,7 @@ describe("searchAndReplace", () => {
       replace: "something",
     });
     const response = searchAndReplace(exampleArgs);
-    response.forEach((entry) => expect(entry.rename).toBe(entry.original));
+     response.forEach((entry) => expect(entry.rename).toBe(entry.original));
   });
   it("Should return original name, if filter doesn't match", () => {
     const customMocksList = generateMockSplitFileList(2);
