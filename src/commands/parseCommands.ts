@@ -1,19 +1,19 @@
 import {
-  INCLUSIVE_TRANSFORM_TYPES,
-  UTILITY_ACTIONS,
-  VALID_TRANSFORM_TYPES,
+    INCLUSIVE_TRANSFORM_TYPES,
+    UTILITY_ACTIONS,
+    VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
 import { checkPath } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-  OptionKeysWithValues,
-  OptionKeysWithValuesAndRestArgs,
-  RenameListArgs,
-  SetTransformationPath,
-  TransformTypes,
-  UtilityActions,
-  UtilityActionsCheck,
+    OptionKeysWithValues,
+    OptionKeysWithValuesAndRestArgs,
+    RenameListArgs,
+    SetTransformationPath,
+    TransformTypes,
+    UtilityActions,
+    UtilityActionsCheck
 } from "../types";
 import program from "./generateCommands.js";
 import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
@@ -30,7 +30,7 @@ export const parseOptions = async (
   try {
     if (!Object.keys(options).length) return program.help();
     const {
-      customText,
+      addText,
       separator,
       textPosition,
       preserveOriginal,
@@ -70,7 +70,7 @@ export const parseOptions = async (
       transformedPreserve = true;
     }
     const args = {
-      customText,
+      addText,
       transformPattern,
       preserveOriginal: transformedPreserve,
       noExtensionPreserve,

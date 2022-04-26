@@ -5,9 +5,10 @@ export const VALID_TRANSFORM_TYPES = [
   "dateRename",
   "searchAndReplace",
   "truncate",
+  "addText"
 ] as const;
 
-export const INCLUSIVE_TRANSFORM_TYPES = ["truncate"] as const;
+export const INCLUSIVE_TRANSFORM_TYPES = ["truncate", "addText"] as const;
 export const EXCLUSIVE_TRANSFORM_TYPES = VALID_TRANSFORM_TYPES.filter(
   (transformType) =>
     !INCLUSIVE_TRANSFORM_TYPES.some(

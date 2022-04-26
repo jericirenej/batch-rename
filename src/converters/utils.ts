@@ -2,21 +2,21 @@ import { existsSync } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
 import { join, resolve } from "path";
 import {
-  DEFAULT_SEPARATOR,
-  EXT_REGEX,
-  ROLLBACK_FILE_NAME
+    DEFAULT_SEPARATOR,
+    EXT_REGEX,
+    ROLLBACK_FILE_NAME
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-  AreNewNamesDistinct,
-  CheckPath,
-  CleanUpRollbackFile,
-  ComposeRenameString,
-  CreateBatchRenameList,
-  DetermineDir,
-  ExtractBaseAndExt,
-  ListFiles,
-  TruncateFileName
+    AreNewNamesDistinct,
+    CheckPath,
+    CleanUpRollbackFile,
+    ComposeRenameString,
+    CreateBatchRenameList,
+    DetermineDir,
+    ExtractBaseAndExt,
+    ListFiles,
+    TruncateFileName
 } from "../types.js";
 
 const {
@@ -104,7 +104,7 @@ export const determineDir: DetermineDir = (transformPath) =>
 export const composeRenameString: ComposeRenameString = ({
   baseName: _baseName,
   ext,
-  customText,
+  addText,
   textPosition,
   separator,
   preserveOriginal,
@@ -126,8 +126,8 @@ export const composeRenameString: ComposeRenameString = ({
       preserveOriginal,
       truncate: truncate!,
     });
-  const additionalText = customText
-    ? customText
+  const additionalText = addText
+    ? addText
     : preserveOriginal
     ? baseName
     : "";

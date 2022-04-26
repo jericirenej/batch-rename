@@ -33,7 +33,7 @@ const splitFileList = generateMockSplitFileList(10);
 
 const defaultArgs: GenerateRenameListArgs = {
   splitFileList,
-  customText: "customText",
+  addText: "addText",
   textPosition: undefined,
   preserveOriginal: true,
   numericTransform: "sequence",

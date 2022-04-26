@@ -3,7 +3,7 @@ import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
   VALID_NUMERIC_TRANSFORM_TYPES,
-  VALID_TRANSFORM_TYPES,
+  VALID_TRANSFORM_TYPES
 } from "./constants";
 
 export type OptionKeys =
@@ -12,7 +12,7 @@ export type OptionKeys =
   | "restore"
   | "dryRun"
   | "cleanRollback"
-  | "customText"
+  | "addText"
   | "dateRename"
   | "textPosition"
   | "searchAndReplace"
@@ -77,7 +77,7 @@ export type RenameList = {
 }[];
 export type RenameListArgs = {
   transformPattern: TransformTypes[];
-  customText?: string;
+  addText?: string;
   textPosition?: "append" | "prepend";
   preserveOriginal?: boolean;
   noExtensionPreserve?: boolean;
@@ -193,7 +193,7 @@ export type ComposeRenameStringArgs = {
   newName: string;
   ext?: string;
   preserveOriginal?: boolean;
-  customText?: string;
+  addText?: string;
   textPosition?: "prepend" | "append";
   separator?: string;
   truncate?: string;

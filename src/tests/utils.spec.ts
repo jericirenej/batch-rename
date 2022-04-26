@@ -4,31 +4,31 @@ import { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import {
-  areNewNamesDistinct,
-  checkPath,
-  cleanUpRollbackFile,
-  composeRenameString,
-  createBatchRenameList,
-  determineDir,
-  extractBaseAndExt,
-  listFiles,
-  truncateFile,
+    areNewNamesDistinct,
+    checkPath,
+    cleanUpRollbackFile,
+    composeRenameString,
+    createBatchRenameList,
+    determineDir,
+    extractBaseAndExt,
+    listFiles,
+    truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-  ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate,
+    ComposeRenameStringArgs,
+    ExtractBaseAndExtTemplate
 } from "../types.js";
 import {
-  createDirentArray,
-  examplePath,
-  exampleStats,
-  expectedSplit,
-  mockFileList,
-  renameListDistinct,
-  renameListWithDuplicateOldAndNew,
-  renameWithNewNameRepeat,
-  truthyArgument,
+    createDirentArray,
+    examplePath,
+    exampleStats,
+    expectedSplit,
+    mockFileList,
+    renameListDistinct,
+    renameListWithDuplicateOldAndNew,
+    renameWithNewNameRepeat,
+    truthyArgument
 } from "./mocks.js";
 
 jest.mock("fs");
@@ -200,45 +200,45 @@ describe("determineDir", () => {
 });
 
 describe("composeRenameString", () => {
-  const [baseName, ext, customText, newName] = [
+  const [baseName, ext, addText, newName] = [
     "baseName",
     ".ext",
-    "customText",
+    "addText",
     "newName",
   ];
   const defaultSep = DEFAULT_SEPARATOR;
   const args: ComposeRenameStringArgs = {
     baseName,
     ext,
-    customText,
+    addText,
     newName,
     preserveOriginal: true,
   };
   it("Should return a newName-baseName.extension by default", () => {
     const expected = `${[newName, baseName].join(defaultSep)}${ext}`;
-    expect(composeRenameString({ ...args, customText: undefined })).toBe(
+    expect(composeRenameString({ ...args, addText: undefined })).toBe(
       expected
     );
   });
-  it("CustomText should override baseName and preserveOriginal", () => {
-    const expected = `${[newName, customText].join(defaultSep)}${ext}`;
+  it("addText should override baseName and preserveOriginal", () => {
+    const expected = `${[newName, addText].join(defaultSep)}${ext}`;
     expect(composeRenameString({ ...args, preserveOriginal: true })).toBe(
       expected
     );
   });
-  it("Should drop original baseName, if preserveOriginal is false|undefined and no customText supplied", () => {
+  it("Should drop original baseName, if preserveOriginal is false|undefined and no addText supplied", () => {
     const expected = `${newName}${ext}`;
     expect(
       composeRenameString({
         ...args,
-        customText: undefined,
+        addText: undefined,
         preserveOriginal: undefined,
       })
     ).toBe(expected);
     expect(
       composeRenameString({
         ...args,
-        customText: undefined,
+        addText: undefined,
         preserveOriginal: false,
       })
     ).toBe(expected);
@@ -246,22 +246,22 @@ describe("composeRenameString", () => {
   it("Should return newName-baseName only, if extension is undefined", () => {
     const expected = `${newName}${defaultSep}${baseName}`;
     expect(
-      composeRenameString({ ...args, customText: undefined, ext: undefined })
+      composeRenameString({ ...args, addText: undefined, ext: undefined })
     ).toBe(expected);
   });
   it("Should respect textPosition", () => {
-    let expected = `${[customText, newName].join(defaultSep)}${ext}`;
+    let expected = `${[addText, newName].join(defaultSep)}${ext}`;
     expect(composeRenameString({ ...args, textPosition: "prepend" })).toBe(
       expected
     );
-    expected = `${[newName, customText].join(defaultSep)}${ext}`;
+    expected = `${[newName, addText].join(defaultSep)}${ext}`;
     expect(composeRenameString({ ...args, textPosition: "append" })).toBe(
       expected
     );
   });
   it("Should respect separator setting", () => {
     const newSep = "_";
-    const expected = `${[newName, customText].join(newSep)}${ext}`;
+    const expected = `${[newName, addText].join(newSep)}${ext}`;
     expect(composeRenameString({ ...args, separator: newSep })).toBe(expected);
   });
   it("Should truncate result if truncate argument is truthy and preserveOriginal is true", () => {
@@ -269,7 +269,7 @@ describe("composeRenameString", () => {
     const newArgs = {
       ...args,
       truncate: "4",
-      customText: "",
+      addText: "",
       separator: "",
       newName: "",
     };
