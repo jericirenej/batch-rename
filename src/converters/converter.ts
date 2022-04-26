@@ -1,6 +1,8 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import { ROLLBACK_FILE_NAME } from "../constants.js";
+import {
+  ROLLBACK_FILE_NAME, VALID_TRANSFORM_TYPES
+} from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   DryRunTransform,
@@ -23,6 +25,17 @@ import {
   listFiles
 } from "./utils.js";
 const { DUPLICATE_FILE_NAMES } = ERRORS;
+
+const TRANSFORM_CORRESPONDENCE_TABLE: Record<
+  typeof VALID_TRANSFORM_TYPES[number],
+  Function
+> = {
+  addText: addTextTransform,
+  dateRename: dateTransform,
+  numericTransform,
+  searchAndReplace,
+  truncate: truncateTransform,
+};
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const { transformPattern, transformPath, exclude } = args;
@@ -47,7 +60,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const transformedNames = generateRenameList(transformArgs);
 
   if (args.dryRun)
-    return await dryRunTransform({
+    return dryRunTransform({
       transformPath: targetDir,
       transformedNames,
       transformPattern,
@@ -69,26 +82,11 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   console.log("Completed!");
 };
 
-/**General renaming function that will call relevant transformer. Currently, it will just call the evenOddTransform, but it could also support other transform types or custom transform functions */
 export const generateRenameList: GenerateRenameList = (args) => {
   const { transformPattern } = args;
-  if (transformPattern.length === 1) {
-    const pattern = transformPattern[0];
-    if (pattern === "truncate") {
-      return truncateTransform(args);
-    }
-    if (pattern === "addText") {
-      return addTextTransform(args);
-    }
-  }
-  if (transformPattern.includes("numericTransform")) {
-    return numericTransform(args);
-  }
-  if (transformPattern.includes("dateRename")) {
-    return dateTransform(args);
-  }
-  if (transformPattern.includes("searchAndReplace")) {
-    return searchAndReplace(args);
+  const primaryTransform = transformPattern[0];
+ if (Object.keys(TRANSFORM_CORRESPONDENCE_TABLE).includes(primaryTransform)) {
+    return TRANSFORM_CORRESPONDENCE_TABLE[primaryTransform](args);
   }
   throw new Error(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
 };
@@ -112,12 +110,11 @@ export const dryRunTransform: DryRunTransform = ({
     (name) => !noChange.includes(name.original)
   );
 
-
   changedNames.forEach((name) =>
     console.log(`${name.original} --> ${name.rename}`)
   );
   if (noChange.length) {
-    console.log(`Number of unchanged files: ${noChange.length}.`);
+    console.log(`Number of unaffected files: ${noChange.length}.`);
   }
   const areNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!areNamesDistinct) {
