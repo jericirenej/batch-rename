@@ -115,9 +115,13 @@ export const composeRenameString: ComposeRenameString = ({
   const extension = ext ? ext : "";
   let sep = "";
   // Allow for empty separator (direct concatenation)
-  if (separator && separator.length) sep = separator;
-  if (separator === undefined) sep = DEFAULT_SEPARATOR;
+  // For undefined cases, force default separator, unless newName is falsy.
+  if (separator) sep = separator;
+  if (separator === undefined && newName) sep = DEFAULT_SEPARATOR;
+  
   let modifiedName = newName;
+  
+  // Truncate baseName or add custom text.
   const shouldTruncate = !isNaN(Number(truncate)) && preserveOriginal;
   let baseName = _baseName;
   if (shouldTruncate)
@@ -126,19 +130,21 @@ export const composeRenameString: ComposeRenameString = ({
       preserveOriginal,
       truncate: truncate!,
     });
-  const additionalText = addText
+  // Custom text overrides preserveOriginal setting.
+  const customOrOriginalText = addText
     ? addText
     : preserveOriginal
     ? baseName
     : "";
-  if (additionalText) {
+  if (customOrOriginalText) {
     if (position === "append") {
-      modifiedName = `${newName}${sep}${additionalText}`;
+      modifiedName = `${newName}${sep}${customOrOriginalText}`;
     }
     if (position === "prepend") {
-      modifiedName = `${additionalText}${sep}${newName}`;
+      modifiedName = `${customOrOriginalText}${sep}${newName}`;
     }
   }
+
   return `${modifiedName}${extension}`;
 };
 
