@@ -1,29 +1,23 @@
 import type { AddTextTransform } from "../types.js";
-import { composeRenameString, truncateFile } from "./utils.js";
+import { composeRenameString } from "./utils.js";
 
 export const addTextTransform: AddTextTransform = ({
   splitFileList,
   textPosition,
   separator,
   truncate,
-  addText,
+  addText
 }) => {
   return splitFileList.map((fileInfo) => {
-    const { baseName:_baseName, ext, sourcePath } = fileInfo;
-    const baseName = truncate
-      ? truncateFile({
-          preserveOriginal: true,
-          baseName: _baseName,
-          truncate,
-        })
-      : _baseName;
+    const { baseName, ext, sourcePath } = fileInfo;
     const rename = composeRenameString({
-      baseName,
+      baseName: baseName,
+      newName: addText!,
       ext,
       separator,
       textPosition,
-      newName: baseName,
-      addText,
+      truncate,
+      preserveOriginal: true,
     });
     const original = `${baseName}${ext}`;
     return { original, rename, sourcePath };
