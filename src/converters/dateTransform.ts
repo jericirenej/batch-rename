@@ -4,14 +4,14 @@ import { join } from "path";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-    DateTransform,
-    DateTransformCorrespondenceTable,
-    FileListWithDates,
-    FileListWithStatsArray,
-    FormattedDate,
-    ProvideFileStats
+  DateTransform,
+  DateTransformCorrespondenceTable,
+  FileListWithDates,
+  FileListWithStatsArray,
+  FormattedDate,
+  ProvideFileStats
 } from "../types";
-import { areNewNamesDistinct, composeRenameString } from "./utils.js";
+import { composeRenameString } from "./utils.js";
 
 const { DUPLICATE_FILE_NAMES } = ERRORS;
 
@@ -98,7 +98,5 @@ export const dateTransform: DateTransform = ({
     };
   });
 
-  const areNamesDistinct = areNewNamesDistinct(transformedNames);
-  if (areNamesDistinct) return transformedNames;
-  throw new Error(DUPLICATE_FILE_NAMES);
+  return transformedNames;
 };
