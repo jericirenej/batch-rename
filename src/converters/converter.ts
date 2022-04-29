@@ -1,8 +1,6 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import {
-  ROLLBACK_FILE_NAME, VALID_TRANSFORM_TYPES
-} from "../constants.js";
+import { ROLLBACK_FILE_NAME, VALID_TRANSFORM_TYPES } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   DryRunTransform,
@@ -26,15 +24,15 @@ import {
 } from "./utils.js";
 const { DUPLICATE_FILE_NAMES } = ERRORS;
 
-const TRANSFORM_CORRESPONDENCE_TABLE: Record<
+export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   typeof VALID_TRANSFORM_TYPES[number],
   Function
 > = {
-  addText: addTextTransform,
-  dateRename: dateTransform,
-  numericTransform,
-  searchAndReplace,
-  truncate: truncateTransform,
+  addText: (args: GenerateRenameListArgs) => addTextTransform(args),
+  dateRename: (args: GenerateRenameListArgs) => dateTransform(args),
+  numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
+  searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
+  truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
@@ -85,7 +83,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
 export const generateRenameList: GenerateRenameList = (args) => {
   const { transformPattern } = args;
   const primaryTransform = transformPattern[0];
- if (Object.keys(TRANSFORM_CORRESPONDENCE_TABLE).includes(primaryTransform)) {
+  if (Object.keys(TRANSFORM_CORRESPONDENCE_TABLE).includes(primaryTransform)) {
     return TRANSFORM_CORRESPONDENCE_TABLE[primaryTransform](args);
   }
   throw new Error(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
