@@ -2,7 +2,6 @@ import { Stats } from "fs";
 import { stat } from "fs/promises";
 import { join } from "path";
 import { DEFAULT_SEPARATOR } from "../constants.js";
-import { ERRORS } from "../messages/errMessages.js";
 import type {
   DateTransform,
   DateTransformCorrespondenceTable,
@@ -12,8 +11,6 @@ import type {
   ProvideFileStats
 } from "../types";
 import { composeRenameString } from "./utils.js";
-
-const { DUPLICATE_FILE_NAMES } = ERRORS;
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(
