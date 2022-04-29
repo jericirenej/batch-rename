@@ -1,4 +1,5 @@
 import { writeFile } from "fs/promises";
+import * as addConverter from "../converters/addTextTransform.js";
 import * as converter from "../converters/converter.js";
 import * as dateTransformFunctions from "../converters/dateTransform.js";
 import * as numericTransformFunctions from "../converters/numericTransform.js";
@@ -6,11 +7,7 @@ import * as searchAndReplaceTransformFunctions from "../converters/searchAndRepl
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type {
-  DryRunTransformArgs,
-  RenameListArgs,
-  TransformTypes
-} from "../types.js";
+import type { DryRunTransformArgs, RenameListArgs, TransformTypes } from "../types.js";
 import {
   examplePath,
   exampleStats,
@@ -64,6 +61,7 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
     searchAndReplaceTransformFunctions,
     "searchAndReplace"
   ),
+  spyOnAddTextTransform = jest.spyOn(addConverter, "addTextTransform"),
   spyOnCreateBatchRename = jest
     .spyOn(utils, "createBatchRenameList")
     .mockReturnValue([Promise.resolve()]),
@@ -189,53 +187,28 @@ describe("convertFiles", () => {
   });
 });
 
-describe.skip("generateRenameList", () => {
+describe("generateRenameList", () => {
   afterEach(() => jest.clearAllMocks());
-  // Only valid transform combinations are evaluated. Invalid ones should be
-  // either be filtered out or throw an exception during
-  // the argument parsing phase.
-  it("Should call truncateTransform only if truncate is the single transform argument", () => {
-    generateRenameList({
-      transformPattern: ["truncate"],
-      splitFileList,
-    });
-    expect(spyOnTruncateTransform).toHaveBeenCalledTimes(1);
-    spyOnTruncateTransform.mockClear();
-    generateRenameList({
-      transformPattern: ["truncate", "dateRename"],
-      splitFileList,
-    });
-    expect(spyOnTruncateTransform).not.toHaveBeenCalled();
-  });
-  it("Should call dateRename, if it is included in transformPattern", () => {
-    const transforms: TransformTypes[][] = [
-      ["dateRename"],
-      ["dateRename", "truncate"],
-    ];
-    transforms.forEach((transformPattern, index) => {
-      generateRenameList({ transformPattern, splitFileList });
-      expect(spyOnDateTransform).toHaveBeenCalledTimes(index + 1);
-    });
-  });
-  it("Should call numericTransform, if it is included in transformPattern", () => {
-    const transforms: TransformTypes[][] = [
-      ["numericTransform"],
-      ["numericTransform", "truncate"],
-    ];
-    transforms.forEach((transformPattern, index) => {
-      generateRenameList({ transformPattern, splitFileList });
-      expect(spyOnNumericTransform).toHaveBeenCalledTimes(index + 1);
-    });
-  });
-  it("Should call searchAndReplace transform, if it is included in transformPattern", () => {
-    const transforms: TransformTypes[][] = [
-      ["searchAndReplace"],
-      ["searchAndReplace", "truncate"],
-    ];
-    transforms.forEach((transformPattern, index) => {
-      generateRenameList({ transformPattern, splitFileList });
-      expect(spyOnSearchAndReplace).toHaveBeenCalledTimes(index + 1);
-    });
+  it("Should call the first supplied transform type", () => {
+    const transformTypes = [
+      "truncate",
+      "dateRename",
+      "numericTransform",
+      "searchAndReplace",
+      "addText",
+    ] as const;
+    transformTypes.forEach((transformType) =>
+      generateRenameList({ transformPattern: [transformType], splitFileList })
+    );
+    [
+      spyOnDateTransform,
+      spyOnSearchAndReplace,
+      spyOnNumericTransform,
+      spyOnTruncateTransform,
+      spyOnAddTextTransform,
+    ].forEach((transformType) =>
+      expect(transformType).toHaveBeenCalledTimes(1)
+    );
   });
   it("Should throw error, if no transformation function is returned", () => {
     const transformPattern = ["invalidType"] as unknown as TransformTypes[];
