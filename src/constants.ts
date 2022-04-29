@@ -9,13 +9,6 @@ export const VALID_TRANSFORM_TYPES = [
   "addText",
 ] as const;
 
-export const INCLUSIVE_TRANSFORM_TYPES = ["truncate", "addText"] as const;
-export const EXCLUSIVE_TRANSFORM_TYPES = VALID_TRANSFORM_TYPES.filter(
-  (transformType) =>
-    !INCLUSIVE_TRANSFORM_TYPES.some(
-      (inclusiveType) => inclusiveType === transformType
-    )
-);
 export const VALID_DATE_TRANSFORM_TYPES = [
   "creationDate",
   "lastAccessed",

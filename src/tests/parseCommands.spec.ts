@@ -1,10 +1,6 @@
 import process from "process";
 import program from "../commands/generateCommands.js";
 import * as parseCommands from "../commands/parseCommands.js";
-import {
-  EXCLUSIVE_TRANSFORM_TYPES,
-  INCLUSIVE_TRANSFORM_TYPES
-} from "../constants.js";
 import * as converters from "../converters/converter.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
@@ -179,22 +175,12 @@ describe("setTransformationPath", () => {
 
 describe("transformationCheck", () => {
   const exampleArg = { preserveOriginal: true } as OptionKeysWithValues;
-  const inclusiveTypes: Partial<OptionKeysWithValues> = {};
-  const exclusiveTypes: Partial<OptionKeysWithValues> = {};
-  INCLUSIVE_TRANSFORM_TYPES.forEach((type) => (inclusiveTypes[type] = true));
-  EXCLUSIVE_TRANSFORM_TYPES.forEach((type) => (exclusiveTypes[type] = true));
-
   it("Should throw error if no transformation picked", () => {
     expect(() => transformationCheck(exampleArg)).toThrowError(
       ERRORS.COMMAND_NO_TRANSFORMATION_PICKED
     );
   });
-  it("Should throw error, if two exclusive transformation types are picked", () => {
-    expect(() =>
-      transformationCheck({ ...exampleArg, ...exclusiveTypes })
-    ).toThrowError(ERRORS.COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM);
-  });
-  it("Should return a list of picked transformations", () => {
+  /* it("Should return a list of picked transformations", () => {
     const variants = [
       {
         [EXCLUSIVE_TRANSFORM_TYPES[0]]:
@@ -212,5 +198,5 @@ describe("transformationCheck", () => {
       const result = transformationCheck({ ...exampleArg, ...variant });
       expect(result).toEqual(expected);
     });
-  });
+  });*/
 });

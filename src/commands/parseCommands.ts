@@ -1,26 +1,24 @@
 import {
-    INCLUSIVE_TRANSFORM_TYPES,
-    UTILITY_ACTIONS,
-    VALID_TRANSFORM_TYPES
+  UTILITY_ACTIONS,
+  VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
 import { checkPath } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-    OptionKeysWithValues,
-    OptionKeysWithValuesAndRestArgs,
-    RenameListArgs,
-    SetTransformationPath,
-    TransformTypes,
-    UtilityActions,
-    UtilityActionsCheck
+  OptionKeysWithValues,
+  OptionKeysWithValuesAndRestArgs,
+  RenameListArgs,
+  SetTransformationPath,
+  TransformTypes,
+  UtilityActions,
+  UtilityActionsCheck
 } from "../types";
 import program from "./generateCommands.js";
 import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
 
 const {
   COMMAND_NO_TRANSFORMATION_PICKED,
-  COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM,
   COMMAND_ONLY_ONE_UTILITY_ACTION,
 } = ERRORS;
 
@@ -104,17 +102,8 @@ export const transformationCheck = (
       options[key]
   );
   const numOfTransformations = transformationPicked.length;
-  const numOfExclusiveTransformations = transformationPicked.filter(
-    (transformationType) =>
-      !INCLUSIVE_TRANSFORM_TYPES.some(
-        (inclusiveType) => inclusiveType === transformationType
-      )
-  ).length;
   if (!numOfTransformations) {
     throw new Error(COMMAND_NO_TRANSFORMATION_PICKED);
-  }
-  if (numOfExclusiveTransformations > 1) {
-    throw new Error(COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM);
   }
   return transformationPicked as TransformTypes[];
 };
