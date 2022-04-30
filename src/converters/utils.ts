@@ -121,7 +121,7 @@ export const composeRenameString: ComposeRenameString = ({
   
   let modifiedName = newName;
   
-  // Truncate baseName or add custom text.
+  // Truncate baseName OR add custom text.
   const shouldTruncate = !isNaN(Number(truncate)) && preserveOriginal;
   let baseName = _baseName;
   if (shouldTruncate)

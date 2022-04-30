@@ -15,7 +15,6 @@ describe("addTextTransform", () => {
   it("Should return appropriately shaped response", () => {
     const renameList = addTextTransform(exampleArgs);
     expect(renameList.length).toBe(splitFileList.length);
-    const expectedKeys = ["rename", "original", "sourcePath"];
     const keys = Object.keys(renameList[0]);
     keys.forEach((key) => {
       expect(
@@ -23,36 +22,18 @@ describe("addTextTransform", () => {
       ).not.toBeUndefined();
     });
   });
+  it("Should call truncateFile, if appropriate", ()=> {
+    const spyOnTruncateFile = jest.spyOn(utils, "truncateFile");
+    const argsWithTruncate = {...exampleArgs, truncate: "5", splitFileList:[splitFileList[0]]};
+    const argsWithoutTruncate = {...argsWithTruncate, truncate: undefined};
+    [argsWithTruncate, argsWithoutTruncate].forEach(args =>addTextTransform(args));
+    expect(spyOnTruncateFile).toHaveBeenCalledTimes(1);
+  })
   it("Should addText to fileList", () => {
     const renameList = addTextTransform(exampleArgs);
     renameList.forEach((renameInstance) => {
       const { rename } = renameInstance;
       expect(rename).toContain(exampleArgs.addText);
-    });
-  });
-  it("Should call composeRenameString with appropriate arguments", () => {
-    const spyOnCompose = jest.spyOn(utils, "composeRenameString");
-    const newArgs: GenerateRenameListArgs = {
-      ...exampleArgs,
-      splitFileList: [splitFileList[0]],
-      separator: "|",
-      textPosition: "prepend",
-      truncate: "3",
-    };
-    addTextTransform(newArgs);
-    expect(spyOnCompose).toHaveBeenCalledTimes(1);
-    const call = spyOnCompose.mock.calls.flat()[0];
-    const expectations = [
-      ["baseName", splitFileList[0].baseName],
-      ["newName", newArgs.addText],
-      ["ext", splitFileList[0].ext],
-      ["separator", newArgs.separator],
-      ["textPosition", newArgs.textPosition],
-      ["truncate", newArgs.truncate],
-    ];
-    expectations.forEach((expectation) => {
-      const [key, value] = [expectation[0], expectation[1]];
-      expect(call[key as keyof typeof call]).toBe(value);
     });
   });
 });
