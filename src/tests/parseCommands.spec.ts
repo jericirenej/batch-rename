@@ -1,6 +1,7 @@
 import process from "process";
 import program from "../commands/generateCommands.js";
 import * as parseCommands from "../commands/parseCommands.js";
+import { VALID_TRANSFORM_TYPES } from "../constants.js";
 import * as converters from "../converters/converter.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
@@ -180,23 +181,18 @@ describe("transformationCheck", () => {
       ERRORS.COMMAND_NO_TRANSFORMATION_PICKED
     );
   });
-  /* it("Should return a list of picked transformations", () => {
+  it("Should return a list of picked transformations", () => {
     const variants = [
-      {
-        [EXCLUSIVE_TRANSFORM_TYPES[0]]:
-          exclusiveTypes[EXCLUSIVE_TRANSFORM_TYPES[0]]!,
-      },
-      {
-        [EXCLUSIVE_TRANSFORM_TYPES[0]]:
-          exclusiveTypes[EXCLUSIVE_TRANSFORM_TYPES[0]]!,
-        [INCLUSIVE_TRANSFORM_TYPES[0]]:
-          inclusiveTypes[INCLUSIVE_TRANSFORM_TYPES[0]]!,
-      },
+      { dateRename: true, truncate: true },
+      { addText: true, truncate: true, numericTransform: true },
+      { someOtherProp: true, numericTransform: true, anotherOther: true },
     ];
     variants.forEach((variant) => {
-      const expected = Object.keys(variant);
+      const expected = Object.keys(variant).filter((variant) =>
+        VALID_TRANSFORM_TYPES.some((transformType) => transformType === variant)
+      );
       const result = transformationCheck({ ...exampleArg, ...variant });
       expect(result).toEqual(expected);
     });
-  });*/
+  });
 });
