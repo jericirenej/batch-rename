@@ -113,7 +113,7 @@ const programOptions: ProgramOptions[] = [
     long: "noExtensionPreserve",
     type: "",
     description:
-      "An option for the 'searchAndPreserve' transform which includes the file extension in the transform operation.",
+      "An option for the 'searchAndPreserve' and 'format' transforms which includes the file extension in the transform operation.",
     defaultValue: "",
   },
 

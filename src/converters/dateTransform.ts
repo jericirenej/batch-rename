@@ -59,6 +59,7 @@ export const dateTransform: DateTransform = ({
   separator,
   truncate,
   format,
+  noExtensionPreserve
 }) => {
   const statProp = dateTransformCorrespondenceTable[dateRename!];
   let originalFileList = splitFileList as FileListWithStatsArray;
@@ -88,6 +89,7 @@ export const dateTransform: DateTransform = ({
       separator,
       truncate,
       format,
+      noExtensionPreserve,
     });
 
     return {

@@ -66,7 +66,7 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
 |`--exclude`|`<string\|regex>`|Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions|
 |`-p, --preserveOriginal`|`[boolean]`| Preserve original file name. Not relevant for the `searchAndReplace` transform type. Defaults to `true`.|
-|`--noPreserveExtension`||An option for the 'searchAndPreserve' transform which includes the file extension in the transform operation.|
+|`--noExtensionPreserve`||An option for the 'searchAndPreserve' and 'format' transforms which includes the file extension in the transform operation.|
 |`--textPosition`|`[prepend \| append]`|Applies to `preserveOriginal` or `addText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`|
 |`--detailedDate`||Appends time information (`T hh:mm:ss`) to date transformations.|
 |`--separator`|`<character>`|Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen (`-`).|

@@ -13,6 +13,7 @@ export const numericTransform: NumericTransform = ({
   truncate,
   baseIndex: baseIndexArg,
   format,
+  noExtensionPreserve,
 }) => {
   const baseIndex = checkBaseIndex(baseIndexArg);
   const listLength = baseIndex
@@ -38,6 +39,7 @@ export const numericTransform: NumericTransform = ({
       separator,
       truncate,
       format,
+      noExtensionPreserve,
     });
     return { rename, original: baseName + ext, sourcePath };
   });
