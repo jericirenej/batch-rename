@@ -166,7 +166,7 @@ describe("convertFiles", () => {
   it("Should throw error, if duplication of names occurs", async () => {
     spyOnAreNewNamesDistinct.mockReturnValueOnce(false);
     await expect(() => convertFiles(exampleArgs)).rejects.toThrowError(
-      ERRORS.DUPLICATE_FILE_NAMES
+      ERRORS.transforms.duplicateRenames
     );
   });
   it("Should call writeFile and process stdout for rollbackFile write", async () => {
@@ -218,7 +218,7 @@ describe("generateRenameList", () => {
     const transformPattern = ["invalidType"] as unknown as TransformTypes[];
     expect(() =>
       generateRenameList({ transformPattern, splitFileList })
-    ).toThrowError(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
+    ).toThrowError(ERRORS.transforms.noTransformFunctionAvailable);
   });
 });
 

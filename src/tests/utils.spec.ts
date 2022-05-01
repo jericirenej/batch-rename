@@ -32,6 +32,9 @@ import {
   truthyArgument
 } from "./mocks.js";
 
+const { noChildFiles, pathDoesNotExist, pathIsNotDir } = ERRORS.utils;
+const { noRollbackFile } = ERRORS.cleanRollback;
+
 jest.mock("fs");
 jest.mock("fs/promises", () => {
   const originalModule = jest.requireActual("fs/promises");
@@ -59,7 +62,7 @@ describe("cleanUpRollbackFile", () => {
   it("Should throw error if rollback file does not exist", async () => {
     mockedFs.existsSync.mockReturnValueOnce(false);
     await expect(() => cleanUpRollbackFile(cleanUpArgs)).rejects.toThrowError(
-      ERRORS.CLEAN_ROLLBACK_NO_FILE_EXISTS
+      noRollbackFile
     );
   });
   it("Should call unlink with target path, if rollbackFile exists", async () => {
@@ -188,7 +191,7 @@ describe("checkPath", () => {
   it("Should throw error, if path does not exist", async () => {
     mockedFs.existsSync.mockReturnValueOnce(false);
     await expect(() => checkPath(examplePath)).rejects.toThrowError(
-      ERRORS.CHECK_PATH_DOES_NOT_EXIST
+      pathDoesNotExist
     );
   });
   it("Should throw error if path is not a directory", async () => {
@@ -198,9 +201,7 @@ describe("checkPath", () => {
       isDirectory: () => false,
     });
 
-    await expect(checkPath(examplePath)).rejects.toThrowError(
-      ERRORS.CHECK_PATH_NOT_A_DIR
-    );
+    await expect(checkPath(examplePath)).rejects.toThrowError(pathIsNotDir);
   });
   it("Should throw error, if directory has no files", async () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
@@ -209,9 +210,7 @@ describe("checkPath", () => {
       isDirectory: () => true,
     });
     mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0));
-    await expect(checkPath(examplePath)).rejects.toThrowError(
-      ERRORS.CHECK_PATH_NO_CHILD_FILES
-    );
+    await expect(checkPath(examplePath)).rejects.toThrowError(noChildFiles);
   });
   it("Should return filePath, if it exists, is a directory, and has children of file type", async () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
@@ -432,7 +431,7 @@ describe("truncateFile", () => {
   it("Should throw error, if truncate argument is invalid", () => {
     const invalidArgs = { ...generalArgs, truncate: "invalid" };
     expect(() => truncateFile(invalidArgs)).toThrowError(
-      ERRORS.TRUNCATE_INVALID_ARGUMENT
+      ERRORS.transforms.truncateInvalidArgument
     );
   });
   it("Should return baseName, if truncate argument evaluates to zero", () => {

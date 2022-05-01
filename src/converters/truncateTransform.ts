@@ -1,7 +1,7 @@
 import { ERRORS } from "../messages/errMessages.js";
 import type { TruncateTransform } from "../types.js";
 import { composeRenameString } from "./utils.js";
-const { TRUNCATE_NO_PRESERVE_ORIGINAL, TRUNCATE_INVALID_ARGUMENT } = ERRORS;
+const {truncateNoPreserveOriginal, truncateInvalidArgument } = ERRORS.transforms;
 
 export const truncateTransform: TruncateTransform = ({
   splitFileList,
@@ -11,11 +11,11 @@ export const truncateTransform: TruncateTransform = ({
   textPosition,
   truncate,
 }) => {
-  if (!preserveOriginal) throw new Error(TRUNCATE_NO_PRESERVE_ORIGINAL);
+  if (!preserveOriginal) throw new Error(truncateNoPreserveOriginal);
 
   const limit = Number(truncate);
 
-  if (isNaN(limit)) throw new Error(TRUNCATE_INVALID_ARGUMENT);
+  if (isNaN(limit)) throw new Error(truncateInvalidArgument);
 
   return splitFileList.map((fileInfo) => {
     const { baseName, ext, sourcePath } = fileInfo;

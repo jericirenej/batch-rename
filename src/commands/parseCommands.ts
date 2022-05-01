@@ -18,9 +18,9 @@ import program from "./generateCommands.js";
 import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
 
 const {
-  COMMAND_NO_TRANSFORMATION_PICKED,
-  COMMAND_ONLY_ONE_UTILITY_ACTION,
-} = ERRORS;
+  noTransformationPicked, 
+  onlyOneUtilAction,
+} = ERRORS.transforms;
 
 export const parseOptions = async (
   options: OptionKeysWithValuesAndRestArgs
@@ -105,7 +105,7 @@ export const transformationCheck = (
   );
   const numOfTransformations = transformationPicked.length;
   if (!numOfTransformations) {
-    throw new Error(COMMAND_NO_TRANSFORMATION_PICKED);
+    throw new Error(noTransformationPicked);
   }
   return transformationPicked as TransformTypes[];
 };
@@ -129,7 +129,7 @@ export const utilityActionsCheck: UtilityActionsCheck = (options) => {
     UTILITY_ACTIONS.some((action) => action === key)
   );
   if (utilityActions.length > 1) {
-    throw new Error(`${COMMAND_ONLY_ONE_UTILITY_ACTION}
+    throw new Error(`${onlyOneUtilAction}
     Chosen: ${JSON.stringify(utilityActions)}.
     Available: ${JSON.stringify(UTILITY_ACTIONS)}.
     `);

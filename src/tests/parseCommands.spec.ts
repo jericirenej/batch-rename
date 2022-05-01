@@ -178,7 +178,7 @@ describe("transformationCheck", () => {
   const exampleArg = { preserveOriginal: true } as OptionKeysWithValues;
   it("Should throw error if no transformation picked", () => {
     expect(() => transformationCheck(exampleArg)).toThrowError(
-      ERRORS.COMMAND_NO_TRANSFORMATION_PICKED
+      ERRORS.transforms.noTransformationPicked
     );
   });
   it("Should return a list of picked transformations", () => {

@@ -20,13 +20,9 @@ import type {
   TruncateFileName
 } from "../types.js";
 
-const {
-  CLEAN_ROLLBACK_NO_FILE_EXISTS,
-  CHECK_PATH_DOES_NOT_EXIST,
-  CHECK_PATH_NOT_A_DIR,
-  CHECK_PATH_NO_CHILD_FILES,
-  TRUNCATE_INVALID_ARGUMENT,
-} = ERRORS;
+const { pathDoesNotExist, pathIsNotDir, noChildFiles } = ERRORS.utils;
+const { truncateInvalidArgument } = ERRORS.transforms;
+const { noRollbackFile } = ERRORS.cleanRollback;
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   transformPath,
@@ -35,7 +31,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
   if (!rollBackFileExists) {
-    throw new Error(CLEAN_ROLLBACK_NO_FILE_EXISTS);
+    throw new Error(noRollbackFile);
   }
   process.stdout.write("Deleting rollback file...");
   await unlink(targetPath);
@@ -112,16 +108,16 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
 export const checkPath: CheckPath = async (path) => {
   const fullPath = resolve(process.cwd(), path);
   if (!existsSync(fullPath)) {
-    throw new Error(CHECK_PATH_DOES_NOT_EXIST);
+    throw new Error(pathDoesNotExist);
   }
   const isDir = (await lstat(fullPath)).isDirectory();
   if (!isDir) {
-    throw new Error(CHECK_PATH_NOT_A_DIR);
+    throw new Error(pathIsNotDir);
   }
   const dirInfo = await readdir(fullPath, { withFileTypes: true });
   const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
   if (!hasFiles) {
-    throw new Error(CHECK_PATH_NO_CHILD_FILES);
+    throw new Error(noChildFiles);
   }
   return fullPath;
 };
@@ -227,7 +223,7 @@ export const truncateFile: TruncateFileName = ({
     return baseName;
   }
   const limit = Number(truncate);
-  if (isNaN(limit)) throw new Error(TRUNCATE_INVALID_ARGUMENT);
+  if (isNaN(limit)) throw new Error(truncateInvalidArgument);
   if (limit === 0) return baseName;
 
   return baseName.slice(0, limit);
