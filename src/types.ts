@@ -6,6 +6,7 @@ import {
   VALID_TRANSFORM_TYPES
 } from "./constants";
 
+export type ValidTextFormats = "uppercase" | "lowercase" | "capitalize";
 export type OptionKeys =
   | "preserveOriginal"
   | "noExtensionPreserve"
@@ -17,13 +18,14 @@ export type OptionKeys =
   | "textPosition"
   | "searchAndReplace"
   | "detailedDate"
-  | "folderPath"
+  | "folder"
   | "numericTransform"
   | "separator"
   | "truncate"
   | "baseIndex"
   | "exclude"
-  | "extensionModify";
+  | "extensionModify"
+  | "format";
 
 export type OptionKeysWithValues = Record<
   OptionKeys,
@@ -35,7 +37,7 @@ export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {
 };
 
 export type SetTransformationPath = (
-  folderPath: string | undefined,
+  folder: string | undefined,
   restARgs: string[] | undefined
 ) => Promise<string | undefined>;
 
@@ -93,6 +95,7 @@ export type RenameListArgs = {
   truncate?: string;
   baseIndex?: string;
   exclude?: string;
+  format?: ValidTextFormats;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -142,6 +145,7 @@ export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
   baseName: string;
   truncate: string;
+  format?: string;
 };
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
 export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
@@ -192,8 +196,13 @@ export type ListFiles = (
   excludeFilter?: string
 ) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
-export type NumberOfDuplicatedNamesArgs = {renameList: RenameList, checkType: "results"|"transforms"};
-export type NumberOfDuplicatedNames = (args: NumberOfDuplicatedNamesArgs) => number;
+export type NumberOfDuplicatedNamesArgs = {
+  renameList: RenameList;
+  checkType: "results" | "transforms";
+};
+export type NumberOfDuplicatedNames = (
+  args: NumberOfDuplicatedNamesArgs
+) => number;
 export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {
@@ -205,5 +214,9 @@ export type ComposeRenameStringArgs = {
   textPosition?: "prepend" | "append";
   separator?: string;
   truncate?: string;
+  format?:ValidTextFormats;
+  noExtensionPreserve?: boolean;
 };
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
+
+export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;

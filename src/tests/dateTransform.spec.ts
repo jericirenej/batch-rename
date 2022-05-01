@@ -2,6 +2,7 @@ import type { PathLike } from "fs";
 import { stat } from "fs/promises";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as dateTransforms from "../converters/dateTransform.js";
+import * as formatText from "../converters/formatTextTransform.js";
 import * as utils from "../converters/utils.js";
 import type {
   ComposeRenameStringArgs,
@@ -185,6 +186,12 @@ describe("dateTransform", () => {
       );
     });
   });
+  it("Should call formatFile (via composeRenameString), if format is supplied", ()=> {
+    const argsWithFormat:GenerateRenameListArgs = {...baseArgs, format: "uppercase"};
+    const spyOnFormat = jest.spyOn(formatText, "formatFile");
+    [baseArgs, argsWithFormat].forEach(args => dateTransform(args));
+    expect(spyOnFormat).toHaveBeenCalledTimes(baseArgs.splitFileList.length);
+  })
   it("Should use separator in date formatting, unless it's of zero length", () => {
     spyOnExtractDate.mockReturnValue(extractDateExpected);
     const { year, month, day } = extractDateExpected;

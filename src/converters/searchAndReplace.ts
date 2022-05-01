@@ -2,6 +2,7 @@ import type {
   GenerateSearchAndReplaceArgs,
   SearchAndReplace
 } from "../types.js";
+import { formatFile } from "./formatTextTransform.js";
 import { extractBaseAndExt, truncateFile } from "./utils.js";
 
 export const searchAndReplace: SearchAndReplace = ({
@@ -9,6 +10,7 @@ export const searchAndReplace: SearchAndReplace = ({
   noExtensionPreserve,
   splitFileList,
   truncate,
+  format,
 }) => {
   const generatedArgs = generateArguments(searchAndReplace!);
   const targetList = splitFileList.map((fileInfo) => {
@@ -18,6 +20,10 @@ export const searchAndReplace: SearchAndReplace = ({
     let rename = noExtensionPreserve ? original : baseName;
     if (filter && filter.test(original)) {
       rename = rename.replaceAll(filter, replace);
+    }
+    // Perform text formatting, if needed.
+    if (format) {
+      rename = formatFile(rename, format);
     }
     // Re-add extension, if noExtensionPreserve is not specified.
     if (!noExtensionPreserve) {

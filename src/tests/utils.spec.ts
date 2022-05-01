@@ -3,6 +3,7 @@ import { lstat, readdir, rename, unlink } from "fs/promises";
 import { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
+import * as formatTransform from "../converters/formatTextTransform.js";
 import {
   areNewNamesDistinct,
   checkPath,
@@ -308,6 +309,18 @@ describe("composeRenameString", () => {
     };
     expect(composeRenameString(newArgs)).toBe(expected);
   });
+  it("Should call formatFile, if format argument is supplied", ()=>{
+    const spyOnFormatFile = jest.spyOn(formatTransform, "formatFile");
+    composeRenameString({...args, format: "uppercase"});
+    expect(spyOnFormatFile).toHaveBeenCalledTimes(1);
+  });
+  it("Should return properly formatted file for different configurations", ()=> {
+    const argsWithFormat:ComposeRenameStringArgs = {...args, format: "uppercase", addText: undefined, preserveOriginal: false};
+    const noExtPreserve:ComposeRenameStringArgs = {...argsWithFormat, noExtensionPreserve: true};
+    const [preserveExtResponse, noPreserveResponse] = [composeRenameString(argsWithFormat), composeRenameString(noExtPreserve)];
+    expect(preserveExtResponse).toBe("NEWNAME.ext");
+    expect(noPreserveResponse).toBe("NEWNAME.EXT");
+  })
 });
 
 describe("createBatchRenameList", () => {
@@ -445,3 +458,4 @@ describe("truncateFile", () => {
     expect(truncateFile(generalArgs).length).toBe(truncateNum);
   });
 });
+

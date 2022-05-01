@@ -14,11 +14,11 @@ import type {
   ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
-  ExtractBaseAndExt,
-  ListFiles,
+  ExtractBaseAndExt, ListFiles,
   NumberOfDuplicatedNames,
   TruncateFileName
 } from "../types.js";
+import { formatFile } from "./formatTextTransform.js";
 
 const { pathDoesNotExist, pathIsNotDir, noChildFiles } = ERRORS.utils;
 const { truncateInvalidArgument } = ERRORS.transforms;
@@ -134,6 +134,8 @@ export const composeRenameString: ComposeRenameString = ({
   preserveOriginal,
   newName,
   truncate,
+  format,
+  noExtensionPreserve,
 }) => {
   const position = textPosition ? textPosition : "append";
   const extension = ext ? ext : "";
@@ -168,7 +170,13 @@ export const composeRenameString: ComposeRenameString = ({
       modifiedName = `${customOrOriginalText}${sep}${newName}`;
     }
   }
-
+  // Format final rename text, if argument supplied.
+  if (format) {
+    if (noExtensionPreserve) {
+      return formatFile(`${modifiedName}${extension}`, format);
+    }
+    modifiedName = formatFile(modifiedName, format);
+  }
   return `${modifiedName}${extension}`;
 };
 

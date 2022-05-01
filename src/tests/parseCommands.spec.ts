@@ -6,8 +6,8 @@ import * as converters from "../converters/converter.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-  OptionKeysWithValues,
-  OptionKeysWithValuesAndRestArgs
+    OptionKeysWithValues,
+    OptionKeysWithValuesAndRestArgs
 } from "../types.js";
 import { examplePath } from "./mocks.js";
 
@@ -33,7 +33,7 @@ describe("parseOptions", () => {
     preserveOriginal: true,
     addText: false,
     numericTransform: true,
-    folderPath: examplePath,
+    folder: examplePath,
   } as OptionKeysWithValuesAndRestArgs;
   beforeEach(() => {
     spyOnSetTransformationPath.mockResolvedValue(examplePath);
@@ -137,18 +137,18 @@ describe("utilityActionsCheck", () => {
 });
 
 describe("setTransformationPath", () => {
-  const [folderPath, restArgs] = ["folderPath", ["restArg1", "restArg2"]];
+  const [folder, restArgs] = ["folder", ["restArg1", "restArg2"]];
   let spyOnCheckPath: jest.SpyInstance;
   beforeEach(() => {
     spyOnCheckPath = jest.spyOn(utils, "checkPath");
   });
   afterEach(() => spyOnCheckPath.mockRestore());
-  it("Should call and return checkPath with folderPath, if latter provided", async () => {
+  it("Should call and return checkPath with folder, if latter provided", async () => {
     spyOnCheckPath.mockResolvedValueOnce(examplePath);
-    const result = await setTransformationPath(folderPath, restArgs);
+    const result = await setTransformationPath(folder, restArgs);
     expect(result).toBe(examplePath);
     expect(spyOnCheckPath).toHaveBeenCalledTimes(1);
-    expect(spyOnCheckPath).toHaveBeenCalledWith(folderPath);
+    expect(spyOnCheckPath).toHaveBeenCalledWith(folder);
   });
   it("Should call and return checkPath with first restArg, if provided", async () => {
     spyOnCheckPath.mockResolvedValueOnce(examplePath);
@@ -163,9 +163,9 @@ describe("setTransformationPath", () => {
       [undefined, []],
       [undefined, undefined],
     ].forEach(async (argConfiguration) => {
-      const [folderPath, restArgs] = [argConfiguration[0], argConfiguration[1]];
+      const [folder, restArgs] = [argConfiguration[0], argConfiguration[1]];
       const result = await setTransformationPath(
-        folderPath as unknown as string,
+        folder as unknown as string,
         restArgs
       );
       expect(result).toBe(undefined);

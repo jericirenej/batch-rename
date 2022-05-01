@@ -1,3 +1,4 @@
+import * as formatText from "../converters/formatTextTransform.js";
 import * as regexTransform from "../converters/searchAndReplace.js";
 import * as utils from "../converters/utils.js";
 import { GenerateRenameListArgs } from "../types.js";
@@ -200,4 +201,10 @@ describe("searchAndReplace", () => {
     searchAndReplace(newArgs);
     expect(spyOnOptionalTruncate).toHaveBeenCalledTimes(1);
   });
+  it("Should call formatFile, if format argument passed", ()=> {
+    const spyOnFormatFile = jest.spyOn(formatText, "formatFile");
+    const argsWithFormat:GenerateRenameListArgs = {...exampleArgs, format: "uppercase"};
+    [exampleArgs, argsWithFormat].forEach(args => searchAndReplace(args));
+    expect(spyOnFormatFile).toHaveBeenCalledTimes(exampleArgs.splitFileList.length);
+  })
 });

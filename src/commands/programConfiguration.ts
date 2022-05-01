@@ -25,7 +25,7 @@ const programOptions: ProgramOptions[] = [
   {
     short: "s",
     long: "searchAndReplace",
-    type: "<search, filter>",
+    type: "<search, filter...>",
     description:
       "Takes a string|regex filter argument and a replacer string.  By default, the transform will preserve file extensions, unless a '--noPreserveExtension' option is supplied",
     defaultValue: "",
@@ -47,6 +47,13 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "f",
+    long: "format",
+    type: "[string]",
+    description:
+      "Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).",
+  },
+  {
     short: "e",
     long: "extensionModify",
     type: "<string>",
@@ -62,8 +69,8 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
-    short: "f",
-    long: "folderPath",
+    short: "",
+    long: "folder",
     type: "<path>",
     description:
       "Folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
@@ -106,7 +113,7 @@ const programOptions: ProgramOptions[] = [
     long: "noExtensionPreserve",
     type: "",
     description:
-      "An option for the 'searchAndPreserve' transform which includes the file extension in the transform operation.",
+      "An option for the 'searchAndPreserve' and 'format' transforms which includes the file extension in the transform operation.",
     defaultValue: "",
   },
 

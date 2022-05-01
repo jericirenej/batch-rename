@@ -1,4 +1,5 @@
 import { DEFAULT_SEPARATOR } from "../constants.js";
+import * as formatText from "../converters/formatTextTransform.js";
 import * as numericConverter from "../converters/numericTransform.js";
 import * as utils from "../converters/utils.js";
 import type { GenerateRenameListArgs } from "../types.js";
@@ -85,6 +86,12 @@ describe("numericTransform", () => {
       expect(areAllCalledWithExpected).toBe(true);
     });
   });
+  it("Should call formatFile (via composeRenameString), if format is supplied", ()=> {
+    const argsWithFormat:GenerateRenameListArgs = {...defaultArgs, format: "uppercase"};
+    const spyOnFormat = jest.spyOn(formatText, "formatFile");
+    [defaultArgs, argsWithFormat].forEach(args => numericTransform(args));
+    expect(spyOnFormat).toHaveBeenCalledTimes(defaultArgs.splitFileList.length);
+  })
   it("Should return proper object", () => {
     spyOnComposeRenameString.mockReturnValue(mockComposeResponse);
     const transformReturn = numericTransform(defaultArgs);

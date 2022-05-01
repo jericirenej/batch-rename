@@ -1,4 +1,5 @@
 import { addTextTransform } from "../converters/addTextTransform.js";
+import * as formatText from "../converters/formatTextTransform.js";
 import * as utils from "../converters/utils.js";
 import type { GenerateRenameListArgs } from "../types.js";
 import { generateMockSplitFileList } from "./mocks.js";
@@ -28,6 +29,12 @@ describe("addTextTransform", () => {
     const argsWithoutTruncate = {...argsWithTruncate, truncate: undefined};
     [argsWithTruncate, argsWithoutTruncate].forEach(args =>addTextTransform(args));
     expect(spyOnTruncateFile).toHaveBeenCalledTimes(1);
+  })
+  it("Should call formatFile (via composeRenameString), if format argument passed", ()=> {
+    const spyOnFormatFile = jest.spyOn(formatText, "formatFile");
+    const argsWithFormat:GenerateRenameListArgs = {...exampleArgs, format: "uppercase"};
+    [exampleArgs, argsWithFormat].forEach(args => addTextTransform(args));
+    expect(spyOnFormatFile).toHaveBeenCalledTimes(exampleArgs.splitFileList.length);
   })
   it("Should addText to fileList", () => {
     const renameList = addTextTransform(exampleArgs);

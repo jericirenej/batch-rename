@@ -1,4 +1,5 @@
 import { Dirent, Stats } from "fs";
+import { extractBaseAndExt } from "../converters/utils.js";
 import type { ExtractBaseAndExtTemplate, RenameList } from "../types.js";
 
 export const mockFileList = [
@@ -115,3 +116,33 @@ export const generateMockSplitFileList = (length: number) => {
     return singleEntry;
   });
 };
+
+export const textFormatMatrix = [
+  {
+    value: "someFile",
+    expected: {
+      uppercase: "SOMEFILE",
+      lowercase: "somefile",
+      capitalize: "Somefile",
+    },
+  },
+  {
+    value: "SOME_FILE.ext",
+    expected: {
+      uppercase: "SOME_FILE.EXT",
+      lowercase: "some_file.ext",
+      capitalize: "Some_file.ext",
+    },
+  },
+  {
+    value: "sOMe FiLe wi12th Different wOrDs.ext",
+    expected: {
+      uppercase: "SOME FILE WI12TH DIFFERENT WORDS.EXT",
+      lowercase: "some file wi12th different words.ext",
+      capitalize: "Some File Wi12th Different Words.ext",
+    },
+  },
+];
+const formatFileList = textFormatMatrix.map((example) => example.value);
+export const textFormatRenameList = extractBaseAndExt(formatFileList, examplePath);
+

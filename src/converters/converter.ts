@@ -13,6 +13,7 @@ import type {
 import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
 import { extensionModifyTransform } from "./extensionModify.js";
+import { formatTextTransform } from "./formatTextTransform.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
@@ -36,10 +37,11 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
   extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args),
+  format: (args: GenerateRenameListArgs) => formatTextTransform(args)
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
-  const { transformPattern, transformPath, exclude } = args;
+  const { transformPattern, transformPath, exclude, format } = args;
   const targetDir = determineDir(transformPath);
   const splitFileList = await listFiles(targetDir, exclude).then((fileList) =>
     extractBaseAndExt(fileList, targetDir)
@@ -59,7 +61,6 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     transformPath: targetDir,
   };
   const transformedNames = generateRenameList(transformArgs);
-
   if (args.dryRun)
     return dryRunTransform({
       transformPath: targetDir,

@@ -1,21 +1,14 @@
 import { DEFAULT_SEPARATOR } from "../constants.js";
+import * as formatText from "../converters/formatTextTransform.js";
 import { truncateTransform } from "../converters/truncateTransform.js";
-import { composeRenameString } from "../converters/utils.js";
+import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type { GenerateRenameListArgs, RenameList } from "../types.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
-jest.mock("../converters/utils.js", () => {
-  const originalModule = jest.requireActual("../converters/utils.js");
-  return {
-    __esModule: true,
-    ...originalModule,
-    composeRenameString: jest.fn(),
-  };
-});
+const spyOnCompose = jest.spyOn(utils, "composeRenameString");
 const splitFileList = generateMockSplitFileList(10);
 const mockComposeResponse = "renameArg";
-const mockedCompose = jest.mocked(composeRenameString);
 
 const defaultArgs: GenerateRenameListArgs = {
   splitFileList,
@@ -28,7 +21,7 @@ const defaultArgs: GenerateRenameListArgs = {
 };
 describe("truncateTransform", () => {
   beforeEach(() =>
-    mockedCompose.mockImplementation((args) => mockComposeResponse)
+    spyOnCompose.mockImplementation((args) => mockComposeResponse)
   );
   afterEach(() => jest.resetAllMocks());
   it("Should throw error if preserveOriginal is true", () => {
@@ -43,11 +36,11 @@ describe("truncateTransform", () => {
   });
   it("Should call composeRename function for each splitFile entry", () => {
     truncateTransform(defaultArgs);
-    expect(mockedCompose).toHaveBeenCalledTimes(splitFileList.length);
+    expect(spyOnCompose).toHaveBeenCalledTimes(splitFileList.length);
   });
   it("Should set preserveOriginal argument to false in each composeRenameString call", () => {
     truncateTransform(defaultArgs);
-    const preserveArgs = mockedCompose.mock.calls.map(
+    const preserveArgs = spyOnCompose.mock.calls.map(
       (call) => call[0].preserveOriginal
     );
     const allFalse = preserveArgs.every((preserveArg) => !preserveArg);
@@ -55,12 +48,12 @@ describe("truncateTransform", () => {
   });
   it("Should pass appropriately truncated baseName to composeRenameString", () => {
     [3, 2, 1, -1, -2, -3].forEach((truncate) => {
-      mockedCompose.mockClear();
+      spyOnCompose.mockClear();
       const expected = splitFileList
         .map((fileInfo) => fileInfo.baseName)
         .map((baseName) => baseName.slice(0, truncate));
       truncateTransform({ ...defaultArgs, truncate: truncate.toString() });
-      const slicedBaseNames = mockedCompose.mock.calls.map(
+      const slicedBaseNames = spyOnCompose.mock.calls.map(
         (call) => call[0].newName
       );
       expect(slicedBaseNames).toEqual(expected);
@@ -69,9 +62,9 @@ describe("truncateTransform", () => {
   it("Should pass original baseName to composeRenameString, if truncate evaluates to 0", () => {
     const expected = splitFileList.map((fileInfo) => fileInfo.baseName);
     ["", "0"].forEach((truncate) => {
-      mockedCompose.mockClear();
+      spyOnCompose.mockClear();
       truncateTransform({ ...defaultArgs, truncate });
-      const slicedBaseNames = mockedCompose.mock.calls.map(
+      const slicedBaseNames = spyOnCompose.mock.calls.map(
         (call) => call[0].newName
       );
       expect(slicedBaseNames).toEqual(expected);
@@ -88,4 +81,11 @@ describe("truncateTransform", () => {
     });
     expect(truncateTransform(defaultArgs)).toEqual(expected);
   });
+  it("Should call formatFile (via composeRenameString), if format argument passed", ()=> {
+    spyOnCompose.mockRestore();
+    const spyOnFormatFile = jest.spyOn(formatText, "formatFile");
+    const argsWithFormat:GenerateRenameListArgs = {...defaultArgs, format: "uppercase"};
+    [defaultArgs, argsWithFormat].forEach(args => truncateTransform(args));
+    expect(spyOnFormatFile).toHaveBeenCalledTimes(defaultArgs.splitFileList.length);
+  })
 });

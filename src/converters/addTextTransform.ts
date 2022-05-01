@@ -6,7 +6,9 @@ export const addTextTransform: AddTextTransform = ({
   textPosition,
   separator,
   truncate,
-  addText
+  addText,
+  format,
+  noExtensionPreserve,
 }) => {
   return splitFileList.map((fileInfo) => {
     const { baseName, ext, sourcePath } = fileInfo;
@@ -22,6 +24,8 @@ export const addTextTransform: AddTextTransform = ({
       separator,
       textPosition,
       preserveOriginal: true,
+      format,
+      noExtensionPreserve,
     });
     const original = `${baseName}${ext}`;
     return { original, rename, sourcePath };

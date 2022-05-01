@@ -10,6 +10,8 @@ export const truncateTransform: TruncateTransform = ({
   separator,
   textPosition,
   truncate,
+  format,
+  noExtensionPreserve,
 }) => {
   if (!preserveOriginal) throw new Error(truncateNoPreserveOriginal);
 
@@ -29,6 +31,8 @@ export const truncateTransform: TruncateTransform = ({
       // Must set preserveOriginal to false, since we are already including it in newName
       preserveOriginal: false,
       newName,
+      format,
+      noExtensionPreserve,
     });
     return {
       rename,
