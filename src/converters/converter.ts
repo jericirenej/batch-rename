@@ -20,7 +20,8 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
-  listFiles
+  listFiles,
+  numberOfDuplicatedNames
 } from "./utils.js";
 const { DUPLICATE_FILE_NAMES } = ERRORS;
 
@@ -101,23 +102,27 @@ export const dryRunTransform: DryRunTransform = ({
     transformPath,
     "would result in:"
   );
-  const noChange = transformedNames
-    .filter((renameInfo) => renameInfo.original === renameInfo.rename)
-    .map((renameInfo) => renameInfo.original);
   const changedNames = transformedNames.filter(
-    (name) => !noChange.includes(name.original)
+    (renameInfo) => renameInfo.original !== renameInfo.rename
   );
+  const duplicatedTransforms = numberOfDuplicatedNames({
+    renameList: transformedNames,
+    checkType: "transforms",
+  });
+  const duplicatedRenames = numberOfDuplicatedNames({
+    renameList: transformedNames,
+    checkType: "results",
+  });
 
   changedNames.forEach((name) =>
     console.log(`${name.original} --> ${name.rename}`)
   );
-  if (noChange.length) {
-    console.log(`Number of unaffected files: ${noChange.length}.`);
+  if (duplicatedTransforms > 0) {
+    console.log(`Number of unaffected files: ${duplicatedTransforms}.`);
   }
-  const areNamesDistinct = areNewNamesDistinct(transformedNames);
-  if (!areNamesDistinct) {
-    console.log(
-      "\n\nWARNING: Running the transform on these files with the given parameters would result in duplicated names and throw an error!"
-    );
+  if (duplicatedRenames > 0) {
+    console.log(`
+    
+    WARNING: Running the transform on these files with the given parameters would result in ${duplicatedRenames} duplicated names and throw an error!`);
   }
 };
