@@ -13,6 +13,7 @@ import type {
 import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
 import { extensionModifyTransform } from "./extensionModify.js";
+import { formatTextTransform } from "./formatTextTransform.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
@@ -21,7 +22,6 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
-  formatText,
   listFiles,
   numberOfDuplicatedNames
 } from "./utils.js";
@@ -36,7 +36,8 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
-  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args)
+  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args),
+  format: (args: GenerateRenameListArgs) => formatTextTransform(args)
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
@@ -59,11 +60,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     splitFileList: fileList,
     transformPath: targetDir,
   };
-  let transformedNames = generateRenameList(transformArgs);
-  if(format) {
-    transformedNames = formatText({renameList: transformedNames, format});
-  }
-
+  const transformedNames = generateRenameList(transformArgs);
   if (args.dryRun)
     return dryRunTransform({
       transformPath: targetDir,

@@ -14,12 +14,11 @@ import type {
   ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
-  ExtractBaseAndExt,
-  FormatText,
-  ListFiles,
+  ExtractBaseAndExt, ListFiles,
   NumberOfDuplicatedNames,
   TruncateFileName
 } from "../types.js";
+import { formatFile } from "./formatTextTransform.js";
 
 const { pathDoesNotExist, pathIsNotDir, noChildFiles } = ERRORS.utils;
 const { truncateInvalidArgument } = ERRORS.transforms;
@@ -135,6 +134,8 @@ export const composeRenameString: ComposeRenameString = ({
   preserveOriginal,
   newName,
   truncate,
+  format,
+  noExtensionPreserve,
 }) => {
   const position = textPosition ? textPosition : "append";
   const extension = ext ? ext : "";
@@ -169,7 +170,13 @@ export const composeRenameString: ComposeRenameString = ({
       modifiedName = `${customOrOriginalText}${sep}${newName}`;
     }
   }
-
+  // Format final rename text, if argument supplied.
+  if (format) {
+    if (noExtensionPreserve) {
+      return formatFile(`${modifiedName}${extension}`, format);
+    }
+    modifiedName = formatFile(modifiedName, format);
+  }
   return `${modifiedName}${extension}`;
 };
 
@@ -228,28 +235,4 @@ export const truncateFile: TruncateFileName = ({
   if (limit === 0) return baseName;
 
   return baseName.slice(0, limit);
-};
-
-const capitalizeString = (str: string): string => {
-  return str
-    .split(" ")
-    .map((word) => `${word[0].toLocaleUpperCase()}${word.slice(1).toLocaleLowerCase()}`)
-    .join(" ");
-};
-/** Will perform text transform. Does not distinguish between baseName and extension. 
- * The inclusion or exclusion of any of them should be handled elsewhere. */
-export const formatText: FormatText = ({ renameList, format }) => {
-  return renameList.map((renameInfo) => {
-    let rename = renameInfo.rename;
-    if (format === "uppercase") {
-      rename = rename.toLocaleUpperCase();
-    }
-    if (format === "lowercase") {
-      rename = rename.toLocaleLowerCase();
-    }
-    if (format === "capitalize") {
-      rename = capitalizeString(rename);
-    }
-    return {...renameInfo, rename};
-  });
 };

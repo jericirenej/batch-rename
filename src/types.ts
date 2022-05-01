@@ -6,7 +6,7 @@ import {
   VALID_TRANSFORM_TYPES
 } from "./constants";
 
-type ValidTextFormats = "uppercase" | "lowercase" | "capitalize";
+export type ValidTextFormats = "uppercase" | "lowercase" | "capitalize";
 export type OptionKeys =
   | "preserveOriginal"
   | "noExtensionPreserve"
@@ -145,6 +145,7 @@ export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
   baseName: string;
   truncate: string;
+  format?: string;
 };
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
 export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
@@ -213,11 +214,9 @@ export type ComposeRenameStringArgs = {
   textPosition?: "prepend" | "append";
   separator?: string;
   truncate?: string;
+  format?:ValidTextFormats;
+  noExtensionPreserve?: boolean;
 };
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
-export type FormatTextArgs = {
-  renameList: RenameList;
-  format: ValidTextFormats;
-};
-export type FormatText = (args: FormatTextArgs) => RenameList;
+export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;

@@ -3,6 +3,7 @@ import { lstat, readdir, rename, unlink } from "fs/promises";
 import { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
+import * as formatTransform from "../converters/formatTextTransform.js";
 import {
   areNewNamesDistinct,
   checkPath,
@@ -11,7 +12,6 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
-  formatText,
   listFiles,
   numberOfDuplicatedNames,
   truncateFile
@@ -19,8 +19,7 @@ import {
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate,
-  FormatTextArgs
+  ExtractBaseAndExtTemplate
 } from "../types.js";
 import {
   createDirentArray,
@@ -31,8 +30,6 @@ import {
   renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
-  textFormatMatrix,
-  textFormatRenameList,
   truthyArgument
 } from "./mocks.js";
 
@@ -312,6 +309,18 @@ describe("composeRenameString", () => {
     };
     expect(composeRenameString(newArgs)).toBe(expected);
   });
+  it("Should call formatFile, if format argument is supplied", ()=>{
+    const spyOnFormatFile = jest.spyOn(formatTransform, "formatFile");
+    composeRenameString({...args, format: "uppercase"});
+    expect(spyOnFormatFile).toHaveBeenCalledTimes(1);
+  });
+  it("Should return properly formatted file for different configurations", ()=> {
+    const argsWithFormat:ComposeRenameStringArgs = {...args, format: "uppercase", addText: undefined, preserveOriginal: false};
+    const noExtPreserve:ComposeRenameStringArgs = {...argsWithFormat, noExtensionPreserve: true};
+    const [preserveExtResponse, noPreserveResponse] = [composeRenameString(argsWithFormat), composeRenameString(noExtPreserve)];
+    expect(preserveExtResponse).toBe("NEWNAME.ext");
+    expect(noPreserveResponse).toBe("NEWNAME.EXT");
+  })
 });
 
 describe("createBatchRenameList", () => {
@@ -450,31 +459,3 @@ describe("truncateFile", () => {
   });
 });
 
-describe("formatText", () => {
-  const examples = textFormatMatrix;
-  const renameList = textFormatRenameList;
-  it("Should convert text to uppercase", () => {
-    const textTransform = formatText({ renameList, format: "uppercase" });
-    textTransform.forEach((transform, index) =>
-      expect(transform.rename).toBe(examples[index].expected.uppercase)
-    );
-  });
-  it("Should convert text to lowercase", () => {
-    const textTransform = formatText({ renameList, format: "lowercase" });
-    textTransform.forEach((transform, index) =>
-      expect(transform.rename).toBe(examples[index].expected.lowercase)
-    );
-  });
-  it("Should capitalize text", () => {
-    const textTransform = formatText({ renameList, format: "capitalize" });
-    textTransform.forEach((transform, index) =>
-      expect(transform.rename).toBe(examples[index].expected.capitalized)
-    );
-  });
-  it("Should return unchanged list, if invalid arg passed", ()=> {
-    const textTransform = formatText({ renameList, format: "invalid" } as unknown as FormatTextArgs)
-    textTransform.forEach((transform, index) =>
-      expect(transform.rename).toBe(examples[index].value)
-    );
-  })
-});
