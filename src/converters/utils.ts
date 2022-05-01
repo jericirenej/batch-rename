@@ -16,6 +16,7 @@ import type {
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
+  NumberOfDuplicatedNames,
   TruncateFileName
 } from "../types.js";
 
@@ -73,12 +74,39 @@ export const listFiles: ListFiles = async (transformPath, excludeFilter) => {
   return files;
 };
 
+/** Calls *numberOfDuplicatedNames* with the "results" checkType
+ * and then evaluates if the result is less or equal than 0.
+ */
 export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
-  const newNames = renameList.map((singleDatum) => singleDatum.rename);
-  const allDistinct = !newNames.some(
-    (newName) => newNames.filter((someName) => someName === newName).length > 1
-  );
-  return allDistinct;
+  const duplicates = numberOfDuplicatedNames({
+    renameList,
+    checkType: "results",
+  });
+  return duplicates <= 0;
+};
+
+/** Check for duplicated fileNames which would lead to errors. Takes in an
+ * @param args.renameList - Supply rename list of appropriate type.
+    @param {"results"|"transforms"} args.checkType - If 'results' are specified,functions checks if there are duplicated among the transformed names. 
+    If 'transforms' are specified, it checks whether there exist identical old and new names.
+ */
+
+export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
+  renameList,
+  checkType,
+}) => {
+  if (checkType === "results") {
+    const renames = renameList.map((renameInfo) => renameInfo.rename);
+    let newNamesUniqueLength = new Set(renames).size;
+    return renames.length - newNamesUniqueLength;
+  }
+  if (checkType === "transforms") {
+    const duplicatedTransforms = renameList.filter(
+      (renameInfo) => renameInfo.original === renameInfo.rename
+    );
+    return duplicatedTransforms.length;
+  }
+  return -1;
 };
 
 export const checkPath: CheckPath = async (path) => {
@@ -104,7 +132,7 @@ export const determineDir: DetermineDir = (transformPath) =>
 export const composeRenameString: ComposeRenameString = ({
   baseName: _baseName,
   ext,
-  customText,
+  addText,
   textPosition,
   separator,
   preserveOriginal,
@@ -115,9 +143,13 @@ export const composeRenameString: ComposeRenameString = ({
   const extension = ext ? ext : "";
   let sep = "";
   // Allow for empty separator (direct concatenation)
-  if (separator && separator.length) sep = separator;
-  if (separator === undefined) sep = DEFAULT_SEPARATOR;
+  // For undefined cases, force default separator, unless newName is falsy.
+  if (separator) sep = separator;
+  if (separator === undefined && newName) sep = DEFAULT_SEPARATOR;
+
   let modifiedName = newName;
+
+  // Truncate baseName OR add custom text.
   const shouldTruncate = !isNaN(Number(truncate)) && preserveOriginal;
   let baseName = _baseName;
   if (shouldTruncate)
@@ -126,19 +158,21 @@ export const composeRenameString: ComposeRenameString = ({
       preserveOriginal,
       truncate: truncate!,
     });
-  const additionalText = customText
-    ? customText
+  // Custom text overrides preserveOriginal setting.
+  const customOrOriginalText = addText
+    ? addText
     : preserveOriginal
     ? baseName
     : "";
-  if (additionalText) {
+  if (customOrOriginalText) {
     if (position === "append") {
-      modifiedName = `${newName}${sep}${additionalText}`;
+      modifiedName = `${newName}${sep}${customOrOriginalText}`;
     }
     if (position === "prepend") {
-      modifiedName = `${additionalText}${sep}${newName}`;
+      modifiedName = `${customOrOriginalText}${sep}${newName}`;
     }
   }
+
   return `${modifiedName}${extension}`;
 };
 

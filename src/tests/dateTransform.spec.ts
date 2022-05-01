@@ -3,13 +3,12 @@ import { stat } from "fs/promises";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as dateTransforms from "../converters/dateTransform.js";
 import * as utils from "../converters/utils.js";
-import { ERRORS } from "../messages/errMessages.js";
 import type {
   ComposeRenameStringArgs,
   DateTransformCorrespondenceTable,
   FileListWithStatsArray,
   FormattedDate,
-  GenerateRenameListArgs,
+  GenerateRenameListArgs
 } from "../types.js";
 import { exampleStats as stats, generateMockSplitFileList } from "./mocks.js";
 
@@ -165,7 +164,7 @@ describe("dateTransform", () => {
     const argsToWatch = {
       textPosition: "append" as const,
       preserveOriginal: false,
-      customText: "customText",
+      addText: "addText",
       separator: "|",
       truncate: "5",
     };
@@ -185,16 +184,6 @@ describe("dateTransform", () => {
         expected[key as keyof typeof expected]
       );
     });
-  });
-  it("Should check for name duplication", () => {
-    dateTransform(baseArgs);
-    expect(spyOnAreNewNamesDistinct).toHaveBeenCalledTimes(1);
-  });
-  it("Should throw error if duplicate names are found", () => {
-    spyOnAreNewNamesDistinct.mockClear().mockReturnValueOnce(false);
-    expect(() => dateTransform(baseArgs)).toThrowError(
-      ERRORS.DUPLICATE_FILE_NAMES
-    );
   });
   it("Should use separator in date formatting, unless it's of zero length", () => {
     spyOnExtractDate.mockReturnValue(extractDateExpected);

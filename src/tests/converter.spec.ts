@@ -1,4 +1,5 @@
 import { writeFile } from "fs/promises";
+import * as addConverter from "../converters/addTextTransform.js";
 import * as converter from "../converters/converter.js";
 import * as dateTransformFunctions from "../converters/dateTransform.js";
 import * as numericTransformFunctions from "../converters/numericTransform.js";
@@ -9,15 +10,14 @@ import { ERRORS } from "../messages/errMessages.js";
 import type {
   DryRunTransformArgs,
   RenameListArgs,
-  TransformTypes,
+  TransformTypes
 } from "../types.js";
 import {
   examplePath,
   exampleStats,
   generateMockSplitFileList,
   mockFileList,
-  renameListDistinct,
-  renameWithNewNameRepeat,
+  renameListDistinct
 } from "./mocks.js";
 
 jest.mock("fs/promises", () => {
@@ -64,6 +64,7 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
     searchAndReplaceTransformFunctions,
     "searchAndReplace"
   ),
+  spyOnAddTextTransform = jest.spyOn(addConverter, "addTextTransform"),
   spyOnCreateBatchRename = jest
     .spyOn(utils, "createBatchRenameList")
     .mockReturnValue([Promise.resolve()]),
@@ -93,6 +94,7 @@ describe("convertFiles", () => {
   const spyOnAreNewNamesDistinct = jest
     .spyOn(utils, "areNewNamesDistinct")
     .mockReturnValue(true);
+
   const exampleArgs: RenameListArgs = {
     transformPattern: ["numericTransform"],
     transformPath: examplePath,
@@ -191,51 +193,26 @@ describe("convertFiles", () => {
 
 describe("generateRenameList", () => {
   afterEach(() => jest.clearAllMocks());
-  // Only valid transform combinations are evaluated. Invalid ones should be
-  // either be filtered out or throw an exception during
-  // the argument parsing phase.
-  it("Should call truncateTransform only if truncate is the single transform argument", () => {
-    generateRenameList({
-      transformPattern: ["truncate"],
-      splitFileList,
-    });
-    expect(spyOnTruncateTransform).toHaveBeenCalledTimes(1);
-    spyOnTruncateTransform.mockClear();
-    generateRenameList({
-      transformPattern: ["truncate", "dateRename"],
-      splitFileList,
-    });
-    expect(spyOnTruncateTransform).not.toHaveBeenCalled();
-  });
-  it("Should call dateRename, if it is included in transformPattern", () => {
-    const transforms: TransformTypes[][] = [
-      ["dateRename"],
-      ["dateRename", "truncate"],
-    ];
-    transforms.forEach((transformPattern, index) => {
-      generateRenameList({ transformPattern, splitFileList });
-      expect(spyOnDateTransform).toHaveBeenCalledTimes(index + 1);
-    });
-  });
-  it("Should call numericTransform, if it is included in transformPattern", () => {
-    const transforms: TransformTypes[][] = [
-      ["numericTransform"],
-      ["numericTransform", "truncate"],
-    ];
-    transforms.forEach((transformPattern, index) => {
-      generateRenameList({ transformPattern, splitFileList });
-      expect(spyOnNumericTransform).toHaveBeenCalledTimes(index + 1);
-    });
-  });
-  it("Should call searchAndReplace transform, if it is included in transformPattern", () => {
-    const transforms: TransformTypes[][] = [
-      ["searchAndReplace"],
-      ["searchAndReplace", "truncate"],
-    ];
-    transforms.forEach((transformPattern, index) => {
-      generateRenameList({ transformPattern, splitFileList });
-      expect(spyOnSearchAndReplace).toHaveBeenCalledTimes(index + 1);
-    });
+  it("Should call the first supplied transform type", () => {
+    const transformTypes = [
+      "truncate",
+      "dateRename",
+      "numericTransform",
+      "searchAndReplace",
+      "addText",
+    ] as const;
+    transformTypes.forEach((transformType) =>
+      generateRenameList({ transformPattern: [transformType], splitFileList })
+    );
+    [
+      spyOnDateTransform,
+      spyOnSearchAndReplace,
+      spyOnNumericTransform,
+      spyOnTruncateTransform,
+      spyOnAddTextTransform,
+    ].forEach((transformType) =>
+      expect(transformType).toHaveBeenCalledTimes(1)
+    );
   });
   it("Should throw error, if no transformation function is returned", () => {
     const transformPattern = ["invalidType"] as unknown as TransformTypes[];
@@ -246,26 +223,39 @@ describe("generateRenameList", () => {
 });
 
 describe("dryRunTransform", () => {
+  const spyOnNumberOfDuplicatedNames = jest
+  .spyOn(utils, "numberOfDuplicatedNames")
+  let spyOnConsole:jest.SpyInstance;
+  const exampleArgs: DryRunTransformArgs = {
+    transformPath: examplePath,
+    transformPattern: ["searchAndReplace"],
+    transformedNames: renameListDistinct,
+  };
+  beforeEach(()=> spyOnConsole = createSpyOnLog());
+  afterEach(()=> {spyOnConsole.mockRestore(); spyOnNumberOfDuplicatedNames.mockReset()});
+  it("Should call numberOfDuplicatedNames 2 times", ()=> {
+  spyOnNumberOfDuplicatedNames.mockReturnValue(0);
+  dryRunTransform(exampleArgs);
+  expect(spyOnNumberOfDuplicatedNames).toHaveBeenCalledTimes(2);
+  
+  const checkTypeArgs = spyOnNumberOfDuplicatedNames.mock.calls.flat().map(config => config.checkType);
+  const expectedArgs = ["transforms", "results"];
+  expect(checkTypeArgs).toEqual(expectedArgs);
+
+  })
   it("Should call console log appropriate number of times", () => {
-    const spyOnAreNewNamesDistinct = jest.spyOn(utils, "areNewNamesDistinct");
     const spyOnConsole = createSpyOnLog();
-    const exampleArgs: DryRunTransformArgs = {
-      transformPath: examplePath,
-      transformPattern: ["searchAndReplace"],
-      transformedNames: renameListDistinct,
-    };
+    spyOnNumberOfDuplicatedNames.mockReturnValueOnce(0).mockReturnValue(0);
     dryRunTransform(exampleArgs);
     const expected = renameListDistinct.length + 1;
     expect(spyOnConsole).toHaveBeenCalledTimes(expected);
-
+    
     spyOnConsole.mockClear();
-
-    dryRunTransform({
-      ...exampleArgs,
-      transformedNames: renameWithNewNameRepeat,
-    });
-    expect(spyOnConsole).toHaveBeenCalledTimes(expected + 1);
-    expect(spyOnAreNewNamesDistinct).toHaveBeenCalledTimes(2);
+    
+    spyOnNumberOfDuplicatedNames.mockReturnValueOnce(1).mockReturnValue(1);
+    dryRunTransform(exampleArgs);
+    // Extra calls because of duplicated transforms and renames.
+     expect(spyOnConsole).toHaveBeenCalledTimes(expected + 2);
     spyOnConsole.mockRestore();
   });
 });

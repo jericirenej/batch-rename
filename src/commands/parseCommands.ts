@@ -1,7 +1,6 @@
 import {
-  INCLUSIVE_TRANSFORM_TYPES,
   UTILITY_ACTIONS,
-  VALID_TRANSFORM_TYPES,
+  VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
 import { checkPath } from "../converters/utils.js";
@@ -13,14 +12,13 @@ import type {
   SetTransformationPath,
   TransformTypes,
   UtilityActions,
-  UtilityActionsCheck,
+  UtilityActionsCheck
 } from "../types";
 import program from "./generateCommands.js";
 import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
 
 const {
   COMMAND_NO_TRANSFORMATION_PICKED,
-  COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM,
   COMMAND_ONLY_ONE_UTILITY_ACTION,
 } = ERRORS;
 
@@ -30,7 +28,7 @@ export const parseOptions = async (
   try {
     if (!Object.keys(options).length) return program.help();
     const {
-      customText,
+      addText,
       separator,
       textPosition,
       preserveOriginal,
@@ -70,7 +68,7 @@ export const parseOptions = async (
       transformedPreserve = true;
     }
     const args = {
-      customText,
+      addText,
       transformPattern,
       preserveOriginal: transformedPreserve,
       noExtensionPreserve,
@@ -104,17 +102,8 @@ export const transformationCheck = (
       options[key]
   );
   const numOfTransformations = transformationPicked.length;
-  const numOfExclusiveTransformations = transformationPicked.filter(
-    (transformationType) =>
-      !INCLUSIVE_TRANSFORM_TYPES.some(
-        (inclusiveType) => inclusiveType === transformationType
-      )
-  ).length;
   if (!numOfTransformations) {
     throw new Error(COMMAND_NO_TRANSFORMATION_PICKED);
-  }
-  if (numOfExclusiveTransformations > 1) {
-    throw new Error(COMMAND_ONLY_ONE_EXCLUSIVE_TRANSFORM);
   }
   return transformationPicked as TransformTypes[];
 };

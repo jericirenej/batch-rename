@@ -34,7 +34,7 @@ const programOptions: ProgramOptions[] = [
     short: "t",
     long: "truncate",
     description:
-      "Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or customText is supplied, it has no effect.",
+      "Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or addText is supplied, it has no effect.",
     type: "<number>",
     defaultValue: "",
   },
@@ -95,18 +95,18 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
-    short: "c",
-    long: "customText",
+    short: "a",
+    long: "addText",
     type: "<name>",
     description:
-      "Text to add to the transformed name. Overwrites the 'preserveOriginal' flag.",
+      "Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.",
     defaultValue: "",
   },
   {
     short: "",
     long: "textPosition",
     description:
-      "Applies to 'preserveOriginal' or 'customText'. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to 'append'",
+      "Applies to 'preserveOriginal' or 'addText'. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to 'append'",
     type: "[position]",
     choices: ["prepend", "append"],
     defaultValue: "append",

@@ -1,3 +1,4 @@
+
 export const DEFAULT_SEPARATOR = "-";
 export const ROLLBACK_FILE_NAME = ".rollback.json";
 export const VALID_TRANSFORM_TYPES = [
@@ -5,15 +6,9 @@ export const VALID_TRANSFORM_TYPES = [
   "dateRename",
   "searchAndReplace",
   "truncate",
+  "addText",
 ] as const;
 
-export const INCLUSIVE_TRANSFORM_TYPES = ["truncate"] as const;
-export const EXCLUSIVE_TRANSFORM_TYPES = VALID_TRANSFORM_TYPES.filter(
-  (transformType) =>
-    !INCLUSIVE_TRANSFORM_TYPES.some(
-      (inclusiveType) => inclusiveType === transformType
-    )
-);
 export const VALID_DATE_TRANSFORM_TYPES = [
   "creationDate",
   "lastAccessed",

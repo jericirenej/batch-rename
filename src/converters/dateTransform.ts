@@ -2,18 +2,15 @@ import { Stats } from "fs";
 import { stat } from "fs/promises";
 import { join } from "path";
 import { DEFAULT_SEPARATOR } from "../constants.js";
-import { ERRORS } from "../messages/errMessages.js";
 import type {
   DateTransform,
   DateTransformCorrespondenceTable,
   FileListWithDates,
   FileListWithStatsArray,
   FormattedDate,
-  ProvideFileStats,
+  ProvideFileStats
 } from "../types";
-import { areNewNamesDistinct, composeRenameString } from "./utils.js";
-
-const { DUPLICATE_FILE_NAMES } = ERRORS;
+import { composeRenameString } from "./utils.js";
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(
@@ -55,7 +52,7 @@ export const extractDate = (milliseconds: number): FormattedDate => {
 export const dateTransform: DateTransform = ({
   splitFileList,
   dateRename,
-  customText,
+  addText,
   textPosition,
   preserveOriginal,
   detailedDate,
@@ -85,7 +82,7 @@ export const dateTransform: DateTransform = ({
       ext,
       preserveOriginal,
       newName: datePrefix,
-      customText,
+      addText,
       textPosition,
       separator,
       truncate,
@@ -98,7 +95,5 @@ export const dateTransform: DateTransform = ({
     };
   });
 
-  const areNamesDistinct = areNewNamesDistinct(transformedNames);
-  if (areNamesDistinct) return transformedNames;
-  throw new Error(DUPLICATE_FILE_NAMES);
+  return transformedNames;
 };

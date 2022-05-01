@@ -3,7 +3,7 @@ import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
   VALID_NUMERIC_TRANSFORM_TYPES,
-  VALID_TRANSFORM_TYPES,
+  VALID_TRANSFORM_TYPES
 } from "./constants";
 
 export type OptionKeys =
@@ -12,7 +12,7 @@ export type OptionKeys =
   | "restore"
   | "dryRun"
   | "cleanRollback"
-  | "customText"
+  | "addText"
   | "dateRename"
   | "textPosition"
   | "searchAndReplace"
@@ -77,7 +77,7 @@ export type RenameList = {
 }[];
 export type RenameListArgs = {
   transformPattern: TransformTypes[];
-  customText?: string;
+  addText?: string;
   textPosition?: "append" | "prepend";
   preserveOriginal?: boolean;
   noExtensionPreserve?: boolean;
@@ -144,6 +144,8 @@ export type TruncateFileNameArgs = {
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
 export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
 
+export type AddTextTransform = (args: GenerateRenameListArgs) => RenameList;
+
 export type ProgramOptions = {
   short: string;
   long: OptionKeys;
@@ -185,7 +187,9 @@ export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string
 ) => Promise<string[]>;
-export type AreNewNamesDistinct = (renameLIst: RenameList) => boolean;
+export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
+export type NumberOfDuplicatedNamesArgs = {renameList: RenameList, checkType: "results"|"transforms"};
+export type NumberOfDuplicatedNames = (args: NumberOfDuplicatedNamesArgs) => number;
 export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {
@@ -193,7 +197,7 @@ export type ComposeRenameStringArgs = {
   newName: string;
   ext?: string;
   preserveOriginal?: boolean;
-  customText?: string;
+  addText?: string;
   textPosition?: "prepend" | "append";
   separator?: string;
   truncate?: string;

@@ -21,7 +21,7 @@ const defaultArgs: GenerateRenameListArgs = {
   splitFileList,
   transformPattern: ["truncate"],
   preserveOriginal: true,
-  customText: "customText",
+  addText: "addText",
   separator: DEFAULT_SEPARATOR,
   textPosition: undefined,
   truncate: "3",
