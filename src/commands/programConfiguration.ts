@@ -39,6 +39,13 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "e",
+    long: "extensionModify",
+    type: "<string>",
+    description:
+      "Modify extension of target files. Can also be used together with the exclude option",
+  },
+  {
     short: "f",
     long: "folderPath",
     type: "<path>",
@@ -71,7 +78,7 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
-    short: "e",
+    short: "",
     long: "exclude",
     type: "<string|regex>",
     description:

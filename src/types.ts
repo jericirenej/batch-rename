@@ -22,7 +22,8 @@ export type OptionKeys =
   | "separator"
   | "truncate"
   | "baseIndex"
-  | "exclude";
+  | "exclude"
+  | "extensionModify";
 
 export type OptionKeysWithValues = Record<
   OptionKeys,

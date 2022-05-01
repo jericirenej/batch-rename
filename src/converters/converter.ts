@@ -34,6 +34,8 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
+  //! Update this entry!
+  extensionModify: (args: GenerateRenameListArgs) => {}
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
