@@ -15,6 +15,7 @@ import type {
   CreateBatchRenameList,
   DetermineDir,
   ExtractBaseAndExt,
+  FormatText,
   ListFiles,
   NumberOfDuplicatedNames,
   TruncateFileName
@@ -227,4 +228,28 @@ export const truncateFile: TruncateFileName = ({
   if (limit === 0) return baseName;
 
   return baseName.slice(0, limit);
+};
+
+const capitalizeString = (str: string): string => {
+  return str
+    .split(" ")
+    .map((word) => `${word[0].toLocaleUpperCase()}${word.slice(1).toLocaleLowerCase()}`)
+    .join(" ");
+};
+/** Will perform text transform. Does not distinguish between baseName and extension. 
+ * The inclusion or exclusion of any of them should be handled elsewhere. */
+export const formatText: FormatText = ({ renameList, format }) => {
+  return renameList.map((renameInfo) => {
+    let rename = renameInfo.rename;
+    if (format === "uppercase") {
+      rename = rename.toLocaleUpperCase();
+    }
+    if (format === "lowercase") {
+      rename = rename.toLocaleLowerCase();
+    }
+    if (format === "capitalize") {
+      rename = capitalizeString(rename);
+    }
+    return {...renameInfo, rename};
+  });
 };

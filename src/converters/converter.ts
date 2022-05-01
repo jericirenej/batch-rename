@@ -21,6 +21,7 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
+  formatText,
   listFiles,
   numberOfDuplicatedNames
 } from "./utils.js";
@@ -35,11 +36,11 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
-  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args),
+  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args)
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
-  const { transformPattern, transformPath, exclude } = args;
+  const { transformPattern, transformPath, exclude, format } = args;
   const targetDir = determineDir(transformPath);
   const splitFileList = await listFiles(targetDir, exclude).then((fileList) =>
     extractBaseAndExt(fileList, targetDir)
@@ -58,7 +59,10 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     splitFileList: fileList,
     transformPath: targetDir,
   };
-  const transformedNames = generateRenameList(transformArgs);
+  let transformedNames = generateRenameList(transformArgs);
+  if(format) {
+    transformedNames = formatText({renameList: transformedNames, format});
+  }
 
   if (args.dryRun)
     return dryRunTransform({

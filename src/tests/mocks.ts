@@ -115,3 +115,36 @@ export const generateMockSplitFileList = (length: number) => {
     return singleEntry;
   });
 };
+
+export const textFormatMatrix = [
+  {
+    value: "someFile",
+    expected: {
+      uppercase: "SOMEFILE",
+      lowercase: "somefile",
+      capitalized: "Somefile",
+    },
+  },
+  {
+    value: "SOME_FILE.ext",
+    expected: {
+      uppercase: "SOME_FILE.EXT",
+      lowercase: "some_file.ext",
+      capitalized: "Some_file.ext",
+    },
+  },
+  {
+    value: "sOMe FiLe wi12th Different wOrDs.ext",
+    expected: {
+      uppercase: "SOME FILE WI12TH DIFFERENT WORDS.EXT",
+      lowercase: "some file wi12th different words.ext",
+      capitalized: "Some File Wi12th Different Words.ext",
+    },
+  },
+];
+export const textFormatRenameList: RenameList = textFormatMatrix.map((example) => ({
+  original: "baseName",
+  rename: example.value,
+  sourcePath: examplePath,
+}));
+

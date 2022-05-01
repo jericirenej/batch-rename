@@ -11,6 +11,7 @@ import {
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
+  formatText,
   listFiles,
   numberOfDuplicatedNames,
   truncateFile
@@ -18,7 +19,8 @@ import {
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate
+  ExtractBaseAndExtTemplate,
+  FormatTextArgs
 } from "../types.js";
 import {
   createDirentArray,
@@ -29,6 +31,8 @@ import {
   renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
+  textFormatMatrix,
+  textFormatRenameList,
   truthyArgument
 } from "./mocks.js";
 
@@ -444,4 +448,33 @@ describe("truncateFile", () => {
   it("Should return truncated baseName", () => {
     expect(truncateFile(generalArgs).length).toBe(truncateNum);
   });
+});
+
+describe("formatText", () => {
+  const examples = textFormatMatrix;
+  const renameList = textFormatRenameList;
+  it("Should convert text to uppercase", () => {
+    const textTransform = formatText({ renameList, format: "uppercase" });
+    textTransform.forEach((transform, index) =>
+      expect(transform.rename).toBe(examples[index].expected.uppercase)
+    );
+  });
+  it("Should convert text to lowercase", () => {
+    const textTransform = formatText({ renameList, format: "lowercase" });
+    textTransform.forEach((transform, index) =>
+      expect(transform.rename).toBe(examples[index].expected.lowercase)
+    );
+  });
+  it("Should capitalize text", () => {
+    const textTransform = formatText({ renameList, format: "capitalize" });
+    textTransform.forEach((transform, index) =>
+      expect(transform.rename).toBe(examples[index].expected.capitalized)
+    );
+  });
+  it("Should return unchanged list, if invalid arg passed", ()=> {
+    const textTransform = formatText({ renameList, format: "invalid" } as unknown as FormatTextArgs)
+    textTransform.forEach((transform, index) =>
+      expect(transform.rename).toBe(examples[index].value)
+    );
+  })
 });
