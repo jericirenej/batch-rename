@@ -187,7 +187,9 @@ export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string
 ) => Promise<string[]>;
-export type AreNewNamesDistinct = (renameLIst: RenameList) => boolean;
+export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
+export type NumberOfDuplicatedNamesArgs = {renameList: RenameList, checkType: "results"|"transforms"};
+export type NumberOfDuplicatedNames = (args: NumberOfDuplicatedNamesArgs) => number;
 export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {

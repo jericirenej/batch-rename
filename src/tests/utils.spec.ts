@@ -4,31 +4,32 @@ import { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import {
-    areNewNamesDistinct,
-    checkPath,
-    cleanUpRollbackFile,
-    composeRenameString,
-    createBatchRenameList,
-    determineDir,
-    extractBaseAndExt,
-    listFiles,
-    truncateFile
+  areNewNamesDistinct,
+  checkPath,
+  cleanUpRollbackFile,
+  composeRenameString,
+  createBatchRenameList,
+  determineDir,
+  extractBaseAndExt,
+  listFiles,
+  numberOfDuplicatedNames,
+  truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-    ComposeRenameStringArgs,
-    ExtractBaseAndExtTemplate
+  ComposeRenameStringArgs,
+  ExtractBaseAndExtTemplate
 } from "../types.js";
 import {
-    createDirentArray,
-    examplePath,
-    exampleStats,
-    expectedSplit,
-    mockFileList,
-    renameListDistinct,
-    renameListWithDuplicateOldAndNew,
-    renameWithNewNameRepeat,
-    truthyArgument
+  createDirentArray,
+  examplePath,
+  exampleStats,
+  expectedSplit,
+  mockFileList,
+  renameListDistinct,
+  renameListWithDuplicateOldAndNew,
+  renameWithNewNameRepeat,
+  truthyArgument
 } from "./mocks.js";
 
 jest.mock("fs");
@@ -147,6 +148,41 @@ describe("areNewNamesDistinct", () => {
   });
 });
 
+describe("numberOfDuplicatedNames", () => {
+  it("Should properly evaluate transform duplicates", () => {
+    const checkType = "transforms";
+    expect(
+      numberOfDuplicatedNames({ renameList: renameListDistinct, checkType })
+    ).toBe(0);
+    expect(
+      numberOfDuplicatedNames({
+        renameList: renameListWithDuplicateOldAndNew,
+        checkType,
+      })
+    ).toBe(1);
+  });
+  it("Should properly evaluate rename duplicates", () => {
+    const checkType = "results";
+    expect(
+      numberOfDuplicatedNames({ renameList: renameListDistinct, checkType })
+    ).toBe(0);
+    expect(
+      numberOfDuplicatedNames({
+        renameList: renameWithNewNameRepeat,
+        checkType,
+      })
+    ).toBe(1);
+  });
+  it("Should return -1, if checkType is not properly specified", () => {
+    expect(
+      numberOfDuplicatedNames({
+        renameList: renameListDistinct,
+        checkType: "inexistent" as any,
+      })
+    ).toBe(-1);
+  });
+});
+
 describe("checkPath", () => {
   afterEach(() => jest.resetAllMocks());
   it("Should throw error, if path does not exist", async () => {
@@ -216,9 +252,7 @@ describe("composeRenameString", () => {
   };
   it("Should return a newName-baseName.extension by default", () => {
     const expected = `${[newName, baseName].join(defaultSep)}${ext}`;
-    expect(composeRenameString({ ...args, addText: undefined })).toBe(
-      expected
-    );
+    expect(composeRenameString({ ...args, addText: undefined })).toBe(expected);
   });
   it("addText should override baseName and preserveOriginal", () => {
     const expected = `${[newName, addText].join(defaultSep)}${ext}`;

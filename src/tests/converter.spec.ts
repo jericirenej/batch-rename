@@ -7,14 +7,17 @@ import * as searchAndReplaceTransformFunctions from "../converters/searchAndRepl
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type { DryRunTransformArgs, RenameListArgs, TransformTypes } from "../types.js";
+import type {
+  DryRunTransformArgs,
+  RenameListArgs,
+  TransformTypes
+} from "../types.js";
 import {
   examplePath,
   exampleStats,
   generateMockSplitFileList,
   mockFileList,
-  renameListDistinct,
-  renameWithNewNameRepeat
+  renameListDistinct
 } from "./mocks.js";
 
 jest.mock("fs/promises", () => {
@@ -91,6 +94,7 @@ describe("convertFiles", () => {
   const spyOnAreNewNamesDistinct = jest
     .spyOn(utils, "areNewNamesDistinct")
     .mockReturnValue(true);
+
   const exampleArgs: RenameListArgs = {
     transformPattern: ["numericTransform"],
     transformPath: examplePath,
@@ -219,26 +223,39 @@ describe("generateRenameList", () => {
 });
 
 describe("dryRunTransform", () => {
+  const spyOnNumberOfDuplicatedNames = jest
+  .spyOn(utils, "numberOfDuplicatedNames")
+  let spyOnConsole:jest.SpyInstance;
+  const exampleArgs: DryRunTransformArgs = {
+    transformPath: examplePath,
+    transformPattern: ["searchAndReplace"],
+    transformedNames: renameListDistinct,
+  };
+  beforeEach(()=> spyOnConsole = createSpyOnLog());
+  afterEach(()=> {spyOnConsole.mockRestore(); spyOnNumberOfDuplicatedNames.mockReset()});
+  it("Should call numberOfDuplicatedNames 2 times", ()=> {
+  spyOnNumberOfDuplicatedNames.mockReturnValue(0);
+  dryRunTransform(exampleArgs);
+  expect(spyOnNumberOfDuplicatedNames).toHaveBeenCalledTimes(2);
+  
+  const checkTypeArgs = spyOnNumberOfDuplicatedNames.mock.calls.flat().map(config => config.checkType);
+  const expectedArgs = ["transforms", "results"];
+  expect(checkTypeArgs).toEqual(expectedArgs);
+
+  })
   it("Should call console log appropriate number of times", () => {
-    const spyOnAreNewNamesDistinct = jest.spyOn(utils, "areNewNamesDistinct");
     const spyOnConsole = createSpyOnLog();
-    const exampleArgs: DryRunTransformArgs = {
-      transformPath: examplePath,
-      transformPattern: ["searchAndReplace"],
-      transformedNames: renameListDistinct,
-    };
+    spyOnNumberOfDuplicatedNames.mockReturnValueOnce(0).mockReturnValue(0);
     dryRunTransform(exampleArgs);
     const expected = renameListDistinct.length + 1;
     expect(spyOnConsole).toHaveBeenCalledTimes(expected);
-
+    
     spyOnConsole.mockClear();
-
-    dryRunTransform({
-      ...exampleArgs,
-      transformedNames: renameWithNewNameRepeat,
-    });
-    expect(spyOnConsole).toHaveBeenCalledTimes(expected + 1);
-    expect(spyOnAreNewNamesDistinct).toHaveBeenCalledTimes(2);
+    
+    spyOnNumberOfDuplicatedNames.mockReturnValueOnce(1).mockReturnValue(1);
+    dryRunTransform(exampleArgs);
+    // Extra calls because of duplicated transforms and renames.
+     expect(spyOnConsole).toHaveBeenCalledTimes(expected + 2);
     spyOnConsole.mockRestore();
   });
 });
