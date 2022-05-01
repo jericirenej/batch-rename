@@ -82,6 +82,7 @@ export type RenameListArgs = {
   textPosition?: "append" | "prepend";
   preserveOriginal?: boolean;
   noExtensionPreserve?: boolean;
+  extensionModify?: string;
   dateRename?: DateTransformOptions;
   detailedDate?: boolean;
   dryRun?: boolean;
@@ -145,7 +146,9 @@ export type TruncateFileNameArgs = {
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
 export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
 
-export type AddTextTransform = (args: GenerateRenameListArgs) => RenameList;
+export type AddTextTransform = TruncateTransform;
+
+export type ExtensionModifyTransform = TruncateTransform;
 
 export type ProgramOptions = {
   short: string;
