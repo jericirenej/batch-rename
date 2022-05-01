@@ -12,6 +12,7 @@ import type {
 } from "../types";
 import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
+import { extensionModifyTransform } from "./extensionModify.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
@@ -34,6 +35,7 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
+  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args),
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {

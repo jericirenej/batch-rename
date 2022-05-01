@@ -7,6 +7,7 @@ export const VALID_TRANSFORM_TYPES = [
   "searchAndReplace",
   "truncate",
   "addText",
+  "extensionModify"
 ] as const;
 
 export const VALID_DATE_TRANSFORM_TYPES = [
