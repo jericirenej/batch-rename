@@ -24,7 +24,7 @@ import {
   listFiles,
   numberOfDuplicatedNames
 } from "./utils.js";
-const { DUPLICATE_FILE_NAMES } = ERRORS;
+const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
 
 export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   typeof VALID_TRANSFORM_TYPES[number],
@@ -68,7 +68,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     });
 
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
-  if (!newNamesDistinct) throw new Error(DUPLICATE_FILE_NAMES);
+  if (!newNamesDistinct) throw new Error(duplicateRenames);
 
   process.stdout.write("Writing rollback file...");
   await writeFile(
@@ -89,7 +89,7 @@ export const generateRenameList: GenerateRenameList = (args) => {
   if (Object.keys(TRANSFORM_CORRESPONDENCE_TABLE).includes(primaryTransform)) {
     return TRANSFORM_CORRESPONDENCE_TABLE[primaryTransform](args);
   }
-  throw new Error(ERRORS.TRANSFORM_NO_FUNCTION_AVAILABLE);
+  throw new Error(noTransformFunctionAvailable);
 };
 
 export const dryRunTransform: DryRunTransform = ({

@@ -7,7 +7,7 @@ import type { RestoreBaseReturn } from "../types.js";
 import {
   examplePath,
   examplePath as transformPath,
-  renameListDistinct as renameList,
+  renameListDistinct as renameList
 } from "./mocks.js";
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -16,7 +16,8 @@ jest.mock("fs/promises", () => {
     rename: jest.fn(),
   };
 });
-
+const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
+  ERRORS.restore;
 const { restoreBaseFunction, restoreOriginalFileNames, dryRunRestore } =
   restorePoint;
 const missingFilesMessage =
@@ -52,14 +53,14 @@ describe("restoreBaseFunction", () => {
   it("Should throw error, if no files exist in targetDir", async () => {
     spyOnListFiles.mockResolvedValueOnce([]);
     await expect(() => restoreBaseFunction()).rejects.toThrowError(
-      ERRORS.RESTORE_NO_FILES_TO_CONVERT
+      noFilesToConvert
     );
   });
   it("Should throw error, if no rollbackFile exists", async () => {
     spyOnListFiles.mockResolvedValueOnce(mockFileList);
     mockedFs.existsSync.mockReturnValueOnce(false);
     await expect(() => restoreBaseFunction()).rejects.toThrowError(
-      ERRORS.RESTORE_NO_ROLLBACK_FILE_TO_CONVERT
+      noRollbackFile
     );
   });
   it("Should return object with appropriate properties", async () => {
@@ -103,7 +104,7 @@ describe("restoreOriginalFileNames", () => {
     );
     await expect(() =>
       restoreOriginalFileNames({ transformPath })
-    ).rejects.toThrowError(ERRORS.RESTORE_NO_VALID_DATA);
+    ).rejects.toThrowError(noValidData);
   });
   it("Should throw Error, if batchRenameLength is 0", async () => {
     spyOnCreateBatchRenameList.mockReturnValueOnce([]);
@@ -112,7 +113,7 @@ describe("restoreOriginalFileNames", () => {
       missingFiles: [mockFileList[0]],
     });
     await expect(() => restoreOriginalFileNames(baseArg)).rejects.toThrowError(
-      ERRORS.RESTORE_COULD_NOT_BE_PARSED
+      couldNotBeParsed
     );
   });
   it("Should notify user about missing restore data", async () => {
@@ -199,7 +200,7 @@ describe("dryRunRestore", () => {
       filesToRestore: [],
     });
     await expect(() => dryRunRestore(examplePath)).rejects.toThrow(
-      ERRORS.RESTORE_COULD_NOT_BE_PARSED
+      couldNotBeParsed
     );
   });
   it("Should log appropriate information about file reverts", async () => {

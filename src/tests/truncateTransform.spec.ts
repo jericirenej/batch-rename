@@ -34,12 +34,12 @@ describe("truncateTransform", () => {
   it("Should throw error if preserveOriginal is true", () => {
     expect(() =>
       truncateTransform({ ...defaultArgs, preserveOriginal: false })
-    ).toThrowError(ERRORS.TRUNCATE_NO_PRESERVE_ORIGINAL);
+    ).toThrowError(ERRORS.transforms.truncateNoPreserveOriginal);
   });
   it("Should throw error, if truncate truncate can't be evaluated to a number", () => {
     expect(() =>
       truncateTransform({ ...defaultArgs, truncate: "invalid" })
-    ).toThrowError(ERRORS.TRUNCATE_INVALID_ARGUMENT);
+    ).toThrowError(ERRORS.transforms.truncateInvalidArgument);
   });
   it("Should call composeRename function for each splitFile entry", () => {
     truncateTransform(defaultArgs);
