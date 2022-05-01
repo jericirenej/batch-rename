@@ -44,6 +44,7 @@ export const parseOptions = async (
       baseIndex,
       exclude,
       restArgs,
+      format,
     } = options;
 
     const transformPath = await setTransformationPath(
@@ -85,6 +86,7 @@ export const parseOptions = async (
       truncate,
       baseIndex,
       exclude,
+      format,
     } as RenameListArgs;
     return await convertFiles(args);
   } catch (err) {

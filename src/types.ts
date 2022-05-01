@@ -23,7 +23,8 @@ export type OptionKeys =
   | "truncate"
   | "baseIndex"
   | "exclude"
-  | "extensionModify";
+  | "extensionModify"
+  | "format";
 
 export type OptionKeysWithValues = Record<
   OptionKeys,
@@ -93,6 +94,7 @@ export type RenameListArgs = {
   truncate?: string;
   baseIndex?: string;
   exclude?: string;
+  format?: "lowercase"|"uppercase"|"capitalized";
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -192,8 +194,13 @@ export type ListFiles = (
   excludeFilter?: string
 ) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
-export type NumberOfDuplicatedNamesArgs = {renameList: RenameList, checkType: "results"|"transforms"};
-export type NumberOfDuplicatedNames = (args: NumberOfDuplicatedNamesArgs) => number;
+export type NumberOfDuplicatedNamesArgs = {
+  renameList: RenameList;
+  checkType: "results" | "transforms";
+};
+export type NumberOfDuplicatedNames = (
+  args: NumberOfDuplicatedNamesArgs
+) => number;
 export type CheckPath = (path: string) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {

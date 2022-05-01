@@ -135,6 +135,13 @@ const programOptions: ProgramOptions[] = [
   },
   {
     short: "",
+    long: "format",
+    type: "[string]",
+    description:
+      "If preserveOriginal is set to true, perform one of the specified transformations: lowercase, uppercase, capitalized",
+  },
+  {
+    short: "",
     long: "cleanRollback",
     type: "",
     description: "Remove rollback file.",
