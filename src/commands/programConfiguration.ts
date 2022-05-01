@@ -25,7 +25,7 @@ const programOptions: ProgramOptions[] = [
   {
     short: "s",
     long: "searchAndReplace",
-    type: "<search, filter>",
+    type: "<search, filter...>",
     description:
       "Takes a string|regex filter argument and a replacer string.  By default, the transform will preserve file extensions, unless a '--noPreserveExtension' option is supplied",
     defaultValue: "",
@@ -138,7 +138,7 @@ const programOptions: ProgramOptions[] = [
     long: "format",
     type: "[string]",
     description:
-      "If preserveOriginal is set to true, perform one of the specified transformations: lowercase, uppercase, capitalized",
+      "Perform one of the specified transformations on the final rename: lowercase, uppercase, capitalized.",
   },
   {
     short: "",
