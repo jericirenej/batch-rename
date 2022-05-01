@@ -25,9 +25,17 @@ const programOptions: ProgramOptions[] = [
   {
     short: "s",
     long: "searchAndReplace",
-    type: "<search, filter...>",
+    type: "<search, filter>",
     description:
       "Takes a string|regex filter argument and a replacer string.  By default, the transform will preserve file extensions, unless a '--noPreserveExtension' option is supplied",
+    defaultValue: "",
+  },
+  {
+    short: "a",
+    long: "addText",
+    type: "<name>",
+    description:
+      "Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.",
     defaultValue: "",
   },
   {
@@ -46,19 +54,19 @@ const programOptions: ProgramOptions[] = [
       "Modify extension of target files. Can also be used together with the exclude option",
   },
   {
-    short: "f",
-    long: "folderPath",
-    type: "<path>",
-    description:
-      "Folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
-    defaultValue: "",
-  },
-  {
     short: "r",
     long: "restore",
     type: "",
     description:
       "Restore transformed files to original names, if restore file is available.",
+    defaultValue: "",
+  },
+  {
+    short: "f",
+    long: "folderPath",
+    type: "<path>",
+    description:
+      "Folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
     defaultValue: "",
   },
   {
@@ -101,14 +109,7 @@ const programOptions: ProgramOptions[] = [
       "An option for the 'searchAndPreserve' transform which includes the file extension in the transform operation.",
     defaultValue: "",
   },
-  {
-    short: "a",
-    long: "addText",
-    type: "<name>",
-    description:
-      "Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.",
-    defaultValue: "",
-  },
+
   {
     short: "",
     long: "textPosition",
