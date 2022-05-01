@@ -18,7 +18,7 @@ export type OptionKeys =
   | "textPosition"
   | "searchAndReplace"
   | "detailedDate"
-  | "folderPath"
+  | "folder"
   | "numericTransform"
   | "separator"
   | "truncate"
@@ -37,7 +37,7 @@ export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {
 };
 
 export type SetTransformationPath = (
-  folderPath: string | undefined,
+  folder: string | undefined,
   restARgs: string[] | undefined
 ) => Promise<string | undefined>;
 

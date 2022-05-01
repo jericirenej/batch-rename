@@ -47,6 +47,13 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "f",
+    long: "format",
+    type: "[string]",
+    description:
+      "Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).",
+  },
+  {
     short: "e",
     long: "extensionModify",
     type: "<string>",
@@ -62,8 +69,8 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
-    short: "f",
-    long: "folderPath",
+    short: "",
+    long: "folder",
     type: "<path>",
     description:
       "Folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
@@ -132,13 +139,6 @@ const programOptions: ProgramOptions[] = [
     type: "[string]",
     description:
       "Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen ('-').",
-  },
-  {
-    short: "",
-    long: "format",
-    type: "[string]",
-    description:
-      "Perform one of the specified transformations on the final rename: lowercase, uppercase, capitalized.",
   },
   {
     short: "",
