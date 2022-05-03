@@ -222,7 +222,7 @@ describe("generateRenameList", () => {
   });
 });
 
-describe("dryRunTransform", () => {
+describe.skip("dryRunTransform", () => {
   const spyOnNumberOfDuplicatedNames = jest
   .spyOn(utils, "numberOfDuplicatedNames")
   let spyOnConsole:jest.SpyInstance;

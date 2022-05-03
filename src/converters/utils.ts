@@ -1,6 +1,7 @@
 import { existsSync } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
 import { join, resolve } from "path";
+import readline from "readline";
 import {
   DEFAULT_SEPARATOR,
   EXT_REGEX,
@@ -14,7 +15,8 @@ import type {
   ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
-  ExtractBaseAndExt, ListFiles,
+  ExtractBaseAndExt,
+  ListFiles,
   NumberOfDuplicatedNames,
   TruncateFileName
 } from "../types.js";
@@ -235,4 +237,11 @@ export const truncateFile: TruncateFileName = ({
   if (limit === 0) return baseName;
 
   return baseName.slice(0, limit);
+};
+
+export const askQuestion = (question: string): Promise<string> => {
+  const rl = readline.createInterface(process.stdin, process.stdout);
+  return new Promise((resolve) => {
+    rl.question(question + "\n", (answer) => resolve(answer));
+  });
 };
