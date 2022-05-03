@@ -107,7 +107,7 @@ export type DryRunTransformArgs = {
   transformPattern: TransformTypes[];
   transformPath: string;
 };
-export type DryRunTransform = (args: DryRunTransformArgs) => void;
+export type DryRunTransform = (args: DryRunTransformArgs) => Promise<boolean>;
 
 export type GeneralTransformReturn = {
   rename: string;

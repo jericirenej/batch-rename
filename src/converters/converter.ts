@@ -19,6 +19,7 @@ import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
 import {
   areNewNamesDistinct,
+  askQuestion,
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
@@ -36,8 +37,9 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
-  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args),
-  format: (args: GenerateRenameListArgs) => formatTextTransform(args)
+  extensionModify: (args: GenerateRenameListArgs) =>
+    extensionModifyTransform(args),
+  format: (args: GenerateRenameListArgs) => formatTextTransform(args),
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
@@ -61,12 +63,16 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     transformPath: targetDir,
   };
   const transformedNames = generateRenameList(transformArgs);
-  if (args.dryRun)
-    return dryRunTransform({
+  if (args.dryRun) {
+    const dryRun = await dryRunTransform({
       transformPath: targetDir,
       transformedNames,
       transformPattern,
     });
+    if (!dryRun) {
+      return;
+    }
+  }
 
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(duplicateRenames);
@@ -93,21 +99,30 @@ export const generateRenameList: GenerateRenameList = (args) => {
   throw new Error(noTransformFunctionAvailable);
 };
 
-export const dryRunTransform: DryRunTransform = ({
+export const dryRunTransform: DryRunTransform = async ({
   transformPath,
   transformPattern,
   transformedNames,
-}): void => {
+}) => {
+  const changedNames = transformedNames.filter(
+    (renameInfo) => renameInfo.original !== renameInfo.rename
+  );
+  if (changedNames.length === 0) {
+    console.log(
+      "No file names would be transformed under the current settings!"
+    );
+    return false;
+  }
+
   console.log(
     "Transformation of type",
     transformPattern,
     "in folder",
     transformPath,
-    "would result in:"
+    "would result in the following transform:"
   );
-  const changedNames = transformedNames.filter(
-    (renameInfo) => renameInfo.original !== renameInfo.rename
-  );
+  console.table(changedNames, ["original", "rename"]);
+
   const duplicatedTransforms = numberOfDuplicatedNames({
     renameList: transformedNames,
     checkType: "transforms",
@@ -117,15 +132,32 @@ export const dryRunTransform: DryRunTransform = ({
     checkType: "results",
   });
 
-  changedNames.forEach((name) =>
+  /* changedNames.forEach((name) =>
     console.log(`${name.original} --> ${name.rename}`)
-  );
+  ); */
   if (duplicatedTransforms > 0) {
-    console.log(`Number of unaffected files: ${duplicatedTransforms}.`);
+    console.log(
+      `Number of files for which transform has no effect: ${duplicatedTransforms}.`
+    );
   }
   if (duplicatedRenames > 0) {
-    console.log(`
-    
-    WARNING: Running the transform on these files with the given parameters would result in ${duplicatedRenames} duplicated names and throw an error!`);
+    console.log(
+      `WARNING: Running the transform on these files with the given parameters would result in ${duplicatedRenames} duplicated names and throw an error!`
+    );
+    return false;
   }
+  /* console.table(
+    changedNames.map((changedName) => {
+      const { original, rename } = changedName;
+      return { original, rename };
+    }) 
+  );*/
+  const response = await askQuestion(
+    "Would you like to perform the transform (N/Y)?"
+  );
+  if (response.toLocaleLowerCase() === "y") {
+    return true;
+  }
+
+  return false;
 };
