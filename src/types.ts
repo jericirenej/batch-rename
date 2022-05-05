@@ -18,7 +18,7 @@ export type OptionKeys =
   | "textPosition"
   | "searchAndReplace"
   | "detailedDate"
-  | "folder"
+  | "target"
   | "numericTransform"
   | "separator"
   | "truncate"

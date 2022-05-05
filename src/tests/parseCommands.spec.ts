@@ -6,8 +6,8 @@ import * as converters from "../converters/converter.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-    OptionKeysWithValues,
-    OptionKeysWithValuesAndRestArgs
+  OptionKeysWithValues,
+  OptionKeysWithValuesAndRestArgs
 } from "../types.js";
 import { examplePath } from "./mocks.js";
 
@@ -33,7 +33,7 @@ describe("parseOptions", () => {
     preserveOriginal: true,
     addText: false,
     numericTransform: true,
-    folder: examplePath,
+    target: examplePath,
   } as OptionKeysWithValuesAndRestArgs;
   beforeEach(() => {
     spyOnSetTransformationPath.mockResolvedValue(examplePath);

@@ -70,10 +70,10 @@ const programOptions: ProgramOptions[] = [
   },
   {
     short: "",
-    long: "folder",
+    long: "target",
     type: "<path>",
     description:
-      "Folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
+      "Target folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
     defaultValue: "",
   },
   {
@@ -81,7 +81,7 @@ const programOptions: ProgramOptions[] = [
     long: "dryRun",
     type: "",
     description:
-      "Run transform operation without writing to disk. Expected output will be logged to console.",
+      "Run transform operation without writing to disk. Run transform operation without writing to disk. Will log properties of expected output. Prompts user for transform execution, if no errors detected.",
     defaultValue: "",
   },
   {
