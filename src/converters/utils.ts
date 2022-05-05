@@ -85,8 +85,8 @@ export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
 
 /** Check for duplicated fileNames which would lead to errors. Takes in an
  * @param args.renameList - Supply rename list of appropriate type.
-    @param {"results"|"transforms"} args.checkType - If 'results' are specified,functions checks if there are duplicated among the transformed names. 
-    If 'transforms' are specified, it checks whether there exist identical old and new names.
+    @param {"results"|"transforms"} args.checkType - If *'results'* are specified,functions checks if there are duplicated among the target transformed names. 
+    If *'transforms'* are specified, it checks whether there exist identical transformation (original === rename).
  */
 
 export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
