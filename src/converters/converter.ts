@@ -1,6 +1,6 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import { ROLLBACK_FILE_NAME, VALID_TRANSFORM_TYPES } from "../constants.js";
+import { ROLLBACK_FILE_NAME, VALID_DRY_RUN_ANSWERS, VALID_TRANSFORM_TYPES } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
@@ -143,7 +143,7 @@ export const dryRunTransform: DryRunTransform = async ({
   }
 
   const response = await askQuestion(questionPerformTransform);
-  if (response.toLocaleLowerCase() === "y") {
+  if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) {
     return true;
   }
   console.log(exitWithoutTransform);

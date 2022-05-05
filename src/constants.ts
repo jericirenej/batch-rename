@@ -24,5 +24,7 @@ export const VALID_NUMERIC_TRANSFORM_TYPES = [
   "even",
   "odd",
 ] as const;
+
+export const VALID_DRY_RUN_ANSWERS = ["y", "yes"];
 export const UTILITY_ACTIONS = ["restore", "cleanRollback"] as const;
 export const PROGRAM_VERSION = "1.0.0.";
