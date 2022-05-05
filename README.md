@@ -19,7 +19,7 @@ Rename files using a search and replace algorithm. Target folder set explicitly.
 
 Preview numeric transform with exclude option and a custom baseIndex. Folder path set implicitly.
 
-`node batchRename.mjs -Dd --exclude "excludedName" -b 100 "folder"`
+`node batchRename.mjs -Dn --exclude "excludedName" -b 100 "folder"`
 
 Append creation date to files in the current folder and specify a custom separator.
 
@@ -49,7 +49,7 @@ When performing the rename operation, the script will write a restore file (`.ro
 
 Before performing the rename, it is **strongly encouraged to perform a dry run first.**
 
-The script will not perform a rename if it would lead to name collisions (i.e. several files sharing the same name). 
+The script will not perform a rename if it would lead to name collisions (i.e. several files sharing the same name).
 
 |Flag|Arguments|Description|
 |------|-----------|--------|
