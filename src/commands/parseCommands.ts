@@ -38,7 +38,7 @@ export const parseOptions = async (
       dateRename,
       detailedDate,
       searchAndReplace,
-      folder,
+      target,
       numericTransform,
       truncate,
       baseIndex,
@@ -48,7 +48,7 @@ export const parseOptions = async (
     } = options;
 
     const transformPath = await setTransformationPath(
-      folder as string | undefined,
+      target as string | undefined,
       restArgs
     );
     // Run util actions first.

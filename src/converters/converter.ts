@@ -1,7 +1,8 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import { ROLLBACK_FILE_NAME, VALID_TRANSFORM_TYPES } from "../constants.js";
+import { ROLLBACK_FILE_NAME, VALID_DRY_RUN_ANSWERS, VALID_TRANSFORM_TYPES } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
 import type {
   DryRunTransform,
   ExtractBaseAndExtReturn,
@@ -19,6 +20,7 @@ import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
 import {
   areNewNamesDistinct,
+  askQuestion,
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
@@ -26,6 +28,14 @@ import {
   numberOfDuplicatedNames
 } from "./utils.js";
 const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
+const {
+  exitWithoutTransform,
+  questionPerformTransform,
+  introText,
+  warningUnaffectedFiles,
+  warningDuplication,
+  exitVoidTransform,
+} = STATUS.dryRun;
 
 export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   typeof VALID_TRANSFORM_TYPES[number],
@@ -36,8 +46,9 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
-  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args),
-  format: (args: GenerateRenameListArgs) => formatTextTransform(args)
+  extensionModify: (args: GenerateRenameListArgs) =>
+    extensionModifyTransform(args),
+  format: (args: GenerateRenameListArgs) => formatTextTransform(args),
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
@@ -61,12 +72,16 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     transformPath: targetDir,
   };
   const transformedNames = generateRenameList(transformArgs);
-  if (args.dryRun)
-    return dryRunTransform({
+  if (args.dryRun) {
+    const dryRun = await dryRunTransform({
       transformPath: targetDir,
       transformedNames,
       transformPattern,
     });
+    if (!dryRun) {
+      return;
+    }
+  }
 
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(duplicateRenames);
@@ -93,39 +108,44 @@ export const generateRenameList: GenerateRenameList = (args) => {
   throw new Error(noTransformFunctionAvailable);
 };
 
-export const dryRunTransform: DryRunTransform = ({
+export const dryRunTransform: DryRunTransform = async ({
   transformPath,
   transformPattern,
   transformedNames,
-}): void => {
-  console.log(
-    "Transformation of type",
-    transformPattern,
-    "in folder",
-    transformPath,
-    "would result in:"
-  );
+}) => {
   const changedNames = transformedNames.filter(
     (renameInfo) => renameInfo.original !== renameInfo.rename
   );
-  const duplicatedTransforms = numberOfDuplicatedNames({
-    renameList: transformedNames,
-    checkType: "transforms",
-  });
-  const duplicatedRenames = numberOfDuplicatedNames({
-    renameList: transformedNames,
-    checkType: "results",
-  });
+  if (changedNames.length === 0) {
+    console.log(exitVoidTransform);
+    return false;
+  }
 
-  changedNames.forEach((name) =>
-    console.log(`${name.original} --> ${name.rename}`)
-  );
-  if (duplicatedTransforms > 0) {
-    console.log(`Number of unaffected files: ${duplicatedTransforms}.`);
+  const transformData: Record<string, number> = {};
+  (["transforms", "results"] as const).forEach((checkType) => {
+    transformData[checkType] = numberOfDuplicatedNames({
+      renameList: transformedNames,
+      checkType,
+    });
+  });
+  const { transforms: unaffectedFiles, results: targetDuplication } =
+    transformData;
+
+  console.log(introText(transformPattern, transformPath));
+  console.table(changedNames, ["original", "rename"]);
+
+  if (unaffectedFiles > 0) {
+    console.log(warningUnaffectedFiles(unaffectedFiles));
   }
-  if (duplicatedRenames > 0) {
-    console.log(`
-    
-    WARNING: Running the transform on these files with the given parameters would result in ${duplicatedRenames} duplicated names and throw an error!`);
+  if (targetDuplication > 0) {
+    console.log(warningDuplication(targetDuplication));
+    return false;
   }
+
+  const response = await askQuestion(questionPerformTransform);
+  if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) {
+    return true;
+  }
+  console.log(exitWithoutTransform);
+  return false;
 };

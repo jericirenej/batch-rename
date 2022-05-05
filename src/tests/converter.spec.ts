@@ -9,6 +9,7 @@ import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   DryRunTransformArgs,
+  RenameList,
   RenameListArgs,
   TransformTypes
 } from "../types.js";
@@ -40,6 +41,8 @@ const createSpyOnProcessWrite = () =>
   jest.spyOn(process.stdout, "write").mockImplementation();
 const createSpyOnLog = () =>
   jest.spyOn(console, "log").mockImplementation((message?: string) => {});
+const createSpyOnTable = () =>
+  jest.spyOn(console, "table").mockImplementation((message?: string) => {});
 
 const restoreMocks = (...spies: jest.SpyInstance[]) =>
   spies.forEach((spy) => spy.mockRestore());
@@ -77,7 +80,8 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
     .mockReturnValue(splitFileList),
   spyOnProvideFileStats = jest
     .spyOn(dateTransformFunctions, "provideFileStats")
-    .mockResolvedValue(splitFileListWithStats);
+    .mockResolvedValue(splitFileListWithStats),
+  spyOnAskQuestion = jest.spyOn(utils, "askQuestion");
 
 [
   spyOnDateTransform,
@@ -114,7 +118,9 @@ describe("convertFiles", () => {
   });
   afterAll(() => spyOnAreNewNamesDistinct.mockRestore());
   it("Should dryRunTransform, if dryRun is true", async () => {
-    spyOnDryRunTransform.mockImplementation();
+    spyOnDryRunTransform.mockImplementationOnce((args) =>
+      Promise.resolve(true)
+    );
     await convertFiles(exampleArgs);
     expect(spyOnDryRunTransform).not.toHaveBeenCalled();
     await convertFiles({ ...exampleArgs, dryRun: true });
@@ -130,6 +136,18 @@ describe("convertFiles", () => {
       spyOnAreNewNamesDistinct,
       spyOnCreateBatchRename,
     ].forEach((auxFunction) => expect(auxFunction).toHaveBeenCalledTimes(1));
+  });
+  it("Should continue execution, if dryRunTransform returns true", async () => {
+    spyOnAreNewNamesDistinct.mockClear();
+    spyOnAreNewNamesDistinct.mockReturnValueOnce(true);
+    spyOnDryRunTransform.mockImplementationOnce((args)=> Promise.resolve(true));
+    await convertFiles({...exampleArgs, dryRun: true});
+    expect(spyOnAreNewNamesDistinct).toHaveBeenCalledTimes(1);
+    
+    spyOnAreNewNamesDistinct.mockClear();
+    spyOnDryRunTransform.mockImplementationOnce((args)=> Promise.resolve(false));
+    await convertFiles({...exampleArgs, dryRun: true});
+    expect(spyOnAreNewNamesDistinct).not.toHaveBeenCalled();
   });
   it("Should include exclude argument in listFiles, if provided", async () => {
     sypOnDetermineDir
@@ -223,39 +241,62 @@ describe("generateRenameList", () => {
 });
 
 describe("dryRunTransform", () => {
-  const spyOnNumberOfDuplicatedNames = jest
-  .spyOn(utils, "numberOfDuplicatedNames")
-  let spyOnConsole:jest.SpyInstance;
+  const spyOnNumberOfDuplicatedNames = jest.spyOn(
+    utils,
+    "numberOfDuplicatedNames"
+  );
+  let spyOnConsole: jest.SpyInstance, spyOnTable: jest.SpyInstance;
   const exampleArgs: DryRunTransformArgs = {
     transformPath: examplePath,
     transformPattern: ["searchAndReplace"],
     transformedNames: renameListDistinct,
   };
-  beforeEach(()=> spyOnConsole = createSpyOnLog());
-  afterEach(()=> {spyOnConsole.mockRestore(); spyOnNumberOfDuplicatedNames.mockReset()});
-  it("Should call numberOfDuplicatedNames 2 times", ()=> {
-  spyOnNumberOfDuplicatedNames.mockReturnValue(0);
-  dryRunTransform(exampleArgs);
-  expect(spyOnNumberOfDuplicatedNames).toHaveBeenCalledTimes(2);
-  
-  const checkTypeArgs = spyOnNumberOfDuplicatedNames.mock.calls.flat().map(config => config.checkType);
-  const expectedArgs = ["transforms", "results"];
-  expect(checkTypeArgs).toEqual(expectedArgs);
+  beforeEach(() => {
+    spyOnConsole = createSpyOnLog();
+    spyOnTable = createSpyOnTable();
+  });
+  afterEach(() => {
+    [spyOnConsole, spyOnTable].forEach((spy) => spy.mockRestore());
+    spyOnNumberOfDuplicatedNames.mockReset();
+  });
+  it("Should call numberOfDuplicatedNames 2 times", async () => {
+    spyOnAskQuestion.mockImplementationOnce((question) => Promise.resolve(""));
+    spyOnNumberOfDuplicatedNames.mockReturnValue(0);
+    await dryRunTransform(exampleArgs);
+    expect(spyOnNumberOfDuplicatedNames).toHaveBeenCalledTimes(2);
 
-  })
-  it("Should call console log appropriate number of times", () => {
-    const spyOnConsole = createSpyOnLog();
-    spyOnNumberOfDuplicatedNames.mockReturnValueOnce(0).mockReturnValue(0);
-    dryRunTransform(exampleArgs);
-    const expected = renameListDistinct.length + 1;
-    expect(spyOnConsole).toHaveBeenCalledTimes(expected);
-    
-    spyOnConsole.mockClear();
-    
-    spyOnNumberOfDuplicatedNames.mockReturnValueOnce(1).mockReturnValue(1);
-    dryRunTransform(exampleArgs);
-    // Extra calls because of duplicated transforms and renames.
-     expect(spyOnConsole).toHaveBeenCalledTimes(expected + 2);
-    spyOnConsole.mockRestore();
+    const checkTypeArgs = spyOnNumberOfDuplicatedNames.mock.calls
+      .flat()
+      .map((config) => config.checkType);
+    const expectedArgs = ["transforms", "results"];
+    expect(checkTypeArgs).toEqual(expectedArgs);
+  });
+  it("Should return false, if no names would be changed by transform", async () => {
+    const identicalTransform: RenameList = [renameListDistinct[0]];
+    identicalTransform[0].rename = identicalTransform[0].original;
+    expect(
+      await dryRunTransform({
+        ...exampleArgs,
+        transformedNames: identicalTransform,
+      })
+    ).toBe(false);
+  });
+  it("Should return false, if duplicated renames exist", async () => {
+    [0, 1].forEach((num) =>
+      spyOnNumberOfDuplicatedNames.mockReturnValueOnce(num)
+    );
+    expect(await dryRunTransform(exampleArgs)).toBe(false);
+  });
+  it("Should return false, if askQuestion answer is not included in valid types", async () => {
+    ["no", "NO", "nope", "something", "!!"].forEach(async (answer) => {
+      spyOnAskQuestion.mockResolvedValueOnce(answer);
+      expect(await dryRunTransform(exampleArgs)).toBe(false);
+    });
+  });
+  it("Should return true, if askQuestion answer is of valid type", async () => {
+    ["y", "yes", "Y", "YES", "yEs", "Yes", "YeS"].forEach(async (answer) => {
+      spyOnAskQuestion.mockResolvedValueOnce(answer);
+      expect(await dryRunTransform(exampleArgs)).toBe(true);
+    });
   });
 });
