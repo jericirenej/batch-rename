@@ -1,7 +1,10 @@
 import process from "process";
 import program from "../commands/generateCommands.js";
 import * as parseCommands from "../commands/parseCommands.js";
-import { VALID_TRANSFORM_TYPES } from "../constants.js";
+import {
+  EXCLUDED_CONVERT_OPTIONS,
+  VALID_TRANSFORM_TYPES
+} from "../constants.js";
 import * as converters from "../converters/converter.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
@@ -102,6 +105,26 @@ describe("parseOptions", () => {
       const preserveOriginal =
         spyOnConvertFiles.mock.calls.flat()[index].preserveOriginal;
       expect(preserveOriginal).toBe(expected);
+    });
+  });
+  it("Should pass appropriately shaped object to converter", async () => {
+    const argList: OptionKeysWithValuesAndRestArgs[] = [
+      exampleArgs,
+      { ...exampleArgs, noExtensionPreserve: true, detailedDate: true },
+      { ...exampleArgs, format: "uppercase" },
+    ];
+    const extraKeys = ["transformPattern", "transformPath"];
+    argList.forEach(async (args) => {
+      await parseOptions(exampleArgs);
+      spyOnConvertFiles.mockClear();
+      await parseOptions(args);
+      const expectedKeys = extraKeys.concat(
+        Object.keys(args).filter(
+          (arg) => !EXCLUDED_CONVERT_OPTIONS.includes(arg)
+        )
+      );
+      const receivedKeys = Object.keys(spyOnConvertFiles.mock.calls.flat()[0]);
+      expect(receivedKeys.every(key => expectedKeys.includes(key))).toBe(true);
     });
   });
 });
