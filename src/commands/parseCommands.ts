@@ -1,9 +1,10 @@
 import {
+  EXCLUDED_CONVERT_OPTIONS,
   UTILITY_ACTIONS,
   VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
-import { checkPath } from "../converters/utils.js";
+import { checkPath, filterObjectByKeys } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   OptionKeysWithValues,
@@ -17,35 +18,14 @@ import type {
 import program from "./generateCommands.js";
 import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
 
-const {
-  noTransformationPicked, 
-  onlyOneUtilAction,
-} = ERRORS.transforms;
+const { noTransformationPicked, onlyOneUtilAction } = ERRORS.transforms;
 
 export const parseOptions = async (
   options: OptionKeysWithValuesAndRestArgs
 ) => {
   try {
     if (!Object.keys(options).length) return program.help();
-    const {
-      addText,
-      separator,
-      textPosition,
-      preserveOriginal,
-      extensionModify,
-      noExtensionPreserve,
-      dryRun,
-      dateRename,
-      detailedDate,
-      searchAndReplace,
-      target,
-      numericTransform,
-      truncate,
-      baseIndex,
-      exclude,
-      restArgs,
-      format,
-    } = options;
+    const { preserveOriginal, dryRun, target, restArgs } = options;
 
     const transformPath = await setTransformationPath(
       target as string | undefined,
@@ -69,26 +49,16 @@ export const parseOptions = async (
     } catch {
       transformedPreserve = true;
     }
-    const args = {
-      addText,
-      transformPattern,
-      preserveOriginal: transformedPreserve,
-      noExtensionPreserve,
-      extensionModify,
-      dateRename,
-      detailedDate,
-      dryRun,
-      searchAndReplace,
-      transformPath,
-      numericTransform,
-      separator,
-      textPosition,
-      truncate,
-      baseIndex,
-      exclude,
-      format,
-    } as RenameListArgs;
-    return await convertFiles(args);
+
+    const args = filterObjectByKeys({
+      targetObj: options,
+      filterKeys: EXCLUDED_CONVERT_OPTIONS,
+      filterType: "exclude",
+    });
+    args.preserveOriginal = transformedPreserve;
+    args.transformPattern = transformPattern;
+    args.transformPath = transformPath;
+    return await convertFiles(args as RenameListArgs);
   } catch (err) {
     const error = err as Error;
     console.error(error.message);
