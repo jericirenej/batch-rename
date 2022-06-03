@@ -57,13 +57,16 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   });
 };
 
-export const listFiles: ListFiles = async (transformPath, excludeFilter) => {
+export const listFiles: ListFiles = async (
+  transformPath,
+  excludeFilter,
+  includeDir = false
+) => {
   const targetDir = determineDir(transformPath);
   const dirContent = await readdir(targetDir, { withFileTypes: true });
   let files = dirContent
-    .filter(
-      (dirEntry) => dirEntry.isFile() && dirEntry.name !== ROLLBACK_FILE_NAME
-    )
+    .filter((dirEntry) => dirEntry.name !== ROLLBACK_FILE_NAME)
+    .filter((dirEntry) => (!includeDir ? dirEntry.isFile() : true))
     .map((fileDirEntry) => fileDirEntry.name);
   if (excludeFilter) {
     const regex = new RegExp(excludeFilter);

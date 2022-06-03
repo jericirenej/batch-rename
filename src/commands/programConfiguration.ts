@@ -148,6 +148,13 @@ const programOptions: ProgramOptions[] = [
     description: "Remove rollback file.",
     defaultValue: "",
   },
+  {
+    short: "",
+    long: "includeDir",
+    type: "",
+    description:
+      "Include directories in renaming transforms. Defaults to false.",
+  },
 ];
 
 const programDescription =

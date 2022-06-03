@@ -25,7 +25,8 @@ export type OptionKeys =
   | "baseIndex"
   | "exclude"
   | "extensionModify"
-  | "format";
+  | "format"
+  | "includeDir";
 
 export type OptionKeysWithValues = Record<
   OptionKeys,
@@ -96,6 +97,7 @@ export type RenameListArgs = {
   baseIndex?: string;
   exclude?: string;
   format?: ValidTextFormats;
+  includeDir?: boolean;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -193,7 +195,8 @@ export type RestoreOriginalFileNames = (
 export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
 export type ListFiles = (
   transformPath?: string,
-  excludeFilter?: string
+  excludeFilter?: string,
+  includeDir?:boolean,
 ) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
 export type NumberOfDuplicatedNamesArgs = {
@@ -203,7 +206,7 @@ export type NumberOfDuplicatedNamesArgs = {
 export type NumberOfDuplicatedNames = (
   args: NumberOfDuplicatedNamesArgs
 ) => number;
-export type CheckPath = (path: string, includeDir?:boolean) => Promise<string>;
+export type CheckPath = (path: string, includeDir?: boolean) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {
   baseName: string;
@@ -214,7 +217,7 @@ export type ComposeRenameStringArgs = {
   textPosition?: "prepend" | "append";
   separator?: string;
   truncate?: string;
-  format?:ValidTextFormats;
+  format?: ValidTextFormats;
   noExtensionPreserve?: boolean;
 };
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;

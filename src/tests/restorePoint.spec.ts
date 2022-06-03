@@ -3,6 +3,7 @@ import { readFile, rename } from "fs/promises";
 import * as restorePoint from "../converters/restorePoint.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
 import type { RestoreBaseReturn } from "../types.js";
 import {
   examplePath,
@@ -20,8 +21,7 @@ const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
   ERRORS.restore;
 const { restoreBaseFunction, restoreOriginalFileNames, dryRunRestore } =
   restorePoint;
-const missingFilesMessage =
-  "The following files did not have restore data available:";
+const missingFilesMessage = STATUS.restore.restoreMissingFiles;
 
 /** Will return spy if no mock is passed, or restoreMock, if mock is passed */
 const consoleSetSpy = (): jest.SpyInstance => {
@@ -74,13 +74,10 @@ describe("restoreBaseFunction", () => {
     expect(rollbackList.filesToRestore).toEqual(mockFileList);
   });
   it("Should log missing fileNames in restoreFile", async () => {
-    spyOnListFiles.mockResolvedValueOnce(mockFileList);
+    spyOnListFiles.mockResolvedValueOnce(mockFileList.slice(0,-1));
     mockedFs.existsSync.mockReturnValueOnce(true);
-    mockedReadFile.mockResolvedValueOnce(
-      JSON.stringify(renameList.slice(0, -1))
-    );
+    mockedReadFile.mockResolvedValueOnce(JSON.stringify(renameList));
     const rollbackList = await restoreBaseFunction(transformPath);
-    expect(rollbackList.rollbackData).toEqual(renameList.slice(0, -1));
     expect(rollbackList.missingFiles).toEqual(mockFileList.slice(-1));
     expect(rollbackList.filesToRestore).toEqual(mockFileList.slice(0, -1));
   });
@@ -93,7 +90,7 @@ describe("restoreOriginalFileNames", () => {
     jest.clearAllMocks();
     spyOnConsole.mockRestore();
   });
-  it("Should call dryRunRestore, if dryRun is true", async () => {
+  it("Should call dryRunRestore, if dryRun arg is true", async () => {
     spyOnDryRunRestore.mockResolvedValueOnce();
     await restoreOriginalFileNames({ dryRun: true, transformPath });
     expect(spyOnDryRunRestore).toHaveBeenCalledTimes(1);

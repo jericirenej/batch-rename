@@ -10,4 +10,7 @@ export const STATUS = {
     exitVoidTransform: "No file names would be transformed under the current settings!",
     exitWithoutTransform: "Exited application without performing transform.",
   },
+  restore: {
+    restoreMissingFiles: "The following files were listed in rollback folder, but could not be found in target folder:"
+  }
 };

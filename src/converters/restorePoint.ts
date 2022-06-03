@@ -3,6 +3,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
 import type {
   RenameList,
   RestoreBaseFunction,
@@ -23,7 +24,7 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
 ) => {
   const targetDir = determineDir(transformPath);
   const targetPath = join(targetDir, ROLLBACK_FILE_NAME);
-  const existingFiles = await listFiles(targetDir);
+  const existingFiles = await listFiles(targetDir, undefined, true);
   if (!existingFiles.length) {
     throw new Error(noFilesToConvert);
   }
@@ -35,11 +36,10 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
   const rollbackData = JSON.parse(readRollback) as RenameList;
 
   const missingFiles: string[] = [];
-  existingFiles.forEach((file) => {
-    const targetName = rollbackData.find(
-      (rollbackInfo) => rollbackInfo.rename === file
-    );
-    if (!targetName) missingFiles.push(file);
+  rollbackData.forEach((info) => {
+    const { rename } = info;
+    const targetFilePresent = existingFiles.includes(rename);
+    if (!targetFilePresent) missingFiles.push(rename);
   });
   const filesToRestore = existingFiles.filter(
     (file) => !missingFiles.includes(file)
@@ -66,7 +66,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     if (!batchRename.length) {
       throw new Error(couldNotBeParsed);
     } else {
-      console.log("The following files did not have restore data available:");
+      console.log(STATUS.restore.restoreMissingFiles);
       missingFiles.map((file) => console.log(file));
     }
   }
@@ -94,7 +94,7 @@ export const dryRunRestore = async (transformPath?: string): Promise<void> => {
   });
 
   if (missingFiles.length) {
-    console.log("The following files did not have restore data available:");
+    console.log(STATUS.restore.restoreMissingFiles);
     missingFiles.forEach((file) => console.log(file));
   }
 };

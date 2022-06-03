@@ -1,6 +1,10 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import { ROLLBACK_FILE_NAME, VALID_DRY_RUN_ANSWERS, VALID_TRANSFORM_TYPES } from "../constants.js";
+import {
+  ROLLBACK_FILE_NAME,
+  VALID_DRY_RUN_ANSWERS,
+  VALID_TRANSFORM_TYPES
+} from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
@@ -52,10 +56,10 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
-  const { transformPattern, transformPath, exclude, format } = args;
+  const { transformPattern, transformPath, exclude, format, includeDir } = args;
   const targetDir = determineDir(transformPath);
-  const splitFileList = await listFiles(targetDir, exclude).then((fileList) =>
-    extractBaseAndExt(fileList, targetDir)
+  const splitFileList = await listFiles(targetDir, exclude, includeDir).then(
+    (fileList) => extractBaseAndExt(fileList, targetDir)
   );
   let listWithStats!: FileListWithStatsArray;
 
