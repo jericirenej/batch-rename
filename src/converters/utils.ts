@@ -16,7 +16,6 @@ import type {
   CreateBatchRenameList,
   DetermineDir,
   ExtractBaseAndExt,
-  FilterObjectByKeys,
   ListFiles,
   NumberOfDuplicatedNames,
   TruncateFileName
@@ -248,29 +247,4 @@ export const askQuestion = (question: string): Promise<string> => {
   return new Promise((resolve) => {
     rl.question(question + "\n", (answer) => resolve(answer));
   });
-};
-
-/** Filter an object based on its keys that are checked against a string array.
- * Two types of filtering available:
- *  * *include*: will return an object that includes **the filter keys only**.
- *  * *exclude*: will return an object that **excludes the filter keys**.
- */
-export const filterObjectByKeys: FilterObjectByKeys = (args) => {
-  const { filterType, filterKeys, targetObj } = args;
-  const returnObj: Record<string, any> = {};
-  const objKeys = Object.keys(targetObj);
-  const checkedFilterKeys = filterKeys.filter((key) => objKeys.includes(key));
-
-  if (!(objKeys.length && filterKeys.length && checkedFilterKeys.length))
-    return targetObj;
-
-  const targetKeys = objKeys.filter((key) => {
-    const isAmongCheckedKeys = checkedFilterKeys.includes(key);
-    if (filterType === "include") {
-      return isAmongCheckedKeys;
-    }
-    return !isAmongCheckedKeys;
-  });
-  targetKeys.forEach((key) => (returnObj[key] = targetObj[key]));
-  return returnObj;
 };

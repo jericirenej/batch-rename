@@ -51,7 +51,8 @@ const programOptions: ProgramOptions[] = [
     long: "format",
     type: "[string]",
     description:
-      "Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).",
+      "Perform one of the transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).",
+    choices: ["uppercase", "lowercase", "capitalize"],
   },
   {
     short: "e",
