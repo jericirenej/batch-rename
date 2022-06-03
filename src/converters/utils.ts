@@ -108,7 +108,7 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
   return -1;
 };
 
-export const checkPath: CheckPath = async (path) => {
+export const checkPath: CheckPath = async (path, includeDir = false) => {
   const fullPath = resolve(process.cwd(), path);
   if (!existsSync(fullPath)) {
     throw new Error(pathDoesNotExist);
@@ -119,6 +119,9 @@ export const checkPath: CheckPath = async (path) => {
   }
   const dirInfo = await readdir(fullPath, { withFileTypes: true });
   const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
+  if (includeDir && dirInfo.length) {
+    return fullPath;
+  }
   if (!hasFiles) {
     throw new Error(noChildFiles);
   }
@@ -257,7 +260,7 @@ export const filterObjectByKeys: FilterObjectByKeys = (args) => {
   const returnObj: Record<string, any> = {};
   const objKeys = Object.keys(targetObj);
   const checkedFilterKeys = filterKeys.filter((key) => objKeys.includes(key));
-  
+
   if (!(objKeys.length && filterKeys.length && checkedFilterKeys.length))
     return targetObj;
 
@@ -267,7 +270,7 @@ export const filterObjectByKeys: FilterObjectByKeys = (args) => {
       return isAmongCheckedKeys;
     }
     return !isAmongCheckedKeys;
-  });  
+  });
   targetKeys.forEach((key) => (returnObj[key] = targetObj[key]));
   return returnObj;
 };

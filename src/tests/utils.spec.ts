@@ -214,14 +214,21 @@ describe("checkPath", () => {
     mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0));
     await expect(checkPath(examplePath)).rejects.toThrowError(noChildFiles);
   });
-  it("Should return filePath, if it exists, is a directory, and has children of file type", async () => {
+  it("Should return filePath, if directory has only dir entries and includeDir is true", () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
     mockedLstat.mockResolvedValueOnce({
       ...exampleStats,
       isDirectory: () => true,
     });
-    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 3));
-    expect(await checkPath(examplePath)).toBe(resolve(examplePath));
+  });
+  it("Should return filePath, if icnludeDir argument is true and targetPath has only dir entries", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(true);
+    mockedLstat.mockResolvedValueOnce({
+      ...exampleStats,
+      isDirectory: () => true,
+    });
+    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0, 2));
+    expect(await checkPath(examplePath, true)).toBe(resolve(examplePath));
   });
 });
 
@@ -498,21 +505,22 @@ describe("filterObjectByKeys", () => {
     expect(keys.length).toBe(expectedLength);
     filterKeys.forEach((key) => expect(keys.includes(key)).toBe(false));
   });
-  it("Should ignore filterKeys that are not part of the object", ()=> {
+  it("Should ignore filterKeys that are not part of the object", () => {
     const validFilters = ["one"];
     const filterKeys = [...validFilters, "invalidKey"];
-    const args = {targetObj,
-      filterKeys,
-      filterType: "include"} as const;
+    const args = { targetObj, filterKeys, filterType: "include" } as const;
     const filteredInclude = filterObjectByKeys(args);
     const keysInclude = Object.keys(filteredInclude);
     expect(keysInclude.length).toBe(validFilters.length);
     expect(keysInclude).toEqual(validFilters);
 
-    const filteredExclude = filterObjectByKeys({...args, filterType: "exclude"});
+    const filteredExclude = filterObjectByKeys({
+      ...args,
+      filterType: "exclude",
+    });
     const keysExclude = Object.keys(filteredExclude);
     expect(keysExclude.length).toBe(objKeys.length - validFilters.length);
-  })
+  });
   it("Should return original object if filterKeys are empty or none of them are in the targetObj", () => {
     [[], ["invalidKey"]].forEach((filterKeys) => {
       (["exclude", "include"] as const).forEach((filterType) => {

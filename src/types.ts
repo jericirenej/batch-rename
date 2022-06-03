@@ -203,7 +203,7 @@ export type NumberOfDuplicatedNamesArgs = {
 export type NumberOfDuplicatedNames = (
   args: NumberOfDuplicatedNamesArgs
 ) => number;
-export type CheckPath = (path: string) => Promise<string>;
+export type CheckPath = (path: string, includeDir?:boolean) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {
   baseName: string;
