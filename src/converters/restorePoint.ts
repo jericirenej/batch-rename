@@ -24,7 +24,7 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
 ) => {
   const targetDir = determineDir(transformPath);
   const targetPath = join(targetDir, ROLLBACK_FILE_NAME);
-  const existingFiles = await listFiles(targetDir, undefined, true);
+  const existingFiles = await listFiles(targetDir, undefined, "all");
   if (!existingFiles.length) {
     throw new Error(noFilesToConvert);
   }

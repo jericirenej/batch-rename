@@ -56,9 +56,9 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
-  const { transformPattern, transformPath, exclude, format, includeDir } = args;
+  const { transformPattern, transformPath, exclude, targetType } = args;
   const targetDir = determineDir(transformPath);
-  const splitFileList = await listFiles(targetDir, exclude, includeDir).then(
+  const splitFileList = await listFiles(targetDir, exclude, targetType).then(
     (fileList) => extractBaseAndExt(fileList, targetDir)
   );
   let listWithStats!: FileListWithStatsArray;

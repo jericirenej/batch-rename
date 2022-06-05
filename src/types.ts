@@ -6,6 +6,8 @@ import {
   VALID_TRANSFORM_TYPES
 } from "./constants";
 
+export type ValidTypes = "files" | "dirs" | "all";
+
 export type ValidTextFormats = "uppercase" | "lowercase" | "capitalize";
 export type OptionKeys =
   | "preserveOriginal"
@@ -26,7 +28,7 @@ export type OptionKeys =
   | "exclude"
   | "extensionModify"
   | "format"
-  | "includeDir";
+  | "targetType";
 
 export type OptionKeysWithValues = Record<
   OptionKeys,
@@ -39,7 +41,7 @@ export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {
 
 export type SetTransformationPath = (
   folder: string | undefined,
-  restARgs: string[] | undefined
+  restArgs: string[] | undefined
 ) => Promise<string | undefined>;
 
 export type TransformTypes = typeof VALID_TRANSFORM_TYPES[number];
@@ -97,7 +99,7 @@ export type RenameListArgs = {
   baseIndex?: string;
   exclude?: string;
   format?: ValidTextFormats;
-  includeDir?: boolean;
+  targetType?: ValidTypes;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -196,7 +198,7 @@ export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
 export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string,
-  includeDir?:boolean,
+  targetType?: ValidTypes
 ) => Promise<string[]>;
 export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
 export type NumberOfDuplicatedNamesArgs = {
@@ -206,7 +208,7 @@ export type NumberOfDuplicatedNamesArgs = {
 export type NumberOfDuplicatedNames = (
   args: NumberOfDuplicatedNamesArgs
 ) => number;
-export type CheckPath = (path: string, includeDir?: boolean) => Promise<string>;
+export type CheckPath = (path: string, targetType?: ValidTypes) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {
   baseName: string;

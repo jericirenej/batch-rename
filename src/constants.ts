@@ -1,5 +1,5 @@
-
 export const DEFAULT_SEPARATOR = "-";
+export const DEFAULT_TARGET_TYPE = "files";
 export const ROLLBACK_FILE_NAME = ".rollback.json";
 export const VALID_TRANSFORM_TYPES = [
   "numericTransform",

@@ -78,6 +78,15 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "",
+    long: "targetType",
+    type: "[types]",
+    description:
+      "Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.",
+    choices: ["files", "dirs", "all"],
+    defaultValue: "files",
+  },
+  {
     short: "D",
     long: "dryRun",
     type: "",
@@ -147,13 +156,6 @@ const programOptions: ProgramOptions[] = [
     type: "",
     description: "Remove rollback file.",
     defaultValue: "",
-  },
-  {
-    short: "",
-    long: "includeDir",
-    type: "",
-    description:
-      "Include directories in renaming transforms. Defaults to false.",
   },
 ];
 
