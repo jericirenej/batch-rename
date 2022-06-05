@@ -17,7 +17,8 @@ export const VALID_DATE_TRANSFORM_TYPES = [
   "lastModified",
 ] as const;
 
-export const EXT_REGEX = /(?<=[\p{Alphabetic}\p{Decimal_Number}-]+)(\.\w+)$/u;
+export const EXT_REGEX =
+  /(?<=[\[\]\(\)\p{Alphabetic}\p{Decimal_Number}\p{Mark}-]+)(\.\w+)$/u;
 
 export const VALID_NUMERIC_TRANSFORM_TYPES = [
   "sequence",
