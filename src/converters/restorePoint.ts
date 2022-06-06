@@ -1,15 +1,17 @@
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { ROLLBACK_FILE_NAME } from "../constants.js";
+import { ROLLBACK_FILE_NAME, VALID_DRY_RUN_ANSWERS } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
+  DryRunRestore,
   RenameList,
   RestoreBaseFunction,
   RestoreOriginalFileNames
 } from "../types";
 import {
+  askQuestion,
   cleanUpRollbackFile,
   createBatchRenameList,
   determineDir,
@@ -18,6 +20,12 @@ import {
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
   ERRORS.restore;
+const {
+  restoreMessage,
+  warningMissingFiles,
+  exitWithoutRestore,
+  questionPerformRestore,
+} = STATUS.restore;
 
 export const restoreBaseFunction: RestoreBaseFunction = async (
   transformPath
@@ -52,23 +60,24 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   dryRun,
   transformPath,
 }) => {
-  if (dryRun) return await dryRunRestore(transformPath);
   const targetDir = determineDir(transformPath);
   const restoreBaseData = await restoreBaseFunction(targetDir);
   if (!restoreBaseData) throw new Error(noValidData);
-  const { rollbackData, missingFiles, filesToRestore } = restoreBaseData;
+  if (!restoreBaseData.filesToRestore.length) {
+    throw new Error(couldNotBeParsed);
+  }
+  if (dryRun) {
+    const dryRun = await dryRunRestore(restoreBaseData);
+    if (!dryRun) return;
+  }
+  const { rollbackData, filesToRestore } = restoreBaseData;
 
   let batchRename: Promise<void>[] = [];
   if (filesToRestore.length) {
     batchRename = createBatchRenameList(rollbackData, filesToRestore);
   }
-  if (missingFiles.length) {
-    if (!batchRename.length) {
-      throw new Error(couldNotBeParsed);
-    } else {
-      console.log(STATUS.restore.restoreMissingFiles);
-      missingFiles.map((file) => console.log(file));
-    }
+  if (!batchRename.length) {
+    throw new Error(couldNotBeParsed);
   }
   if (batchRename.length) {
     const revertMessage = `Will revert ${batchRename.length} files...`;
@@ -78,23 +87,24 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   }
 };
 
-export const dryRunRestore = async (transformPath?: string): Promise<void> => {
-  const restoreData = await restoreBaseFunction(transformPath);
-  const { missingFiles, rollbackData, filesToRestore } = restoreData;
-  if (!filesToRestore.length) {
-    throw new Error(couldNotBeParsed);
+export const dryRunRestore: DryRunRestore = async ({
+  filesToRestore,
+  missingFiles,
+  rollbackData,
+}) => {
+  const missingLength = missingFiles.length;
+  const tableData = rollbackData.map(({ rename, original }) => ({
+    current: rename,
+    restored: original,
+  }));
+  console.log(restoreMessage(filesToRestore.length));
+  console.table(tableData, ["current", "restored"]);
+  if (missingLength) {
+    console.log(warningMissingFiles(missingLength));
+    console.log(missingFiles);
   }
-  const revertMessage = `Will revert ${filesToRestore.length} files...`;
-  console.log(revertMessage);
-  filesToRestore.forEach((file) => {
-    const target = rollbackData.find((restore) => restore.rename === file);
-    if (target) {
-      console.log(`${file} --> ${target.original}`);
-    }
-  });
-
-  if (missingFiles.length) {
-    console.log(STATUS.restore.restoreMissingFiles);
-    missingFiles.forEach((file) => console.log(file));
-  }
+  const response = await askQuestion(questionPerformRestore);
+  if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) return true;
+  console.log(exitWithoutRestore);
+  return false;
 };

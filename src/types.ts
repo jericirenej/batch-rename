@@ -113,6 +113,8 @@ export type DryRunTransformArgs = {
 };
 export type DryRunTransform = (args: DryRunTransformArgs) => Promise<boolean>;
 
+export type DryRunRestore = (args: RestoreBaseReturn) => Promise<boolean>;
+
 export type GeneralTransformReturn = {
   rename: string;
   original: string;
@@ -208,7 +210,10 @@ export type NumberOfDuplicatedNamesArgs = {
 export type NumberOfDuplicatedNames = (
   args: NumberOfDuplicatedNamesArgs
 ) => number;
-export type CheckPath = (path: string, targetType?: ValidTypes) => Promise<string>;
+export type CheckPath = (
+  path: string,
+  targetType?: ValidTypes
+) => Promise<string>;
 export type DetermineDir = (transformPath: string | undefined) => string;
 export type ComposeRenameStringArgs = {
   baseName: string;

@@ -35,7 +35,7 @@ const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
 const {
   exitWithoutTransform,
   questionPerformTransform,
-  introText,
+  transformIntro,
   warningUnaffectedFiles,
   warningDuplication,
   exitVoidTransform,
@@ -135,7 +135,7 @@ export const dryRunTransform: DryRunTransform = async ({
   const { transforms: unaffectedFiles, results: targetDuplication } =
     transformData;
 
-  console.log(introText(transformPattern, transformPath));
+  console.log(transformIntro(transformPattern, transformPath));
   console.table(changedNames, ["original", "rename"]);
 
   if (unaffectedFiles > 0) {
