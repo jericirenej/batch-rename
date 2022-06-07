@@ -51,7 +51,8 @@ const programOptions: ProgramOptions[] = [
     long: "format",
     type: "[string]",
     description:
-      "Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).",
+      "Perform one of the transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).",
+    choices: ["uppercase", "lowercase", "capitalize"],
   },
   {
     short: "e",
@@ -75,6 +76,15 @@ const programOptions: ProgramOptions[] = [
     description:
       "Target folder in which the transformation should take place. Can also be set implicitly with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.",
     defaultValue: "",
+  },
+  {
+    short: "",
+    long: "targetType",
+    type: "[types]",
+    description:
+      "Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.",
+    choices: ["files", "dirs", "all"],
+    defaultValue: "files",
   },
   {
     short: "D",
