@@ -21,9 +21,9 @@ Preview numeric transform with exclude option and a custom baseIndex. Folder pat
 
 `node batchRename.mjs -Dn --exclude "excludedName" -b 100 "folder"`
 
-Append creation date to files in the current folder and specify a custom separator.
+Append creation date to files AND folders in the current folder and specify a custom separator.
 
-`node batchRename.mjs -d --separator _`
+`node batchRename.mjs -d --separator _ --targetType all`
 
 Preview the odd numbering transform with custom text append in a target folder.
 
