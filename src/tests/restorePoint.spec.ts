@@ -3,9 +3,9 @@ import { readFile, rename } from "fs/promises";
 import * as restorePoint from "../converters/restorePoint.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
 import type { RestoreBaseReturn } from "../types.js";
 import {
-  examplePath,
   examplePath as transformPath,
   renameListDistinct as renameList
 } from "./mocks.js";
@@ -20,8 +20,9 @@ const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
   ERRORS.restore;
 const { restoreBaseFunction, restoreOriginalFileNames, dryRunRestore } =
   restorePoint;
-const missingFilesMessage =
-  "The following files did not have restore data available:";
+
+jest.mock("../messages/statusMessages.js");
+const statusMocked = jest.mocked(STATUS, true);
 
 /** Will return spy if no mock is passed, or restoreMock, if mock is passed */
 const consoleSetSpy = (): jest.SpyInstance => {
@@ -74,13 +75,10 @@ describe("restoreBaseFunction", () => {
     expect(rollbackList.filesToRestore).toEqual(mockFileList);
   });
   it("Should log missing fileNames in restoreFile", async () => {
-    spyOnListFiles.mockResolvedValueOnce(mockFileList);
+    spyOnListFiles.mockResolvedValueOnce(mockFileList.slice(0, -1));
     mockedFs.existsSync.mockReturnValueOnce(true);
-    mockedReadFile.mockResolvedValueOnce(
-      JSON.stringify(renameList.slice(0, -1))
-    );
+    mockedReadFile.mockResolvedValueOnce(JSON.stringify(renameList));
     const rollbackList = await restoreBaseFunction(transformPath);
-    expect(rollbackList.rollbackData).toEqual(renameList.slice(0, -1));
     expect(rollbackList.missingFiles).toEqual(mockFileList.slice(-1));
     expect(rollbackList.filesToRestore).toEqual(mockFileList.slice(0, -1));
   });
@@ -93,11 +91,6 @@ describe("restoreOriginalFileNames", () => {
     jest.clearAllMocks();
     spyOnConsole.mockRestore();
   });
-  it("Should call dryRunRestore, if dryRun is true", async () => {
-    spyOnDryRunRestore.mockResolvedValueOnce();
-    await restoreOriginalFileNames({ dryRun: true, transformPath });
-    expect(spyOnDryRunRestore).toHaveBeenCalledTimes(1);
-  });
   it("Should throw error, if restoreBaseFunction would return a falsy value", async () => {
     spyOnRestoreBase.mockResolvedValueOnce(
       undefined as unknown as RestoreBaseReturn
@@ -106,43 +99,48 @@ describe("restoreOriginalFileNames", () => {
       restoreOriginalFileNames({ transformPath })
     ).rejects.toThrowError(noValidData);
   });
-  it("Should throw Error, if batchRenameLength is 0", async () => {
-    spyOnCreateBatchRenameList.mockReturnValueOnce([]);
+  it("Should throw error, if there are no files to restore", async () => {
     spyOnRestoreBase.mockResolvedValueOnce({
       ...mockRestoreList,
-      missingFiles: [mockFileList[0]],
+      filesToRestore: [],
     });
+    await expect(() =>
+      restoreOriginalFileNames({ transformPath })
+    ).rejects.toThrow(couldNotBeParsed);
+  });
+  it("Should call dryRunRestore, if dryRun arg is true", async () => {
+    spyOnDryRunRestore.mockResolvedValueOnce(false);
+    spyOnRestoreBase.mockResolvedValueOnce(mockRestoreList);
+    await restoreOriginalFileNames({ dryRun: true, transformPath });
+    expect(spyOnDryRunRestore).toHaveBeenCalledTimes(1);
+  });
+  it("If dryRunRestore is called, only perform restore, if it returns true", async () => {
+    const testCases = [false, true];
+    for (const testCase of testCases) {
+      spyOnCreateBatchRenameList.mockClear();
+      mockedFs.existsSync.mockReturnValueOnce(true);
+      spyOnDryRunRestore.mockResolvedValueOnce(testCase);
+      spyOnRestoreBase.mockResolvedValueOnce(mockRestoreList);
+      if (testCase) {
+        spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
+          Promise.resolve()
+        );
+        spyOnCreateBatchRenameList.mockReturnValueOnce([Promise.resolve()]);
+      }
+      await restoreOriginalFileNames({ ...baseArg, dryRun: true });
+      if (testCase) {
+        expect(spyOnCreateBatchRenameList).toHaveBeenCalled();
+      } else {
+        expect(spyOnCreateBatchRenameList).not.toHaveBeenCalled();
+      }
+    }
+  });
+  it("Should throw Error, if batchRenameLength is 0", async () => {
+    spyOnCreateBatchRenameList.mockReturnValueOnce([]);
+    spyOnRestoreBase.mockResolvedValueOnce(mockRestoreList);
     await expect(() => restoreOriginalFileNames(baseArg)).rejects.toThrowError(
       couldNotBeParsed
     );
-  });
-  it("Should notify user about missing restore data", async () => {
-    spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
-      Promise.resolve()
-    );
-    const missingFiles = [mockFileList[0], mockFileList[1]];
-    spyOnCreateBatchRenameList.mockReturnValueOnce([Promise.resolve()]);
-    spyOnRestoreBase.mockResolvedValueOnce({
-      ...mockRestoreList,
-      missingFiles,
-    });
-    await restoreOriginalFileNames(baseArg);
-    const logCalledWith = spyOnConsole.mock.calls.map((call) => call[0]);
-    [missingFilesMessage, ...missingFiles].forEach((message) =>
-      expect(logCalledWith.includes(message)).toBe(true)
-    );
-  });
-  it("Should not notify users about missing files, if missingFiles empty", async () => {
-    spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
-      Promise.resolve()
-    );
-    spyOnCreateBatchRenameList.mockReturnValueOnce(
-      mockFileList.map((file) => Promise.resolve())
-    );
-    spyOnRestoreBase.mockResolvedValueOnce(mockRestoreList);
-    await restoreOriginalFileNames(baseArg);
-    const calls = spyOnConsole.mock.calls.length;
-    expect(calls).toBe(1);
   });
   it("Should notify user about the number of files that will be reverted", async () => {
     spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
@@ -179,68 +177,56 @@ describe("restoreOriginalFileNames", () => {
 });
 
 describe("dryRunRestore", () => {
-  const generateDryRunMessage = (
-    newName: string,
-    originalName: string
-  ): string => `${newName} --> ${originalName}`;
-  let spyOnConsole: jest.SpyInstance;
-  beforeEach(() => (spyOnConsole = consoleSetSpy()));
+  let spyOnQuestion: jest.SpyInstance, spyOnConsole: jest.SpyInstance;
+
+  beforeEach(() => {
+    spyOnConsole = consoleSetSpy();
+    spyOnQuestion = jest.spyOn(utils, "askQuestion");
+  });
   afterEach(() => {
     jest.clearAllMocks();
+    spyOnQuestion.mockRestore();
     spyOnConsole.mockRestore();
   });
-  it("Should call restoreBaseFunction", async () => {
-    spyOnRestoreBase.mockResolvedValueOnce(mockRestoreList);
-    await dryRunRestore(examplePath);
-    expect(spyOnRestoreBase).toHaveBeenCalledTimes(1);
-  });
-  it("Should throw error, if filesToRestore length is 0", async () => {
-    spyOnRestoreBase.mockResolvedValueOnce({
-      ...mockRestoreList,
-      filesToRestore: [],
-    });
-    await expect(() => dryRunRestore(examplePath)).rejects.toThrow(
-      couldNotBeParsed
+  it("Should return true or false, depending on user input", async () => {
+    const expectTrue = ["y", "Y", "yes", "YeS", "YES"].map((answer) => ({
+      answer,
+      expected: true,
+    }));
+    const expectFalse = ["n", "No", "N", "ye", "YE", "exit", "abc"].map(
+      (answer) => ({ answer, expected: false })
     );
+    for (const { answer, expected } of [...expectTrue, ...expectFalse]) {
+      spyOnQuestion.mockResolvedValueOnce(answer);
+      expect(await dryRunRestore(mockRestoreList)).toBe(expected);
+    }
   });
   it("Should log appropriate information about file reverts", async () => {
-    spyOnRestoreBase.mockResolvedValueOnce(mockRestoreList);
-    await dryRunRestore(examplePath);
-    const calls = spyOnConsole.mock.calls.flat();
-    const expectedIntro = `Will revert ${mockRestoreList.filesToRestore.length} files...`;
-    expect(calls.includes(expectedIntro)).toBe(true);
-    mockRestoreList.filesToRestore.forEach((fileInfo, index) => {
-      const expected = generateDryRunMessage(
-        fileInfo,
-        mockRestoreList.rollbackData[index].original
-      );
-      expect(calls.includes(expected)).toBe(true);
-    });
-    expect(calls.includes(missingFilesMessage)).toBe(false);
+    const spyOnTable = jest.spyOn(console, "table");
+    spyOnQuestion.mockResolvedValueOnce("yes");
+    await dryRunRestore(mockRestoreList);
+    const expectedTable = mockRestoreList.rollbackData.map(
+      ({ rename, original }) => ({ current: rename, restored: original })
+    );
+    expect(statusMocked.restore.restoreMessage).toHaveBeenLastCalledWith(
+      mockRestoreList.filesToRestore.length
+    );
+    expect(spyOnTable).toHaveBeenCalledWith(expectedTable, [
+      "current",
+      "restored",
+    ]);
   });
   it("Should log appropriate information about missing files", async () => {
+    spyOnQuestion.mockResolvedValue("yes");
     const modifiedArgs = {
       ...mockRestoreList,
       filesToRestore: mockFileList.slice(0, -1),
       missingFiles: mockFileList.slice(-1),
     };
-
-    spyOnRestoreBase.mockResolvedValueOnce(modifiedArgs);
-    await dryRunRestore(examplePath);
-    const expectedIntro = `Will revert ${modifiedArgs.filesToRestore.length} files...`;
-    const calls = spyOnConsole.mock.calls.flat();
-    [expectedIntro, missingFilesMessage].forEach((message) =>
-      expect(calls.includes(message)).toBe(true)
+    await dryRunRestore(modifiedArgs);
+    expect(statusMocked.restore.warningMissingFiles).toHaveBeenLastCalledWith(
+      modifiedArgs.missingFiles.length
     );
-    modifiedArgs.filesToRestore.forEach((fileInfo, index) => {
-      const expected = generateDryRunMessage(
-        fileInfo,
-        modifiedArgs.rollbackData[index].original
-      );
-      expect(calls.includes(expected)).toBe(true);
-    });
-    modifiedArgs.missingFiles.forEach((missingFile) =>
-      expect(calls.includes(missingFile)).toBe(true)
-    );
+    expect(spyOnConsole).toHaveBeenLastCalledWith(modifiedArgs.missingFiles);
   });
 });

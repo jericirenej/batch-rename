@@ -1,10 +1,11 @@
+import objectFilter from "@jericirenej/object-filter";
 import {
   EXCLUDED_CONVERT_OPTIONS,
   UTILITY_ACTIONS,
   VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
-import { checkPath, filterObjectByKeys } from "../converters/utils.js";
+import { checkPath } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   OptionKeysWithValues,
@@ -50,9 +51,9 @@ export const parseOptions = async (
       transformedPreserve = true;
     }
 
-    const args = filterObjectByKeys({
-      targetObj: options,
-      filterKeys: EXCLUDED_CONVERT_OPTIONS,
+    const args = objectFilter({
+      targetObject: options,
+      filters: EXCLUDED_CONVERT_OPTIONS,
       filterType: "exclude",
     });
     args.preserveOriginal = transformedPreserve;
