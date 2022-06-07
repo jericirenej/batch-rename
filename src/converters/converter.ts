@@ -1,6 +1,10 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import { ROLLBACK_FILE_NAME, VALID_DRY_RUN_ANSWERS, VALID_TRANSFORM_TYPES } from "../constants.js";
+import {
+  ROLLBACK_FILE_NAME,
+  VALID_DRY_RUN_ANSWERS,
+  VALID_TRANSFORM_TYPES
+} from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
@@ -31,7 +35,7 @@ const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
 const {
   exitWithoutTransform,
   questionPerformTransform,
-  introText,
+  transformIntro,
   warningUnaffectedFiles,
   warningDuplication,
   exitVoidTransform,
@@ -52,10 +56,10 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
-  const { transformPattern, transformPath, exclude, format } = args;
+  const { transformPattern, transformPath, exclude, targetType } = args;
   const targetDir = determineDir(transformPath);
-  const splitFileList = await listFiles(targetDir, exclude).then((fileList) =>
-    extractBaseAndExt(fileList, targetDir)
+  const splitFileList = await listFiles(targetDir, exclude, targetType).then(
+    (fileList) => extractBaseAndExt(fileList, targetDir)
   );
   let listWithStats!: FileListWithStatsArray;
 
@@ -131,7 +135,7 @@ export const dryRunTransform: DryRunTransform = async ({
   const { transforms: unaffectedFiles, results: targetDuplication } =
     transformData;
 
-  console.log(introText(transformPattern, transformPath));
+  console.log(transformIntro(transformPattern, transformPath));
   console.table(changedNames, ["original", "rename"]);
 
   if (unaffectedFiles > 0) {

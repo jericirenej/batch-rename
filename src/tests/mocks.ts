@@ -83,19 +83,27 @@ export const exampleStats: Stats = {
 
 export const exampleDirent: Dirent = { name: "0", ...exampleStatMethods };
 
+/**Create a direntArray with specified number of file and dir entries.
+ * If file and dir entries exceed the specified length of the array,
+ * the array will be extended.
+ */
 export const createDirentArray = (
   length: number,
-  numberOfFiles = 0
+  numberOfFiles = 0,
+  numberOfDirs = 0
 ): Dirent[] => {
   let counter = 1;
-  const arr = new Array(length).fill(0);
-  const filesNum = numberOfFiles > length ? length : numberOfFiles;
+  const combinedLength = numberOfDirs + numberOfFiles;
+  let arrLength = combinedLength > length ? combinedLength : length;
+  const arr = new Array(arrLength).fill(0);
   return arr.map((entry, index) => {
-    const isFileReturn = counter <= filesNum;
+    const isFileReturn = counter <= numberOfFiles;
+    const isDirReturn = (numberOfDirs > 0) && (counter > numberOfFiles);
     counter++;
     return {
       ...exampleStatMethods,
       isFile: () => isFileReturn,
+      isDirectory: () => isDirReturn,
       name: index.toString(),
     };
   });
@@ -144,5 +152,7 @@ export const textFormatMatrix = [
   },
 ];
 const formatFileList = textFormatMatrix.map((example) => example.value);
-export const textFormatRenameList = extractBaseAndExt(formatFileList, examplePath);
-
+export const textFormatRenameList = extractBaseAndExt(
+  formatFileList,
+  examplePath
+);
