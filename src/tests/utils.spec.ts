@@ -11,9 +11,7 @@ import {
   composeRenameString,
   createBatchRenameList,
   determineDir,
-  extractBaseAndExt,
-  filterObjectByKeys,
-  listFiles,
+  extractBaseAndExt, listFiles,
   numberOfDuplicatedNames,
   truncateFile
 } from "../converters/utils.js";
@@ -468,61 +466,5 @@ describe("truncateFile", () => {
   });
   it("Should return truncated baseName", () => {
     expect(truncateFile(generalArgs).length).toBe(truncateNum);
-  });
-});
-
-describe("filterObjectByKeys", () => {
-  const targetObj: Record<string, any> = {};
-  const objKeys = ["one", "two", "three", "four"];
-  objKeys.forEach((key) => (targetObj[key] = key));
-  it("Include filterType should return object with filterKeys only", () => {
-    const filterKeys = ["one", "two"];
-    const filteredObj = filterObjectByKeys({
-      targetObj,
-      filterKeys,
-      filterType: "include",
-    });
-    const keys = Object.keys(filteredObj);
-    expect(keys.length).toBe(filterKeys.length);
-    expect(keys).toEqual(filterKeys);
-  });
-  it("Exclude filterType should return object without filterKeys", () => {
-    const filterKeys = ["one"];
-    const expectedLength = objKeys.length - filterKeys.length;
-    const filteredObj = filterObjectByKeys({
-      targetObj,
-      filterKeys,
-      filterType: "exclude",
-    });
-    const keys = Object.keys(filteredObj);
-    expect(keys.length).toBe(expectedLength);
-    filterKeys.forEach((key) => expect(keys.includes(key)).toBe(false));
-  });
-  it("Should ignore filterKeys that are not part of the object", ()=> {
-    const validFilters = ["one"];
-    const filterKeys = [...validFilters, "invalidKey"];
-    const args = {targetObj,
-      filterKeys,
-      filterType: "include"} as const;
-    const filteredInclude = filterObjectByKeys(args);
-    const keysInclude = Object.keys(filteredInclude);
-    expect(keysInclude.length).toBe(validFilters.length);
-    expect(keysInclude).toEqual(validFilters);
-
-    const filteredExclude = filterObjectByKeys({...args, filterType: "exclude"});
-    const keysExclude = Object.keys(filteredExclude);
-    expect(keysExclude.length).toBe(objKeys.length - validFilters.length);
-  })
-  it("Should return original object if filterKeys are empty or none of them are in the targetObj", () => {
-    [[], ["invalidKey"]].forEach((filterKeys) => {
-      (["exclude", "include"] as const).forEach((filterType) => {
-        const filteredObj = filterObjectByKeys({
-          targetObj,
-          filterKeys,
-          filterType,
-        });
-        expect(filteredObj).toEqual(targetObj);
-      });
-    });
   });
 });

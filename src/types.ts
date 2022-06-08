@@ -220,6 +220,3 @@ export type ComposeRenameStringArgs = {
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
 export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;
-
-
-export type FilterObjectByKeys = ({targetObj, filterKeys, filterType}:{targetObj:Record<string, any>, filterKeys: string[], filterType: "include"|"exclude"}) => Record<string,any>;
