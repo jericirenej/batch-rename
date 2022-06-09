@@ -1,4 +1,4 @@
-import { Stats } from "fs";
+import { Dirent, Stats } from "fs";
 import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
@@ -49,6 +49,7 @@ export type ExtractBaseAndExtTemplate = {
   baseName: string;
   ext: string;
   sourcePath: string;
+  type: "directory"|"file"
 };
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
 export type FileListWithStats = ExtractBaseAndExtTemplate & {
@@ -73,7 +74,7 @@ export type ProvideFileStats = (
 ) => Promise<FileListWithStatsArray>;
 
 export type ExtractBaseAndExt = (
-  fileList: string[],
+  fileList: Dirent[],
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
 export type RenameList = {
@@ -201,7 +202,7 @@ export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string,
   targetType?: ValidTypes
-) => Promise<string[]>;
+) => Promise<Dirent[]>;
 export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
 export type NumberOfDuplicatedNamesArgs = {
   renameList: RenameList;

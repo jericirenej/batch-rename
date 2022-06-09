@@ -23,7 +23,13 @@ import type {
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 
-const { pathDoesNotExist, pathIsNotDir, noChildFiles, noChildDirs, noChildEntries } = ERRORS.utils;
+const {
+  pathDoesNotExist,
+  pathIsNotDir,
+  noChildFiles,
+  noChildDirs,
+  noChildEntries,
+} = ERRORS.utils;
 const { truncateInvalidArgument } = ERRORS.transforms;
 const { noRollbackFile } = ERRORS.cleanRollback;
 
@@ -46,15 +52,19 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
 export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   const regex = EXT_REGEX;
   return fileList.map((file) => {
-    const extPosition = file.search(regex);
+    const isDir = file.isDirectory(),
+      type = isDir ? "directory" : "file",
+      fileName = file.name;
+    const extPosition = isDir ? -1 : fileName.search(regex);
     if (extPosition !== -1) {
       return {
-        baseName: file.slice(0, extPosition),
-        ext: file.slice(extPosition),
+        baseName: fileName.slice(0, extPosition),
+        ext: fileName.slice(extPosition),
         sourcePath,
+        type,
       };
     }
-    return { baseName: file, ext: "", sourcePath };
+    return { baseName: fileName, ext: "", sourcePath, type };
   });
 };
 
@@ -71,11 +81,10 @@ export const listFiles: ListFiles = async (
       if (targetType === "all") return dirEntry;
       if (targetType === "files") return dirEntry.isFile();
       return dirEntry.isDirectory();
-    })
-    .map((fileDirEntry) => fileDirEntry.name);
+    });
   if (excludeFilter) {
     const regex = new RegExp(excludeFilter);
-    files = files.filter((fileName) => !regex.test(fileName));
+    files = files.filter((fileName) => !regex.test(fileName.name));
   }
   return files;
 };
@@ -115,7 +124,10 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
   return -1;
 };
 
-export const checkPath: CheckPath = async (path, targetType = DEFAULT_TARGET_TYPE) => {
+export const checkPath: CheckPath = async (
+  path,
+  targetType = DEFAULT_TARGET_TYPE
+) => {
   const fullPath = resolve(process.cwd(), path);
   if (!existsSync(fullPath)) {
     throw new Error(pathDoesNotExist);
@@ -125,22 +137,24 @@ export const checkPath: CheckPath = async (path, targetType = DEFAULT_TARGET_TYP
     throw new Error(pathIsNotDir);
   }
   const dirInfo = await readdir(fullPath, { withFileTypes: true });
-  if(!dirInfo.length) {
-    throw new Error(noChildEntries)
+  if (!dirInfo.length) {
+    throw new Error(noChildEntries);
   }
   if (targetType === "all") return fullPath;
-  
-  if(targetType === "files") {
-    const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
+
+  if (targetType === "files") {
+    const hasFiles =
+      dirInfo.filter((childNode) => childNode.isFile()).length > 0;
     if (!hasFiles) {
       throw new Error(noChildFiles);
     }
   }
 
-  if(targetType === "dirs") {
-    const hasDirs = dirInfo.filter(childNode =>childNode.isDirectory()).length > 0;
-    if(!hasDirs) {
-      throw new Error(noChildDirs)
+  if (targetType === "dirs") {
+    const hasDirs =
+      dirInfo.filter((childNode) => childNode.isDirectory()).length > 0;
+    if (!hasDirs) {
+      throw new Error(noChildDirs);
     }
   }
   return fullPath;

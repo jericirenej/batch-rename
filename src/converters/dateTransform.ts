@@ -65,9 +65,9 @@ export const dateTransform: DateTransform = ({
   let originalFileList = splitFileList as FileListWithStatsArray;
   let fileListWithDates: FileListWithDates[] = originalFileList.map(
     (fileInfo) => {
-      const { baseName, stats, ext, sourcePath } = fileInfo;
+      const { baseName, stats, ext, sourcePath, type } = fileInfo;
       const formattedDate = extractDate(stats[statProp] as number);
-      return { baseName, ext, formattedDate, sourcePath };
+      return { baseName, ext, formattedDate, sourcePath, type };
     }
   );
 

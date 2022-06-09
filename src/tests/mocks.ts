@@ -2,7 +2,30 @@ import { Dirent, Stats } from "fs";
 import { extractBaseAndExt } from "../converters/utils.js";
 import type { ExtractBaseAndExtTemplate, RenameList } from "../types.js";
 
-export const mockFileList = [
+export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
+  isFile() {
+    return true;
+  },
+  isDirectory() {
+    return false;
+  },
+  isBlockDevice() {
+    return false;
+  },
+  isCharacterDevice() {
+    return false;
+  },
+  isSymbolicLink() {
+    return false;
+  },
+  isFIFO() {
+    return false;
+  },
+  isSocket() {
+    return false;
+  },
+};
+export const mockFileList: Dirent[] = [
   "someFile.with.extra.dots.ext",
   "shortFile.ext",
   "fileWithoutExt",
@@ -10,8 +33,8 @@ export const mockFileList = [
   ".startWithDot.ext",
   "UTF-čšžäöüéŁ.ext",
   "12345-and-chars.ext",
-];
-export const examplePath = "A:/path/to/file";
+].map((fileName) => ({ name: fileName, ...mockDirentEntryAsFile }));
+
 export const expectedSplit = [
   ["someFile.with.extra.dots", ".ext"],
   ["shortFile", ".ext"],
@@ -21,6 +44,7 @@ export const expectedSplit = [
   ["UTF-čšžäöüéŁ", ".ext"],
   ["12345-and-chars", ".ext"],
 ];
+export const examplePath = "A:/path/to/file";
 
 const firstRename = "rename1";
 const sourcePath = examplePath;
@@ -98,7 +122,7 @@ export const createDirentArray = (
   const arr = new Array(arrLength).fill(0);
   return arr.map((entry, index) => {
     const isFileReturn = counter <= numberOfFiles;
-    const isDirReturn = (numberOfDirs > 0) && (counter > numberOfFiles);
+    const isDirReturn = numberOfDirs > 0 && counter > numberOfFiles;
     counter++;
     return {
       ...exampleStatMethods,
@@ -113,6 +137,7 @@ export const mockSplitFile: ExtractBaseAndExtTemplate = {
   baseName: "baseName",
   ext: ".ext",
   sourcePath: "sourcePath",
+  type: "file",
 };
 
 export const generateMockSplitFileList = (length: number) => {
@@ -151,7 +176,10 @@ export const textFormatMatrix = [
     },
   },
 ];
-const formatFileList = textFormatMatrix.map((example) => example.value);
+const formatFileList = textFormatMatrix.map((example) => ({
+  name: example.value,
+  ...mockDirentEntryAsFile,
+}));
 export const textFormatRenameList = extractBaseAndExt(
   formatFileList,
   examplePath
