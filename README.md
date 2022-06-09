@@ -21,9 +21,9 @@ Preview numeric transform with exclude option and a custom baseIndex. Folder pat
 
 `node batchRename.mjs -Dn --exclude "excludedName" -b 100 "folder"`
 
-Append creation date to files in the current folder and specify a custom separator.
+Append creation date to files AND folders in the current folder and specify a custom separator.
 
-`node batchRename.mjs -d --separator _`
+`node batchRename.mjs -d --separator _ --targetType all`
 
 Preview the odd numbering transform with custom text append in a target folder.
 
@@ -60,7 +60,8 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-f, --format`|`[uppercase \| lowercase \| capitalize]`|Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).|
 |`-e, --extensionModify`|`<string>`|Modify extension of target files. Can also be used together with the exclude option|
 |`-a, --addText`|`<string>`|Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.|
-|`--folder`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
+|`--target`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
+|`--targetType`|`['files'\|'dirs'\|'all']`||`Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.`
 |`-r, --restore`||Restore transformed files to original names, if restore file is available.|
 |`-D, --dryRun`||Run transform operation without writing to disk. Will log properties of expected output. Prompts user for transform execution, if no errors detected.|
 |`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|

@@ -1,6 +1,6 @@
 import fs from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
-import { join, resolve } from "path";
+import path, { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import * as formatTransform from "../converters/formatTextTransform.js";
@@ -11,14 +11,16 @@ import {
   composeRenameString,
   createBatchRenameList,
   determineDir,
-  extractBaseAndExt, listFiles,
+  extractBaseAndExt,
+  listFiles,
   numberOfDuplicatedNames,
   truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate
+  ExtractBaseAndExtTemplate,
+  ValidTypes
 } from "../types.js";
 import {
   createDirentArray,
@@ -32,7 +34,13 @@ import {
   truthyArgument
 } from "./mocks.js";
 
-const { noChildFiles, pathDoesNotExist, pathIsNotDir } = ERRORS.utils;
+const {
+  noChildFiles,
+  noChildDirs,
+  noChildEntries,
+  pathDoesNotExist,
+  pathIsNotDir,
+} = ERRORS.utils;
 const { noRollbackFile } = ERRORS.cleanRollback;
 
 jest.mock("fs");
@@ -53,9 +61,14 @@ const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
 describe("cleanUpRollbackFile", () => {
-  const suppressStdOut = jest
-    .spyOn(process.stdout, "write")
-    .mockImplementation();
+  let suppressStdOut: jest.SpyInstance;
+  beforeEach(
+    () =>
+      (suppressStdOut = jest
+        .spyOn(process.stdout, "write")
+        .mockImplementation())
+  );
+  afterEach(() => suppressStdOut.mockRestore());
   const cleanUpArgs = { transformPath: examplePath };
   afterAll(() => suppressStdOut.mockRestore());
   afterEach(() => jest.resetAllMocks());
@@ -92,7 +105,7 @@ describe("extractBaseAndExt", () => {
 
 describe("listFiles", () => {
   afterEach(() => jest.resetAllMocks());
-  it("Should return list of names", async () => {
+  it("Should return list of file names by default", async () => {
     const listLength = mockFileList.length;
     let exampleDirentArray = createDirentArray(listLength, listLength);
     exampleDirentArray = exampleDirentArray.map((dirent, index) => {
@@ -120,13 +133,28 @@ describe("listFiles", () => {
       foundFiles.filter((file) => file === ROLLBACK_FILE_NAME).length > 0;
     expect(isRollbackPresent).toBe(false);
   });
-  it("Should not include directories", async () => {
+  it("Should not include directories by default", async () => {
     const listLength = mockFileList.length;
     let exampleDirentArray = createDirentArray(listLength, listLength);
     exampleDirentArray[0].isFile = () => false;
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundFiles = await listFiles(examplePath);
     expect(foundFiles.length).toBe(listLength - 1);
+  });
+  it("Should include only directories, if targetType is set to dirs", async () => {
+    const dirNum = 2;
+    let exampleDirentArray = createDirentArray(10, 8, dirNum);
+    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
+    const foundDirs = await listFiles(examplePath, undefined, "dirs");
+    expect(foundDirs.length).toBe(dirNum);
+  });
+  it("Should include files and directories, if targetType is set to all", async () => {
+    const dirNum = 2,
+      fileNum = 8;
+    let exampleDirentArray = createDirentArray(10, fileNum, dirNum);
+    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
+    const foundDirs = await listFiles(examplePath, undefined, "all");
+    expect(foundDirs.length).toBe(dirNum + fileNum);
   });
   it("Should exclude files that match the exclude filter", async () => {
     const excludeFilter = "John";
@@ -187,6 +215,13 @@ describe("numberOfDuplicatedNames", () => {
 });
 
 describe("checkPath", () => {
+  const mockTargetDirResolve = () => {
+    mockedFs.existsSync.mockReturnValueOnce(true);
+    mockedLstat.mockResolvedValueOnce({
+      ...exampleStats,
+      isDirectory: () => true,
+    });
+  };
   afterEach(() => jest.resetAllMocks());
   it("Should throw error, if path does not exist", async () => {
     mockedFs.existsSync.mockReturnValueOnce(false);
@@ -203,23 +238,47 @@ describe("checkPath", () => {
 
     await expect(checkPath(examplePath)).rejects.toThrowError(pathIsNotDir);
   });
-  it("Should throw error, if directory has no files", async () => {
-    mockedFs.existsSync.mockReturnValueOnce(true);
-    mockedLstat.mockResolvedValueOnce({
-      ...exampleStats,
-      isDirectory: () => true,
-    });
-    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0));
-    await expect(checkPath(examplePath)).rejects.toThrowError(noChildFiles);
+  it("Should throw error, if directory has no child entries", async () => {
+    mockTargetDirResolve();
+    mockedReadDir.mockResolvedValueOnce([]);
+    await expect(checkPath(examplePath)).rejects.toThrowError(noChildEntries);
   });
-  it("Should return filePath, if it exists, is a directory, and has children of file type", async () => {
+  it("Should throw error, if directory has no files, if fileType is undefined or set to 'files'", async () => {
+    const fileTypes = [undefined, "files"] as const;
+    for (const fileType of fileTypes) {
+      mockTargetDirResolve();
+      mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0, 10));
+      await expect(checkPath(examplePath, fileType)).rejects.toThrowError(
+        noChildFiles
+      );
+    }
+  });
+  it("Should throw error, if directory has no sub-directories if fileType is set to 'dirs'", async () => {
+    mockTargetDirResolve();
+    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 10, 0));
+    await expect(checkPath(examplePath, "dirs")).rejects.toThrowError(
+      noChildDirs
+    );
+  });
+  it("Should return filePath, if targetType argument is true and targetPath has only dir entries", async () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
     mockedLstat.mockResolvedValueOnce({
       ...exampleStats,
       isDirectory: () => true,
     });
-    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 3));
-    expect(await checkPath(examplePath)).toBe(resolve(examplePath));
+    mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0, 2));
+    expect(await checkPath(examplePath, "all")).toBe(resolve(examplePath));
+  });
+  it("Should return target path if appropriate file types are found", async () => {
+    const children = createDirentArray(10, 5, 5);
+    const fileTypes: ValidTypes[] = ["all", "files", "dirs"];
+    for (const fileType of fileTypes) {
+      mockTargetDirResolve();
+      mockedReadDir.mockResolvedValueOnce(children);
+      const result = await checkPath(examplePath, fileType);
+      expect(result).toBeDefined();
+      expect(path.resolve(result)).toBe(path.resolve(examplePath));
+    }
   });
 });
 

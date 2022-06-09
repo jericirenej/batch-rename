@@ -156,10 +156,11 @@ describe("convertFiles", () => {
     await convertFiles(exampleArgs);
     expect(spyOnListFiles).toHaveBeenLastCalledWith(
       examplePath,
-      exampleArgs.exclude
+      exampleArgs.exclude,
+      undefined,
     );
     await convertFiles({ ...exampleArgs, exclude: undefined });
-    expect(spyOnListFiles).toHaveBeenLastCalledWith(examplePath, undefined);
+    expect(spyOnListFiles).toHaveBeenLastCalledWith(examplePath, undefined, undefined);
   });
   it("Should run provideFileStats with dateTransform", async () => {
     await convertFiles(exampleArgs);

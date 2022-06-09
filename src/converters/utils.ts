@@ -4,6 +4,7 @@ import { join, resolve } from "path";
 import readline from "readline";
 import {
   DEFAULT_SEPARATOR,
+  DEFAULT_TARGET_TYPE,
   EXT_REGEX,
   ROLLBACK_FILE_NAME
 } from "../constants.js";
@@ -22,7 +23,7 @@ import type {
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 
-const { pathDoesNotExist, pathIsNotDir, noChildFiles } = ERRORS.utils;
+const { pathDoesNotExist, pathIsNotDir, noChildFiles, noChildDirs, noChildEntries } = ERRORS.utils;
 const { truncateInvalidArgument } = ERRORS.transforms;
 const { noRollbackFile } = ERRORS.cleanRollback;
 
@@ -57,13 +58,20 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   });
 };
 
-export const listFiles: ListFiles = async (transformPath, excludeFilter) => {
+export const listFiles: ListFiles = async (
+  transformPath,
+  excludeFilter,
+  targetType = DEFAULT_TARGET_TYPE
+) => {
   const targetDir = determineDir(transformPath);
   const dirContent = await readdir(targetDir, { withFileTypes: true });
   let files = dirContent
-    .filter(
-      (dirEntry) => dirEntry.isFile() && dirEntry.name !== ROLLBACK_FILE_NAME
-    )
+    .filter((dirEntry) => dirEntry.name !== ROLLBACK_FILE_NAME)
+    .filter((dirEntry) => {
+      if (targetType === "all") return dirEntry;
+      if (targetType === "files") return dirEntry.isFile();
+      return dirEntry.isDirectory();
+    })
     .map((fileDirEntry) => fileDirEntry.name);
   if (excludeFilter) {
     const regex = new RegExp(excludeFilter);
@@ -107,7 +115,7 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
   return -1;
 };
 
-export const checkPath: CheckPath = async (path) => {
+export const checkPath: CheckPath = async (path, targetType = DEFAULT_TARGET_TYPE) => {
   const fullPath = resolve(process.cwd(), path);
   if (!existsSync(fullPath)) {
     throw new Error(pathDoesNotExist);
@@ -117,9 +125,23 @@ export const checkPath: CheckPath = async (path) => {
     throw new Error(pathIsNotDir);
   }
   const dirInfo = await readdir(fullPath, { withFileTypes: true });
-  const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
-  if (!hasFiles) {
-    throw new Error(noChildFiles);
+  if(!dirInfo.length) {
+    throw new Error(noChildEntries)
+  }
+  if (targetType === "all") return fullPath;
+  
+  if(targetType === "files") {
+    const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
+    if (!hasFiles) {
+      throw new Error(noChildFiles);
+    }
+  }
+
+  if(targetType === "dirs") {
+    const hasDirs = dirInfo.filter(childNode =>childNode.isDirectory()).length > 0;
+    if(!hasDirs) {
+      throw new Error(noChildDirs)
+    }
   }
   return fullPath;
 };

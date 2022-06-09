@@ -15,7 +15,10 @@ export const ERRORS = {
   utils: {
     pathDoesNotExist: "Target path does not exist!",
     pathIsNotDir: "Target path is not a directory!",
-    noChildFiles: "Directory has no children file entries",
+    noChildEntries: "Directory has no child entries!",
+    noChildFiles:
+      "Directory has no children file entries ('files' target type)",
+    noChildDirs: "Directory has no child sub-directories ('dirs' target type)",
   },
   transforms: {
     noTransformFunctionAvailable: `No transform function available for the chosen option!`,
