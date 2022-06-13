@@ -31,6 +31,13 @@ const programOptions: ProgramOptions[] = [
     defaultValue: "",
   },
   {
+    short: "k",
+    long: "keep",
+    type: "<string>",
+    description:
+      "Only keep the part of the name that matches the supplied pattern. Can be used together with the 'addText', 'format', and the 'separator' option.",
+  },
+  {
     short: "a",
     long: "addText",
     type: "<name>",

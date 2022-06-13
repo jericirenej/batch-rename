@@ -52,7 +52,7 @@ export const optionalTruncate = (
   sourcePath: string,
   type: "directory" | "file"
 ): string => {
-  // Provide fiel type data for extractBaseAndExt.
+  // Provide file type data for extractBaseAndExt.
   const nameWithFileType = [
     {
       name: modifiedName,

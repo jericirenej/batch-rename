@@ -19,6 +19,7 @@ export type OptionKeys =
   | "dateRename"
   | "textPosition"
   | "searchAndReplace"
+  | "keep"
   | "detailedDate"
   | "target"
   | "numericTransform"
@@ -49,7 +50,7 @@ export type ExtractBaseAndExtTemplate = {
   baseName: string;
   ext: string;
   sourcePath: string;
-  type: "directory"|"file"
+  type: "directory" | "file";
 };
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
 export type FileListWithStats = ExtractBaseAndExtTemplate & {
@@ -101,6 +102,7 @@ export type RenameListArgs = {
   exclude?: string;
   format?: ValidTextFormats;
   targetType?: ValidTypes;
+  keep?: string;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -231,3 +233,5 @@ export type ComposeRenameStringArgs = {
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
 export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;
+
+export type KeepTransform = FormatTextTransform;
