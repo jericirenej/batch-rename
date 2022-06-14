@@ -8,23 +8,28 @@ export const keepTransform: KeepTransform = ({
   separator,
   format,
   splitFileList,
+  noExtensionPreserve,
 }) => {
-  const regexBase = `^.*(?=${keep})|(?<=${keep})`;
+  const regexBase = `^.*(?=${keep})|(?<=${keep}).*$`;
   const matcher = new RegExp(regexBase, "gu");
   return splitFileList.map((fileInfo) => {
-    const { baseName, ext, sourcePath } = fileInfo;
-
+    const { baseName: _baseName, ext, sourcePath } = fileInfo;
+    const baseName = noExtensionPreserve ? `${_baseName}${ext}` : _baseName;
+    const original = `${_baseName}${ext}`
     const newName = composeRenameString({
-      baseName: baseName,
+      baseName: _baseName,
       newName: baseName.replaceAll(matcher, ""),
-      separator,
+      ext: noExtensionPreserve ? "" : ext,
+      separator, 
       textPosition,
       addText,
       format,
     });
+
+    console.log(baseName, baseName.replaceAll(matcher, ""), newName);
     return {
-      rename: `${newName}${ext}`,
-      original: `${baseName}${ext}`,
+      rename: `${newName}`,
+      original,
       sourcePath,
     };
   });
