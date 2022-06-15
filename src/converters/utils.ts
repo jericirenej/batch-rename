@@ -47,8 +47,9 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   process.stdout.write("DONE!");
 };
 
-/**Will separate the basename and file extension. If no extension is found, it will
- * return the whole file name under the base property and an empty ext string. */
+/**Will separate the basename and file extension, in addition to providing 
+ * a sourcePath and type information. If no extension is found, it will return 
+ * the whole file name  under the base property and an empty ext string. */
 export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   const regex = EXT_REGEX;
   return fileList.map((file) => {
@@ -68,6 +69,10 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   });
 };
 
+/** Will return a Dirent list of entities. 
+ * Can exclude files based on matches supplied with **excludeFilter**.
+ * If a **targetType** argument is supplied, it will only return entries of 
+ * a specified type (defaults to files). */
 export const listFiles: ListFiles = async (
   transformPath,
   excludeFilter,
