@@ -1,6 +1,10 @@
 import { Dirent, Stats } from "fs";
 import { extractBaseAndExt } from "../converters/utils.js";
-import type { ExtractBaseAndExtTemplate, RenameList } from "../types.js";
+import type {
+  ExtractBaseAndExtReturn,
+  ExtractBaseAndExtTemplate,
+  RenameList
+} from "../types.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
   isFile() {
@@ -35,6 +39,15 @@ export const mockFileList: Dirent[] = [
   "12345-and-chars.ext",
 ].map((fileName) => ({ name: fileName, ...mockDirentEntryAsFile }));
 
+const ext = ".ext";
+export const examplePath = "A:/path/to/file";
+export const mockKeepList: ExtractBaseAndExtReturn = [
+  { baseName: "Description-Part001-Introduction", ext },
+  { baseName: "Description-Part002-Main", ext },
+  { baseName: "Description-Part003-Conclusion", ext },
+  { baseName: "Addendum-Part004-Index", ext },
+].map((fileInfo) => ({ ...fileInfo, sourcePath: examplePath, type: "file" }));
+
 export const expectedSplit = [
   ["someFile.with.extra.dots", ".ext"],
   ["shortFile", ".ext"],
@@ -44,7 +57,6 @@ export const expectedSplit = [
   ["UTF-čšžäöüéŁ", ".ext"],
   ["12345-and-chars", ".ext"],
 ];
-export const examplePath = "A:/path/to/file";
 
 const firstRename = "rename1";
 const sourcePath = examplePath;

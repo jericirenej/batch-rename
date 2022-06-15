@@ -15,17 +15,16 @@ export const keepTransform: KeepTransform = ({
   return splitFileList.map((fileInfo) => {
     const { baseName: _baseName, ext, sourcePath } = fileInfo;
     const baseName = noExtensionPreserve ? `${_baseName}${ext}` : _baseName;
-    const original = `${_baseName}${ext}`
+    const original = `${_baseName}${ext}`;
     const newName = composeRenameString({
       baseName: _baseName,
       newName: baseName.replaceAll(matcher, ""),
       ext: noExtensionPreserve ? "" : ext,
-      separator, 
+      separator,
       textPosition,
       addText,
       format,
     });
-
     return {
       rename: `${newName}`,
       original,
