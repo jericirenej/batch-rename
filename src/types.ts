@@ -234,4 +234,15 @@ export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
 export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;
 
-export type KeepTransform = FormatTextTransform;
+export type KeepTransformArgs = Pick<
+  GenerateRenameListArgs,
+  | "keep"
+  | "addText"
+  | "separator"
+  | "textPosition"
+  | "splitFileList"
+  | "noExtensionPreserve"
+  | "format"
+>;
+
+export type KeepTransform = (args: KeepTransformArgs) => RenameList;

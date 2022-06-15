@@ -26,7 +26,6 @@ export const keepTransform: KeepTransform = ({
       format,
     });
 
-    console.log(baseName, baseName.replaceAll(matcher, ""), newName);
     return {
       rename: `${newName}`,
       original,
