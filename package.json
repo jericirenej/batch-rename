@@ -8,7 +8,10 @@
     "test": "jest",
     "build": "webpack",
     "dev-build": "webpack --mode=development",
-    "husky-prepare": "husky install"
+    "husky-prepare": "husky install",
+    "clean": "rm -rf dist/*",
+    "precompile": "npm run clean",
+    "compile": "tsc"
   },
   "author": "Irenej Jerič",
   "license": "ISC",
