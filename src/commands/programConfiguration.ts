@@ -33,7 +33,7 @@ const programOptions: ProgramOptions[] = [
   {
     short: "k",
     long: "keep",
-    type: "<string>",
+    type: "<regex>",
     description:
       "Only keep the part of the name that matches the supplied pattern. Can be used together with the 'addText', 'format', and the 'separator' option.",
   },
