@@ -7,6 +7,7 @@ import { STATUS } from "../messages/statusMessages.js";
 import type { RestoreBaseReturn } from "../types.js";
 import {
   examplePath as transformPath,
+  mockDirentEntryAsFile,
   renameListDistinct as renameList
 } from "./mocks.js";
 jest.mock("fs");
@@ -35,7 +36,11 @@ const spyOnListFiles = jest.spyOn(utils, "listFiles"),
   spyOnDryRunRestore = jest.spyOn(restorePoint, "dryRunRestore"),
   spyOnRestoreBase = jest.spyOn(restorePoint, "restoreBaseFunction");
 
-const mockFileList = renameList.map((list) => list.rename);
+const mockRenamedList = renameList.map((fileItem) => fileItem.rename);
+const mockFileList = mockRenamedList.map((file) => ({
+  name: file,
+  ...mockDirentEntryAsFile,
+}));
 const mockedFs = jest.mocked(fs, true);
 const mockedReadFile = jest.mocked(readFile);
 const mockedRename = jest.mocked(rename);
@@ -43,8 +48,8 @@ const mockedRename = jest.mocked(rename);
 const baseArg = { transformPath };
 
 const mockRestoreList: RestoreBaseReturn = {
-  existingFiles: mockFileList,
-  filesToRestore: mockFileList,
+  existingFiles: mockFileList.map((file) => file.name),
+  filesToRestore: mockFileList.map((file) => file.name),
   missingFiles: [],
   rollbackData: renameList,
 };
@@ -70,17 +75,17 @@ describe("restoreBaseFunction", () => {
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(renameList));
     const rollbackList = await restoreBaseFunction(transformPath);
     expect(rollbackList.rollbackData).toEqual(renameList);
-    expect(rollbackList.existingFiles).toEqual(mockFileList);
+    expect(rollbackList.existingFiles).toEqual(mockRenamedList);
     expect(rollbackList.missingFiles.length).toBe(0);
-    expect(rollbackList.filesToRestore).toEqual(mockFileList);
+    expect(rollbackList.filesToRestore).toEqual(mockRenamedList);
   });
   it("Should log missing fileNames in restoreFile", async () => {
     spyOnListFiles.mockResolvedValueOnce(mockFileList.slice(0, -1));
     mockedFs.existsSync.mockReturnValueOnce(true);
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(renameList));
     const rollbackList = await restoreBaseFunction(transformPath);
-    expect(rollbackList.missingFiles).toEqual(mockFileList.slice(-1));
-    expect(rollbackList.filesToRestore).toEqual(mockFileList.slice(0, -1));
+    expect(rollbackList.missingFiles).toEqual(mockRenamedList.slice(-1));
+    expect(rollbackList.filesToRestore).toEqual(mockRenamedList.slice(0, -1));
   });
 });
 
@@ -220,8 +225,8 @@ describe("dryRunRestore", () => {
     spyOnQuestion.mockResolvedValue("yes");
     const modifiedArgs = {
       ...mockRestoreList,
-      filesToRestore: mockFileList.slice(0, -1),
-      missingFiles: mockFileList.slice(-1),
+      filesToRestore: mockRenamedList.slice(0, -1),
+      missingFiles: mockRenamedList.slice(-1),
     };
     await dryRunRestore(modifiedArgs);
     expect(statusMocked.restore.warningMissingFiles).toHaveBeenLastCalledWith(

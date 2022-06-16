@@ -17,6 +17,10 @@ Rename files using a search and replace algorithm. Target folder set explicitly.
 
 `node batchRename.mjs -s [regex|string] [replaceText] --target [folder]`
 
+Preview rename files by keeping only part of the name (the 'id-' tag with variable number of digits).
+
+`node batchRename.mjs -Dk "id-\d{1,}" --target [folder]`
+
 Preview numeric transform with exclude option and a custom baseIndex. Folder path set implicitly.
 
 `node batchRename.mjs -Dn --exclude "excludedName" -b 100 "folder"`
@@ -47,7 +51,7 @@ To run the script successfully, you will have to provide one of the valid transf
 
 When performing the rename operation, the script will write a restore file (`.rollback.json`) to the target folder. Without this file, restore operations are not possible. 
 
-Before performing the rename, it is **strongly encouraged to perform a dry run first.**
+Before performing the rename, it is **strongly encouraged to perform a dry run first.** Dry run will present you with the rename preview information and warnings, as well as prompt you if the rename should be run or not.
 
 The script will not perform a rename if it would lead to name collisions (i.e. several files sharing the same name).
 
@@ -56,6 +60,7 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-n, -numericTransform`|`[sequential \| even \| odd]`|Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to `sequence`. To help with file-sorting, the number of digits will always be one more than the (so, a list of 10 files will use three digits: 001, 002 ...) |
 |`-d --dateRename`|`<creationDate, lastAccessed, lastModifies>`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
 |`-s, --searchAndReplace`|`<string\|regex> <replacer>`|Takes a string or a regex filter argument and a replacer string. By default, the transform will preserve file extensions, unless a `--noPreserveExtension` option is supplied|
+|`-k --keep`|`<regex\|string>`|Will remove everything, except the matched part of the name. Essentially the same as replacing positive look-behinds and look-aheads captures and with empty strings. Can be used together with addText, textPosition, format, noExtensionPreserve, and separator flags.|
 |`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or addText is supplied, it has no effect.|
 |`-f, --format`|`[uppercase \| lowercase \| capitalize]`|Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).|
 |`-e, --extensionModify`|`<string>`|Modify extension of target files. Can also be used together with the exclude option|

@@ -19,6 +19,7 @@ import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
 import { extensionModifyTransform } from "./extensionModify.js";
 import { formatTextTransform } from "./formatTextTransform.js";
+import { keepTransform } from "./keepTransform.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
@@ -49,6 +50,7 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   dateRename: (args: GenerateRenameListArgs) => dateTransform(args),
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
+  keep: (args:GenerateRenameListArgs) => keepTransform(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
   extensionModify: (args: GenerateRenameListArgs) =>
     extensionModifyTransform(args),

@@ -5,6 +5,7 @@ export const VALID_TRANSFORM_TYPES = [
   "numericTransform",
   "dateRename",
   "searchAndReplace",
+  "keep",
   "truncate",
   "addText",
   "extensionModify",

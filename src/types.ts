@@ -1,4 +1,4 @@
-import { Stats } from "fs";
+import { Dirent, Stats } from "fs";
 import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
@@ -19,6 +19,7 @@ export type OptionKeys =
   | "dateRename"
   | "textPosition"
   | "searchAndReplace"
+  | "keep"
   | "detailedDate"
   | "target"
   | "numericTransform"
@@ -49,6 +50,7 @@ export type ExtractBaseAndExtTemplate = {
   baseName: string;
   ext: string;
   sourcePath: string;
+  type: "directory" | "file";
 };
 export type ExtractBaseAndExtReturn = ExtractBaseAndExtTemplate[];
 export type FileListWithStats = ExtractBaseAndExtTemplate & {
@@ -73,7 +75,7 @@ export type ProvideFileStats = (
 ) => Promise<FileListWithStatsArray>;
 
 export type ExtractBaseAndExt = (
-  fileList: string[],
+  fileList: Dirent[],
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
 export type RenameList = {
@@ -100,6 +102,7 @@ export type RenameListArgs = {
   exclude?: string;
   format?: ValidTextFormats;
   targetType?: ValidTypes;
+  keep?: string;
 };
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
@@ -201,7 +204,7 @@ export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string,
   targetType?: ValidTypes
-) => Promise<string[]>;
+) => Promise<Dirent[]>;
 export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
 export type NumberOfDuplicatedNamesArgs = {
   renameList: RenameList;
@@ -230,3 +233,16 @@ export type ComposeRenameStringArgs = {
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
 export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;
+
+export type KeepTransformArgs = Pick<
+  GenerateRenameListArgs,
+  | "keep"
+  | "addText"
+  | "separator"
+  | "textPosition"
+  | "splitFileList"
+  | "noExtensionPreserve"
+  | "format"
+>;
+
+export type KeepTransform = (args: KeepTransformArgs) => RenameList;

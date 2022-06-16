@@ -2,9 +2,13 @@ import * as formatText from "../converters/formatTextTransform.js";
 import * as regexTransform from "../converters/searchAndReplace.js";
 import * as utils from "../converters/utils.js";
 import { GenerateRenameListArgs } from "../types.js";
-import { generateMockSplitFileList } from "./mocks.js";
+import {
+  generateMockSplitFileList,
+  mockDirentEntryAsFile,
+  mockSplitFile
+} from "./mocks.js";
 
-const { extractBaseAndExt, truncateFile } = utils;
+const { extractBaseAndExt } = utils;
 
 const { generateArguments, optionalTruncate, searchAndReplace } =
   regexTransform;
@@ -42,19 +46,17 @@ describe("generateArguments", () => {
 describe("optionalTruncate", () => {
   const truncate = "5",
     modifiedName = "modifiedName.ext",
+    modifiedNameType = "file" as const,
+    modifiedNameDirent = [{ name: modifiedName, ...mockDirentEntryAsFile }],
     sourcePath = "sourcePath";
   afterEach(() => jest.clearAllMocks());
   it("should call extractBaseAndExt", () => {
-    optionalTruncate(truncate, modifiedName, sourcePath);
+    optionalTruncate(truncate, modifiedName, sourcePath, modifiedNameType);
     expect(spyOnExtractBaseAndExt).toHaveBeenCalledTimes(1);
-    expect(spyOnExtractBaseAndExt).toHaveBeenCalledWith(
-      [modifiedName],
-      sourcePath
-    );
   });
   it("Should call truncateFile", () => {
-    optionalTruncate(truncate, modifiedName, sourcePath);
-    const { baseName } = extractBaseAndExt([modifiedName], sourcePath)[0];
+    optionalTruncate(truncate, modifiedName, sourcePath, modifiedNameType);
+    const { baseName } = extractBaseAndExt(modifiedNameDirent, sourcePath)[0];
     expect(spyOnTruncateFile).toHaveBeenCalledTimes(1);
     expect(spyOnTruncateFile).toHaveBeenCalledWith({
       baseName,
@@ -63,7 +65,12 @@ describe("optionalTruncate", () => {
     });
   });
   it("Should return appropriate response", () => {
-    const response = optionalTruncate(truncate, modifiedName, sourcePath);
+    const response = optionalTruncate(
+      truncate,
+      modifiedName,
+      sourcePath,
+      modifiedNameType
+    );
     const expected = `${modifiedName.slice(0, Number(truncate))}.ext`;
     expect(response).toBe(expected);
   });
@@ -132,7 +139,8 @@ describe("searchAndReplace", () => {
     ];
     extensionPreserve.forEach((renamedFile, index) => {
       const { rename, sourcePath } = renamedFile;
-      const extract = extractBaseAndExt([rename], sourcePath);
+      const dirent = [{ name: rename, ...mockDirentEntryAsFile }];
+      const extract = extractBaseAndExt(dirent, sourcePath);
       const { baseName, ext } = extract[0];
       expect(ext).toBe(".ext");
       expect(baseName).toBe(`interior${index + 1}`);
@@ -148,7 +156,7 @@ describe("searchAndReplace", () => {
       replace: "something",
     });
     const response = searchAndReplace(exampleArgs);
-     response.forEach((entry) => expect(entry.rename).toBe(entry.original));
+    response.forEach((entry) => expect(entry.rename).toBe(entry.original));
   });
   it("Should return original name, if filter doesn't match", () => {
     const customMocksList = generateMockSplitFileList(2);
@@ -185,7 +193,12 @@ describe("searchAndReplace", () => {
         `replace${customMocksList[index].ext}`,
         customMocksList[index].sourcePath,
       ];
-      expect(callArgs).toEqual([newArgs.truncate, rename, sourcePath]);
+      expect(callArgs).toEqual([
+        newArgs.truncate,
+        rename,
+        sourcePath,
+        mockSplitFile.type,
+      ]);
     });
   });
   it("Should not call optionalTruncate for un-transformed elements", () => {
@@ -201,10 +214,15 @@ describe("searchAndReplace", () => {
     searchAndReplace(newArgs);
     expect(spyOnOptionalTruncate).toHaveBeenCalledTimes(1);
   });
-  it("Should call formatFile, if format argument passed", ()=> {
+  it("Should call formatFile, if format argument passed", () => {
     const spyOnFormatFile = jest.spyOn(formatText, "formatFile");
-    const argsWithFormat:GenerateRenameListArgs = {...exampleArgs, format: "uppercase"};
-    [exampleArgs, argsWithFormat].forEach(args => searchAndReplace(args));
-    expect(spyOnFormatFile).toHaveBeenCalledTimes(exampleArgs.splitFileList.length);
-  })
+    const argsWithFormat: GenerateRenameListArgs = {
+      ...exampleArgs,
+      format: "uppercase",
+    };
+    [exampleArgs, argsWithFormat].forEach((args) => searchAndReplace(args));
+    expect(spyOnFormatFile).toHaveBeenCalledTimes(
+      exampleArgs.splitFileList.length
+    );
+  });
 });

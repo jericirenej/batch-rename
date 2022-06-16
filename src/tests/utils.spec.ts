@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs, { Dirent } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
 import path, { join, resolve } from "path";
 import process from "process";
@@ -97,6 +97,24 @@ describe("extractBaseAndExt", () => {
         baseName: targetSplit[0],
         ext: targetSplit[1],
         sourcePath: examplePath,
+        type: "file",
+      };
+      expect(extractedData).toEqual(expected);
+    });
+  });
+  it("Should not perform extension separation on directories", () => {
+    const mockDirList: Dirent[] = mockFileList.map((fileInfo) => {
+      fileInfo.isDirectory = () => true;
+      fileInfo.isFile = () => true;
+      return fileInfo;
+    });
+    const extracted = extractBaseAndExt(mockDirList, examplePath);
+    extracted.forEach((extractedData, index) => {
+      const expected: ExtractBaseAndExtTemplate = {
+        baseName: expectedSplit[index].join(""),
+        ext: "",
+        sourcePath: examplePath,
+        type: "directory",
       };
       expect(extractedData).toEqual(expected);
     });
@@ -105,15 +123,16 @@ describe("extractBaseAndExt", () => {
 
 describe("listFiles", () => {
   afterEach(() => jest.resetAllMocks());
-  it("Should return list of file names by default", async () => {
+  it("Should return list of Dirents by default", async () => {
     const listLength = mockFileList.length;
     let exampleDirentArray = createDirentArray(listLength, listLength);
     exampleDirentArray = exampleDirentArray.map((dirent, index) => {
-      dirent.name = mockFileList[index];
+      dirent.name = mockFileList[index].name;
       return dirent;
     });
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
-    expect(await listFiles(examplePath)).toEqual(mockFileList);
+    const data = await listFiles(examplePath);
+    expect(JSON.stringify(data)).toBe(JSON.stringify(mockFileList));
   });
   it("Should exclude rollback file from list", async () => {
     const listLength = mockFileList.length + 1;
@@ -122,13 +141,15 @@ describe("listFiles", () => {
       if (index >= mockFileList.length) {
         dirent.name = ROLLBACK_FILE_NAME;
       } else {
-        dirent.name = mockFileList[index];
+        dirent.name = mockFileList[index].name;
       }
       dirent.isFile = () => true;
       return dirent;
     });
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
-    const foundFiles = await listFiles(examplePath);
+    const foundFiles = await (
+      await listFiles(examplePath)
+    ).map((file) => file.name);
     const isRollbackPresent =
       foundFiles.filter((file) => file === ROLLBACK_FILE_NAME).length > 0;
     expect(isRollbackPresent).toBe(false);
@@ -167,9 +188,9 @@ describe("listFiles", () => {
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundFiles = await listFiles(examplePath, excludeFilter);
     expect(foundFiles.length).toBe(direntLength - shouldMatch.length);
-    expect(foundFiles.filter((name) => shouldMatch.includes(name)).length).toBe(
-      0
-    );
+    expect(
+      foundFiles.filter((file) => shouldMatch.includes(file.name)).length
+    ).toBe(0);
   });
 });
 describe("areNewNamesDistinct", () => {

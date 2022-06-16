@@ -1,3 +1,4 @@
+import { Dirent } from "fs";
 import type {
   GenerateSearchAndReplaceArgs,
   SearchAndReplace
@@ -15,7 +16,7 @@ export const searchAndReplace: SearchAndReplace = ({
   const generatedArgs = generateArguments(searchAndReplace!);
   const targetList = splitFileList.map((fileInfo) => {
     const { filter, replace } = generatedArgs;
-    let { baseName, sourcePath, ext } = fileInfo;
+    let { baseName, sourcePath, ext, type } = fileInfo;
     const original = `${baseName}${ext}`;
     let rename = noExtensionPreserve ? original : baseName;
     if (filter && filter.test(original)) {
@@ -31,7 +32,7 @@ export const searchAndReplace: SearchAndReplace = ({
     }
     if (truncate && !isNaN(Number(truncate))) {
       if (rename !== original) {
-        rename = optionalTruncate(truncate, rename, sourcePath);
+        rename = optionalTruncate(truncate, rename, sourcePath, type);
       }
     }
     return { original, rename, sourcePath };
@@ -48,9 +49,19 @@ export const generateArguments: GenerateSearchAndReplaceArgs = (args) => {
 export const optionalTruncate = (
   truncate: string,
   modifiedName: string,
-  sourcePath: string
+  sourcePath: string,
+  type: "directory" | "file"
 ): string => {
-  const renameBaseAndExt = extractBaseAndExt([modifiedName], sourcePath);
+  // Provide file type data for extractBaseAndExt.
+  const nameWithFileType = [
+    {
+      name: modifiedName,
+      isDirectory() {
+        return type === "directory";
+      },
+    },
+  ] as Dirent[];
+  const renameBaseAndExt = extractBaseAndExt(nameWithFileType, sourcePath);
   const { baseName: newBase, ext: newExt } = renameBaseAndExt[0];
   return `${truncateFile({
     baseName: newBase,
