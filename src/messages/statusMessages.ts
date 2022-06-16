@@ -1,7 +1,7 @@
 export const STATUS = {
   dryRun: {
     transformIntro(transformPattern: string[], transformPath: string): string {
-      return `Transformations of type ${transformPattern} in folder ${transformPath} would result in the following transform:`;
+      return `Transformations of type ${transformPattern.join(", ")} in folder ${transformPath} would result in the following transform:`;
     },
     warningUnaffectedFiles(unaffectedFiles: number) {
       return `Number of files for which transform has no effect: ${unaffectedFiles}`;
@@ -20,7 +20,7 @@ export const STATUS = {
       return `Will revert ${restoreNum} files...`;
     },
     warningMissingFiles(missingNum: number): string {
-      return `WARNING: ${missingNum} files were listed in rollback file, but could not be located in target folder:`;
+      return `WARNING: ${missingNum} files were listed in rollback file, but could not be located in target folder.`;
     },
     questionPerformRestore:
       "Would you like to execute the restore of original entry names (N/Y)?",
