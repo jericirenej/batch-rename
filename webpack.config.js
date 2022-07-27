@@ -1,5 +1,4 @@
 import { dirname, resolve } from "path";
-import ResolveTypescriptPlugin from "resolve-typescript-plugin";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -26,8 +25,8 @@ export default {
     ],
   },
   resolve: {
-    extensions: [".ts", ".js"],
-    plugins: [new ResolveTypescriptPlugin()],
+    extensionAlias: { ".js": [".ts", ".js"] },
+    /* plugins: [new ResolveTypescriptPlugin()],*/
   },
   output: {
     path: resolve(__dirname, "prod"),
