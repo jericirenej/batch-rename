@@ -11,14 +11,14 @@ import type {
   DryRunTransformArgs,
   RenameList,
   RenameListArgs,
-  TransformTypes
+  TransformTypes,
 } from "../types.js";
 import {
   examplePath,
   exampleStats,
   generateMockSplitFileList,
   mockFileList,
-  renameListDistinct
+  renameListDistinct,
 } from "./mocks.js";
 
 jest.mock("fs/promises", () => {
@@ -140,13 +140,17 @@ describe("convertFiles", () => {
   it("Should continue execution, if dryRunTransform returns true", async () => {
     spyOnAreNewNamesDistinct.mockClear();
     spyOnAreNewNamesDistinct.mockReturnValueOnce(true);
-    spyOnDryRunTransform.mockImplementationOnce((args)=> Promise.resolve(true));
-    await convertFiles({...exampleArgs, dryRun: true});
+    spyOnDryRunTransform.mockImplementationOnce((args) =>
+      Promise.resolve(true)
+    );
+    await convertFiles({ ...exampleArgs, dryRun: true });
     expect(spyOnAreNewNamesDistinct).toHaveBeenCalledTimes(1);
-    
+
     spyOnAreNewNamesDistinct.mockClear();
-    spyOnDryRunTransform.mockImplementationOnce((args)=> Promise.resolve(false));
-    await convertFiles({...exampleArgs, dryRun: true});
+    spyOnDryRunTransform.mockImplementationOnce((args) =>
+      Promise.resolve(false)
+    );
+    await convertFiles({ ...exampleArgs, dryRun: true });
     expect(spyOnAreNewNamesDistinct).not.toHaveBeenCalled();
   });
   it("Should include exclude argument in listFiles, if provided", async () => {
@@ -157,10 +161,14 @@ describe("convertFiles", () => {
     expect(spyOnListFiles).toHaveBeenLastCalledWith(
       examplePath,
       exampleArgs.exclude,
-      undefined,
+      undefined
     );
     await convertFiles({ ...exampleArgs, exclude: undefined });
-    expect(spyOnListFiles).toHaveBeenLastCalledWith(examplePath, undefined, undefined);
+    expect(spyOnListFiles).toHaveBeenLastCalledWith(
+      examplePath,
+      undefined,
+      undefined
+    );
   });
   it("Should run provideFileStats with dateTransform", async () => {
     await convertFiles(exampleArgs);
@@ -198,11 +206,11 @@ describe("convertFiles", () => {
     const mockBatchPromises = [0, 1, 2, 3].map((num) => Promise.resolve());
     spyOnCreateBatchRename.mockReturnValueOnce(mockBatchPromises);
 
-    const spyOnPromiseAll = jest.spyOn(Promise, "all");
+    const spyOnPromiseAllSettled = jest.spyOn(Promise, "allSettled");
     await convertFiles(exampleArgs);
-    expect(spyOnPromiseAll).toHaveBeenCalledTimes(1);
-    expect(spyOnPromiseAll).toHaveBeenCalledWith(mockBatchPromises);
-    spyOnPromiseAll.mockRestore();
+    expect(spyOnPromiseAllSettled).toHaveBeenCalledTimes(1);
+    expect(spyOnPromiseAllSettled).toHaveBeenCalledWith(mockBatchPromises);
+    spyOnPromiseAllSettled.mockRestore();
   });
   it("Should call console.log twice", async () => {
     await convertFiles(exampleArgs);

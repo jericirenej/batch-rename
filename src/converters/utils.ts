@@ -6,7 +6,7 @@ import {
   DEFAULT_SEPARATOR,
   DEFAULT_TARGET_TYPE,
   EXT_REGEX,
-  ROLLBACK_FILE_NAME
+  ROLLBACK_FILE_NAME,
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
@@ -19,11 +19,13 @@ import type {
   ExtractBaseAndExt,
   ListFiles,
   NumberOfDuplicatedNames,
-  TruncateFileName
+  RenameList,
+  TruncateFileName,
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 
 const {
+  allRenameFailed,
   pathDoesNotExist,
   pathIsNotDir,
   noChildFiles,
@@ -47,8 +49,8 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   process.stdout.write("DONE!");
 };
 
-/**Will separate the basename and file extension, in addition to providing 
- * a sourcePath and type information. If no extension is found, it will return 
+/**Will separate the basename and file extension, in addition to providing
+ * a sourcePath and type information. If no extension is found, it will return
  * the whole file name  under the base property and an empty ext string. */
 export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   const regex = EXT_REGEX;
@@ -69,9 +71,9 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
   });
 };
 
-/** Will return a Dirent list of entities. 
+/** Will return a Dirent list of entities.
  * Can exclude files based on matches supplied with **excludeFilter**.
- * If a **targetType** argument is supplied, it will only return entries of 
+ * If a **targetType** argument is supplied, it will only return entries of
  * a specified type (defaults to files). */
 export const listFiles: ListFiles = async (
   transformPath,
@@ -259,6 +261,38 @@ export const createBatchRenameList: CreateBatchRenameList = (
     }
   });
   return batchRename;
+};
+
+/**Remove entries from the list for which the rename operation
+ * resulted in a rejected promise. */
+export const pruneTransformedNamesList = ({
+  transformedNames,
+  promiseResults,
+}: {
+  transformedNames: RenameList;
+  promiseResults: PromiseSettledResult<void>[];
+}): RenameList => {
+  const promisesRejected = promiseResults.filter(
+    (settledResult) => settledResult.status === "rejected"
+  ).length;
+
+  if (promisesRejected === 0) return transformedNames;
+  if (promisesRejected === transformedNames.length)
+    throw new Error(allRenameFailed);
+
+  console.log(
+    `${promisesRejected} rename operations failed. Removing from rollbackList...`
+  );
+  const truncatedList: RenameList = [];
+  promiseResults.forEach((settledResult, index) => {
+    if (settledResult.status === "rejected") {
+      const { original, rename } = transformedNames[index];
+      console.log(`Omitting ${original}=>${rename}`);
+      return;
+    }
+    return truncatedList.push(transformedNames[index]);
+  });
+  return truncatedList;
 };
 
 /** Will truncate baseName to the length of the supplied truncate argument

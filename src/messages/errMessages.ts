@@ -19,6 +19,7 @@ export const ERRORS = {
     noChildFiles:
       "Directory has no children file entries ('files' target type)",
     noChildDirs: "Directory has no child sub-directories ('dirs' target type)",
+    allRenameFailed: "All rename operations failed! No file has been changed.",
   },
   transforms: {
     noTransformFunctionAvailable: `No transform function available for the chosen option!`,
@@ -31,7 +32,6 @@ export const ERRORS = {
     noTransformationPicked: `No transformation operation picked! Please specify one of the following: ${VALID_TRANSFORM_TYPES.join(
       ", "
     )}`,
-
     duplicateRenames:
       "Transformation would lead to duplication of file names! Operation aborted.",
   },
