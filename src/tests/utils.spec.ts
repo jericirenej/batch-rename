@@ -14,7 +14,7 @@ import {
   extractBaseAndExt,
   listFiles,
   numberOfDuplicatedNames,
-  pruneTransformedNamesList,
+  settledPromisesEval,
   truncateFile,
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
@@ -521,8 +521,11 @@ describe("createBatchRenameList", () => {
   });
 });
 
-describe.only("pruneTransformedList", () => {
-  const args = { transformedNames: renameListDistinct },
+describe("settledPromisesEval", () => {
+  const args = {
+      transformedNames: renameListDistinct,
+      operationType: "convert" as const,
+    },
     settledLength = renameListDistinct.length,
     rejected = {
       status: "rejected",
@@ -536,7 +539,7 @@ describe.only("pruneTransformedList", () => {
     const promiseResults = new Array(settledLength).fill(
       fulfilled
     ) as PromiseSettledResult<void>[];
-    const result = pruneTransformedNamesList({ ...args, promiseResults });
+    const result = settledPromisesEval({ ...args, promiseResults });
     expect(result).toEqual(args.transformedNames);
   });
   it("Should throw error, if all promises are rejected", () => {
@@ -544,9 +547,9 @@ describe.only("pruneTransformedList", () => {
       rejected
     ) as PromiseSettledResult<void>[];
 
-    expect(() =>
-      pruneTransformedNamesList({ ...args, promiseResults })
-    ).toThrowError(ERRORS.utils.allRenameFailed);
+    expect(() => settledPromisesEval({ ...args, promiseResults })).toThrowError(
+      ERRORS.utils.allRenameFailed
+    );
   });
   it("Should remove entries that resulted in rejected promises", () => {
     const promiseResults: PromiseSettledResult<void>[] = [
@@ -554,7 +557,7 @@ describe.only("pruneTransformedList", () => {
       fulfilled,
       rejected,
     ];
-    const result = pruneTransformedNamesList({ ...args, promiseResults });
+    const result = settledPromisesEval({ ...args, promiseResults });
     expect(result.length).toBe(renameListDistinct.length - 2);
 
     const rejectedNames = [

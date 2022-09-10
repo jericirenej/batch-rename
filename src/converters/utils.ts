@@ -9,6 +9,7 @@ import {
   ROLLBACK_FILE_NAME,
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
 import type {
   AreNewNamesDistinct,
   CheckPath,
@@ -34,6 +35,7 @@ const {
 } = ERRORS.utils;
 const { truncateInvalidArgument } = ERRORS.transforms;
 const { noRollbackFile } = ERRORS.cleanRollback;
+const { failReport, failItem } = STATUS.settledPromisesEval;
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   transformPath,
@@ -263,14 +265,16 @@ export const createBatchRenameList: CreateBatchRenameList = (
   return batchRename;
 };
 
-/**Remove entries from the list for which the rename operation
+/**Remove entries from the list for which the renaming operation
  * resulted in a rejected promise. */
-export const pruneTransformedNamesList = ({
+export const settledPromisesEval = ({
   transformedNames,
   promiseResults,
+  operationType,
 }: {
   transformedNames: RenameList;
   promiseResults: PromiseSettledResult<void>[];
+  operationType: "convert" | "restore";
 }): RenameList => {
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
@@ -280,14 +284,12 @@ export const pruneTransformedNamesList = ({
   if (promisesRejected === transformedNames.length)
     throw new Error(allRenameFailed);
 
-  console.log(
-    `${promisesRejected} rename operations failed. Removing from rollbackList...`
-  );
+  console.log(failReport(promisesRejected, operationType));
   const truncatedList: RenameList = [];
   promiseResults.forEach((settledResult, index) => {
     if (settledResult.status === "rejected") {
       const { original, rename } = transformedNames[index];
-      console.log(`Omitting ${original}=>${rename}`);
+      console.log(failItem(original, rename, operationType));
       return;
     }
     return truncatedList.push(transformedNames[index]);

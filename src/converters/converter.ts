@@ -31,7 +31,7 @@ import {
   extractBaseAndExt,
   listFiles,
   numberOfDuplicatedNames,
-  pruneTransformedNamesList,
+  settledPromisesEval,
 } from "./utils.js";
 const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
 const {
@@ -96,10 +96,12 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const batchRename = createBatchRenameList(transformedNames);
   console.log(`Renaming ${batchRename.length} files...`);
   const promiseResults = await Promise.allSettled(batchRename);
-  const updatedRenameList = pruneTransformedNamesList({
+  const updatedRenameList = settledPromisesEval({
     promiseResults,
     transformedNames,
+    operationType: "convert",
   });
+
   console.log("Rename completed!");
   process.stdout.write("Writing rollback file...");
   await writeFile(
