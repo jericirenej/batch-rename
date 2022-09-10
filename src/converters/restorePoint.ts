@@ -87,8 +87,8 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     updatedRenameList = rollbackData.filter(({ rename }) =>
       filesToRestore.includes(rename)
     );
-    const revertMessage = `Will revert ${batchRename.length} files...`;
-    console.log(revertMessage);
+
+    console.log(`Will revert ${batchRename.length} files...`);
     const promiseResults = await Promise.allSettled(batchRename);
 
     settledPromisesEval({
