@@ -523,6 +523,14 @@ describe("createBatchRenameList", () => {
 });
 
 describe("settledPromisesEval", () => {
+  let spyOnConsole: jest.SpyInstance;
+  beforeEach(
+    () =>
+      (spyOnConsole = jest
+        .spyOn(console, "log")
+        .mockImplementation((message?: string) => {}))
+  );
+  afterEach(() => spyOnConsole.mockRestore());
   const args = {
       transformedNames: renameListDistinct,
       operationType: "convert" as const,
@@ -579,7 +587,6 @@ describe("settledPromisesEval", () => {
     ];
     for (const operationType of ["convert", "restore"] as const) {
       const { failReport, failItem } = STATUS.settledPromisesEval;
-      const spyOnConsole = jest.spyOn(console, "log");
       settledPromisesEval({ ...args, operationType, promiseResults });
 
       const expectedFailReport = failReport(1, operationType);
@@ -592,7 +599,7 @@ describe("settledPromisesEval", () => {
       expect(spyOnConsole).toHaveBeenCalledTimes(2);
       expect(spyOnConsole).toHaveBeenNthCalledWith(1, expectedFailReport);
       expect(spyOnConsole).toHaveBeenNthCalledWith(2, expectedFailItem);
-      spyOnConsole.mockRestore();
+      spyOnConsole.mockClear();
     }
   });
 });
