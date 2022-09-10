@@ -18,6 +18,7 @@ import {
   truncateFile,
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
   ExtractBaseAndExtTemplate,
@@ -569,6 +570,30 @@ describe("settledPromisesEval", () => {
     );
 
     expect(areRejectedPresent).toBe(false);
+  });
+  it("Should produce appropriate failReport and failItem messages", () => {
+    const promiseResults: PromiseSettledResult<void>[] = [
+      fulfilled,
+      fulfilled,
+      rejected,
+    ];
+    for (const operationType of ["convert", "restore"] as const) {
+      const { failReport, failItem } = STATUS.settledPromisesEval;
+      const spyOnConsole = jest.spyOn(console, "log");
+      settledPromisesEval({ ...args, operationType, promiseResults });
+
+      const expectedFailReport = failReport(1, operationType);
+      const expectedFailItem = failItem(
+        renameListDistinct[2].original,
+        renameListDistinct[2].rename,
+        operationType
+      );
+
+      expect(spyOnConsole).toHaveBeenCalledTimes(2);
+      expect(spyOnConsole).toHaveBeenNthCalledWith(1, expectedFailReport);
+      expect(spyOnConsole).toHaveBeenNthCalledWith(2, expectedFailItem);
+      spyOnConsole.mockRestore();
+    }
   });
 });
 
