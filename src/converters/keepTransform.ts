@@ -7,7 +7,7 @@ export const keepTransform: KeepTransform = ({
   textPosition,
   separator,
   /**Current limitation: format option will never format the extension, as
-   * the extension will be removed if  noExtensionPreserve is true.
+   * the extension will be removed if noExtensionPreserve is true.
    */
   format,
   splitFileList,
