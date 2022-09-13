@@ -5,22 +5,25 @@ import { GenerateRenameListArgs } from "../types.js";
 import {
   generateMockSplitFileList,
   mockDirentEntryAsFile,
-  mockSplitFile
+  mockSplitFile,
 } from "./mocks.js";
 
 const { extractBaseAndExt } = utils;
 
-const { generateArguments, optionalTruncate, searchAndReplace } =
+const { generateSearchAndReplaceArgs, optionalTruncate, searchAndReplace } =
   regexTransform;
-const spyOnGenerateArguments = jest.spyOn(regexTransform, "generateArguments"),
+const spyOnGenerateArguments = jest.spyOn(
+    regexTransform,
+    "generateSearchAndReplaceArgs"
+  ),
   spyOnOptionalTruncate = jest.spyOn(regexTransform, "optionalTruncate"),
   spyOnExtractBaseAndExt = jest.spyOn(utils, "extractBaseAndExt"),
   spyOnTruncateFile = jest.spyOn(utils, "truncateFile");
 
-describe("generateArguments", () => {
+describe("generateSearchAndReplaceArgs", () => {
   const exampleArgs = ["filter", "replace"];
   it("Should return proper shape of object", () => {
-    const replaceConfig = generateArguments(exampleArgs);
+    const replaceConfig = generateSearchAndReplaceArgs(exampleArgs);
     Object.entries(replaceConfig).forEach((entry, index) => {
       const [key, value] = [entry[0], entry[1]];
       expect(key).toBe(exampleArgs[index]);
@@ -30,15 +33,15 @@ describe("generateArguments", () => {
     });
   });
   it("Filter should be null, if only one argument is supplied", () => {
-    const replaceConfig = generateArguments([exampleArgs[0]]);
+    const replaceConfig = generateSearchAndReplaceArgs([exampleArgs[0]]);
     expect(replaceConfig.filter).toBeNull();
   });
   it("Filter should include passed string", () => {
-    const replaceConfig = generateArguments(exampleArgs);
+    const replaceConfig = generateSearchAndReplaceArgs(exampleArgs);
     expect(replaceConfig.filter!.source).toBe(exampleArgs[0]);
   });
   it("Filter should have only global flag set", () => {
-    const replaceConfig = generateArguments(exampleArgs);
+    const replaceConfig = generateSearchAndReplaceArgs(exampleArgs);
     expect(replaceConfig.filter!.flags).toBe("gu");
   });
 });
