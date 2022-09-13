@@ -3,7 +3,7 @@ import { resolve } from "path";
 import {
   ROLLBACK_FILE_NAME,
   VALID_DRY_RUN_ANSWERS,
-  VALID_TRANSFORM_TYPES
+  VALID_TRANSFORM_TYPES,
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
@@ -13,7 +13,7 @@ import type {
   FileListWithStatsArray,
   GenerateRenameList,
   GenerateRenameListArgs,
-  RenameListArgs
+  RenameListArgs,
 } from "../types";
 import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
@@ -30,7 +30,8 @@ import {
   determineDir,
   extractBaseAndExt,
   listFiles,
-  numberOfDuplicatedNames
+  numberOfDuplicatedNames,
+  settledPromisesEval,
 } from "./utils.js";
 const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
 const {
@@ -50,7 +51,7 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   dateRename: (args: GenerateRenameListArgs) => dateTransform(args),
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
-  keep: (args:GenerateRenameListArgs) => keepTransform(args),
+  keep: (args: GenerateRenameListArgs) => keepTransform(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
   extensionModify: (args: GenerateRenameListArgs) =>
     extensionModifyTransform(args),
@@ -92,17 +93,23 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(duplicateRenames);
 
+  const batchRename = createBatchRenameList(transformedNames);
+  console.log(`Renaming ${batchRename.length} files...`);
+  const promiseResults = await Promise.allSettled(batchRename);
+  const updatedRenameList = settledPromisesEval({
+    promiseResults,
+    transformedNames,
+    operationType: "convert",
+  });
+
+  console.log("Rename completed!");
   process.stdout.write("Writing rollback file...");
   await writeFile(
     resolve(targetDir, ROLLBACK_FILE_NAME),
-    JSON.stringify(transformedNames, undefined, 2),
+    JSON.stringify(updatedRenameList, undefined, 2),
     "utf-8"
   );
   process.stdout.write("DONE.\n");
-  const batchRename = createBatchRenameList(transformedNames);
-  console.log(`Renaming ${batchRename.length} files...`);
-  await Promise.all(batchRename);
-  console.log("Completed!");
 };
 
 export const generateRenameList: GenerateRenameList = (args) => {

@@ -3,7 +3,7 @@ import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
   VALID_NUMERIC_TRANSFORM_TYPES,
-  VALID_TRANSFORM_TYPES
+  VALID_TRANSFORM_TYPES,
 } from "./constants";
 
 export type ValidTypes = "files" | "dirs" | "all";

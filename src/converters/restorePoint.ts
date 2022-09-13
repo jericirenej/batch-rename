@@ -8,14 +8,15 @@ import type {
   DryRunRestore,
   RenameList,
   RestoreBaseFunction,
-  RestoreOriginalFileNames
+  RestoreOriginalFileNames,
 } from "../types";
 import {
   askQuestion,
   cleanUpRollbackFile,
   createBatchRenameList,
   determineDir,
-  listFiles
+  listFiles,
+  settledPromisesEval,
 } from "./utils.js";
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
@@ -74,7 +75,8 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   }
   const { rollbackData, filesToRestore } = restoreBaseData;
 
-  let batchRename: Promise<void>[] = [];
+  let batchRename: Promise<void>[] = [],
+    updatedRenameList: RenameList = [];
   if (filesToRestore.length) {
     batchRename = createBatchRenameList(rollbackData, filesToRestore);
   }
@@ -82,9 +84,19 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     throw new Error(couldNotBeParsed);
   }
   if (batchRename.length) {
-    const revertMessage = `Will revert ${batchRename.length} files...`;
-    console.log(revertMessage);
-    await Promise.all(batchRename);
+    updatedRenameList = rollbackData.filter(({ rename }) =>
+      filesToRestore.includes(rename)
+    );
+
+    console.log(`Will revert ${batchRename.length} files...`);
+    const promiseResults = await Promise.allSettled(batchRename);
+
+    settledPromisesEval({
+      promiseResults,
+      transformedNames: updatedRenameList,
+      operationType: "restore",
+    });
+
     await cleanUpRollbackFile({ transformPath });
   }
 };

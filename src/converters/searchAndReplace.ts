@@ -1,7 +1,7 @@
 import { Dirent } from "fs";
 import type {
   GenerateSearchAndReplaceArgs,
-  SearchAndReplace
+  SearchAndReplace,
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 import { extractBaseAndExt, truncateFile } from "./utils.js";
@@ -13,7 +13,7 @@ export const searchAndReplace: SearchAndReplace = ({
   truncate,
   format,
 }) => {
-  const generatedArgs = generateArguments(searchAndReplace!);
+  const generatedArgs = generateSearchAndReplaceArgs(searchAndReplace!);
   const targetList = splitFileList.map((fileInfo) => {
     const { filter, replace } = generatedArgs;
     let { baseName, sourcePath, ext, type } = fileInfo;
@@ -40,7 +40,9 @@ export const searchAndReplace: SearchAndReplace = ({
   return targetList;
 };
 
-export const generateArguments: GenerateSearchAndReplaceArgs = (args) => {
+export const generateSearchAndReplaceArgs: GenerateSearchAndReplaceArgs = (
+  args
+) => {
   if (args.length === 1) return { filter: null, replace: args[0] };
   return { filter: new RegExp(args[0], "gu"), replace: args[1] };
 };

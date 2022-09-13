@@ -8,7 +8,7 @@ import type { RestoreBaseReturn } from "../types.js";
 import {
   examplePath as transformPath,
   mockDirentEntryAsFile,
-  renameListDistinct as renameList
+  renameListDistinct as renameList,
 } from "./mocks.js";
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -34,7 +34,8 @@ const spyOnListFiles = jest.spyOn(utils, "listFiles"),
   spyOnCleanUpRollbackFile = jest.spyOn(utils, "cleanUpRollbackFile"),
   spyOnCreateBatchRenameList = jest.spyOn(utils, "createBatchRenameList"),
   spyOnDryRunRestore = jest.spyOn(restorePoint, "dryRunRestore"),
-  spyOnRestoreBase = jest.spyOn(restorePoint, "restoreBaseFunction");
+  spyOnRestoreBase = jest.spyOn(restorePoint, "restoreBaseFunction"),
+  spyOnSettledPromisesEval = jest.spyOn(utils, "settledPromisesEval");
 
 const mockRenamedList = renameList.map((fileItem) => fileItem.rename);
 const mockFileList = mockRenamedList.map((file) => ({
@@ -159,6 +160,37 @@ describe("restoreOriginalFileNames", () => {
     const logCalledWith = spyOnConsole.mock.calls.map((call) => call[0]);
     const expected = `Will revert ${mockFileList.length} files...`;
     expect(logCalledWith).toContain(expected);
+  });
+  it("Should call settledPromisesEval with appropriate args", async () => {
+    spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
+      Promise.resolve()
+    );
+    // Presume that last file is missing.
+    spyOnRestoreBase.mockResolvedValueOnce({
+      ...mockRestoreList,
+      filesToRestore: mockFileList
+        .slice(0, -1)
+        .map((fileInfo) => fileInfo.name),
+    });
+    // Make second promise reject, to test for proper truncating of renamed list.
+    spyOnCreateBatchRenameList.mockReturnValueOnce([
+      Promise.resolve(),
+      Promise.reject(),
+    ]);
+    // Create the appropriate allSettled data.
+    const promiseResults = [
+      { status: "fulfilled", value: undefined },
+      { status: "rejected", reason: undefined },
+    ];
+    const expectedArgs = {
+      promiseResults,
+      operationType: "restore",
+      transformedNames: renameList.slice(0, -1),
+    };
+    await restoreOriginalFileNames(baseArg);
+    expect(spyOnSettledPromisesEval).toHaveBeenCalledTimes(1);
+    spyOnConsole.mockRestore();
+    expect(spyOnSettledPromisesEval).toHaveBeenCalledWith(expectedArgs);
   });
   it("Should await all pending promises and call cleanUpRollbackFile", async () => {
     let resolved = 0;

@@ -1,7 +1,9 @@
 export const STATUS = {
   dryRun: {
     transformIntro(transformPattern: string[], transformPath: string): string {
-      return `Transformations of type ${transformPattern.join(", ")} in folder ${transformPath} would result in the following transform:`;
+      return `Transformations of type ${transformPattern.join(
+        ", "
+      )} in folder ${transformPath} would result in the following transform:`;
     },
     warningUnaffectedFiles(unaffectedFiles: number) {
       return `Number of files for which transform has no effect: ${unaffectedFiles}`;
@@ -25,5 +27,22 @@ export const STATUS = {
     questionPerformRestore:
       "Would you like to execute the restore of original entry names (N/Y)?",
     exitWithoutRestore: "Exited application without performing restore.",
+  },
+  settledPromisesEval: {
+    failReport: (
+      promisesRejected: number,
+      operationType: "convert" | "restore"
+    ) => `${promisesRejected} ${operationType} operations were unsuccessful:`,
+    failItem: (
+      original: string,
+      rename: string,
+      operationType: "convert" | "restore"
+    ) => {
+      const renameOrder =
+        operationType === "convert"
+          ? `${original} => ${rename}`
+          : `${rename} => ${original}`;
+      return `${operationType}: ${renameOrder}`;
+    },
   },
 };

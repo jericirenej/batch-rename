@@ -14,13 +14,15 @@ import {
   extractBaseAndExt,
   listFiles,
   numberOfDuplicatedNames,
-  truncateFile
+  settledPromisesEval,
+  truncateFile,
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
   ExtractBaseAndExtTemplate,
-  ValidTypes
+  ValidTypes,
 } from "../types.js";
 import {
   createDirentArray,
@@ -31,7 +33,7 @@ import {
   renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
-  truthyArgument
+  truthyArgument,
 } from "./mocks.js";
 
 const {
@@ -517,6 +519,88 @@ describe("createBatchRenameList", () => {
       );
       expect(batchPromise.length).toBe(expectedLength);
     });
+  });
+});
+
+describe("settledPromisesEval", () => {
+  let spyOnConsole: jest.SpyInstance;
+  beforeEach(
+    () =>
+      (spyOnConsole = jest
+        .spyOn(console, "log")
+        .mockImplementation((message?: string) => {}))
+  );
+  afterEach(() => spyOnConsole.mockRestore());
+  const args = {
+      transformedNames: renameListDistinct,
+      operationType: "convert" as const,
+    },
+    settledLength = renameListDistinct.length,
+    rejected = {
+      status: "rejected",
+      reason: "someReason",
+    } as const,
+    fulfilled = {
+      status: "fulfilled",
+      value: void 0,
+    } as const;
+  it("Should return unmodified rename list, if all promises are fulfilled", () => {
+    const promiseResults = new Array(settledLength).fill(
+      fulfilled
+    ) as PromiseSettledResult<void>[];
+    const result = settledPromisesEval({ ...args, promiseResults });
+    expect(result).toEqual(args.transformedNames);
+  });
+  it("Should throw error, if all promises are rejected", () => {
+    const promiseResults = new Array(settledLength).fill(
+      rejected
+    ) as PromiseSettledResult<void>[];
+
+    expect(() => settledPromisesEval({ ...args, promiseResults })).toThrowError(
+      ERRORS.utils.allRenameFailed
+    );
+  });
+  it("Should remove entries that resulted in rejected promises", () => {
+    const promiseResults: PromiseSettledResult<void>[] = [
+      rejected,
+      fulfilled,
+      rejected,
+    ];
+    const result = settledPromisesEval({ ...args, promiseResults });
+    expect(result.length).toBe(renameListDistinct.length - 2);
+
+    const rejectedNames = [
+      renameListDistinct[0].original,
+      renameListDistinct[2].original,
+    ];
+    const areRejectedPresent = result.some(({ original }) =>
+      rejectedNames.includes(original)
+    );
+
+    expect(areRejectedPresent).toBe(false);
+  });
+  it("Should produce appropriate failReport and failItem messages", () => {
+    const promiseResults: PromiseSettledResult<void>[] = [
+      fulfilled,
+      fulfilled,
+      rejected,
+    ];
+    for (const operationType of ["convert", "restore"] as const) {
+      const { failReport, failItem } = STATUS.settledPromisesEval;
+      settledPromisesEval({ ...args, operationType, promiseResults });
+
+      const expectedFailReport = failReport(1, operationType);
+      const expectedFailItem = failItem(
+        renameListDistinct[2].original,
+        renameListDistinct[2].rename,
+        operationType
+      );
+
+      expect(spyOnConsole).toHaveBeenCalledTimes(2);
+      expect(spyOnConsole).toHaveBeenNthCalledWith(1, expectedFailReport);
+      expect(spyOnConsole).toHaveBeenNthCalledWith(2, expectedFailItem);
+      spyOnConsole.mockClear();
+    }
   });
 });
 

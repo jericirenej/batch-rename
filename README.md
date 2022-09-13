@@ -66,7 +66,7 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-e, --extensionModify`|`<string>`|Modify extension of target files. Can also be used together with the exclude option|
 |`-a, --addText`|`<string>`|Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.|
 |`--target`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
-|`--targetType`|`['files'\|'dirs'\|'all']`||`Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.`
+|`--targetType`|`['files'\|'dirs'\|'all']`|Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.|
 |`-r, --restore`||Restore transformed files to original names, if restore file is available.|
 |`-D, --dryRun`||Run transform operation without writing to disk. Will log properties of expected output. Prompts user for transform execution, if no errors detected.|
 |`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
