@@ -212,6 +212,28 @@ describe("convertFiles", () => {
     expect(spyOnPromiseAllSettled).toHaveBeenCalledWith(mockBatchPromises);
     spyOnPromiseAllSettled.mockRestore();
   });
+  it("Should call settledPromisesEval with appropriate arguments", async () => {
+    const mockBatchPromises = [...renameListDistinct].map(() =>
+      Promise.resolve()
+    );
+    spyOnGenerateRenameList.mockImplementationOnce(() => renameListDistinct);
+    mockBatchPromises[0] = Promise.reject();
+    spyOnCreateBatchRename.mockReturnValueOnce(mockBatchPromises);
+    const promiseResults = await Promise.allSettled(mockBatchPromises);
+    const spyOnSettledPromisesEval = jest.spyOn(utils, "settledPromisesEval");
+    await convertFiles(exampleArgs);
+    spyOnProcessWrite.mockRestore();
+    spyOnConsole.mockRestore();
+    expect(spyOnSettledPromisesEval).toHaveBeenCalledTimes(1);
+    expect(spyOnSettledPromisesEval).toHaveBeenCalledWith({
+      promiseResults,
+      transformedNames: renameListDistinct,
+      operationType: "convert",
+    });
+    expect(spyOnSettledPromisesEval).toHaveReturnedWith(
+      renameListDistinct.slice(1)
+    );
+  });
   it("Should call console.log twice", async () => {
     await convertFiles(exampleArgs);
     expect(spyOnConsole).toHaveBeenCalledTimes(2);
