@@ -21,7 +21,10 @@ import type {
   ExtractBaseAndExt,
   ListFiles,
   NumberOfDuplicatedNames,
-  RenameList, TruncateFileName
+  RenameItem,
+  RenameList,
+  RestoreFileMapper,
+  TruncateFileName
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 
@@ -339,13 +342,52 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
   return targetRestoreLevel;
 };
 
-/*  export const restoreFileMapper: RestoreFileMapper = ({
+export const restoreFileMapper: RestoreFileMapper = ({
   rollbackFile,
   rollbackLevel = 1,
 }) => {
-  const targetLevel = determineRollbackLevel({rollbackFile, rollbackLevel});
-  const rollbackSlice = rollbackFile.slice(0,targetLevel);
-  const sourcePath = rollbackFile[0][0].sourcePath;
-  
-  
-}; */
+  const targetLevel = determineRollbackLevel({ rollbackFile, rollbackLevel });
+  const iterationArray = new Array(targetLevel-1)
+      .fill(0)
+      .map((el, index) => index+1)
+      .reverse(),
+    rollbackSlice = rollbackFile.slice(0, targetLevel);
+  let finalRollback = [] as RenameList;
+
+  rollbackSlice[0].forEach(({ rename, original, sourcePath }, index) => {
+    let isIncluded = true,
+      targetName = original,
+      initialName = "";
+
+    for (let i=0; i < iterationArray.length; i++) {
+      const targetVal = iterationArray[i]
+      const renameItem = searchInRollback(rollbackSlice[targetVal], targetName);
+      if (!renameItem) {
+        isIncluded = false;
+        break;
+      }
+      targetName = renameItem.original;
+      if (i === iterationArray.length - 1)
+      console.log("ON INDEX", renameItem);
+        initialName = renameItem.original;
+    }
+    if (isIncluded) {
+      return (finalRollback[index] = {
+        sourcePath,
+        rename,
+        original: initialName,
+      });
+    }
+  });
+  console.log("FINAL ROLLBACK CONFIG", finalRollback);
+  return finalRollback;
+};
+
+const searchInRollback = (
+  list: RenameList,
+  targetName: string
+): RenameItem | undefined => {
+  const query = list.filter(({ rename }) => rename === targetName);
+  console.log("THIS IS THE QUERY", query[0]);
+  return query.length === 1 ? query[0] : undefined;
+};
