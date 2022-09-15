@@ -26,7 +26,6 @@ export default {
   },
   resolve: {
     extensionAlias: { ".js": [".ts", ".js"] },
-    /* plugins: [new ResolveTypescriptPlugin()],*/
   },
   output: {
     path: resolve(__dirname, "prod"),
