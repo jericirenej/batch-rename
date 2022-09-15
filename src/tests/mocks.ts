@@ -80,6 +80,15 @@ renameListWithDuplicateOldAndNew[0] = {
   sourcePath,
 };
 
+export const renameListArray = [
+  renameListDistinct.map(({ sourcePath, rename }, index) => ({
+    original: rename,
+    rename: `secondRename${index}`,
+    sourcePath,
+  })),
+  renameListDistinct,
+];
+
 export { renameListDistinct, renameListWithDuplicateOldAndNew };
 
 export const truthyArgument = "argument";

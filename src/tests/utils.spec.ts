@@ -15,6 +15,7 @@ import {
   extractBaseAndExt,
   listFiles,
   numberOfDuplicatedNames,
+  restoreFileMapper,
   settledPromisesEval,
   truncateFile
 } from "../converters/utils.js";
@@ -31,6 +32,7 @@ import {
   exampleStats,
   expectedSplit,
   mockFileList,
+  renameListArray,
   renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
@@ -680,3 +682,9 @@ describe.only("determineRollbackLevel", () => {
     );
   });
 });
+
+describe.only("restoreFileMapper", ()=>{
+  it("Should run", ()=> {
+    restoreFileMapper({rollbackFile: renameListArray, rollbackLevel: 10})
+  })
+})

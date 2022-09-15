@@ -78,11 +78,13 @@ export type ExtractBaseAndExt = (
   fileList: Dirent[],
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
-export type RenameList = {
+
+export interface RenameItem {
   rename: string;
   original: string;
   sourcePath: string;
-}[];
+}
+export type RenameList = RenameItem[];
 export type RenameListArgs = {
   transformPattern: TransformTypes[];
   addText?: string;
