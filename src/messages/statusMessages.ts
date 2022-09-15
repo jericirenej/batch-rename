@@ -28,6 +28,9 @@ export const STATUS = {
       "Would you like to execute the restore of original entry names (N/Y)?",
     exitWithoutRestore: "Exited application without performing restore.",
   },
+  restoreFileMapper: {
+    rollbackLevelOverMax: "Specified rollback level is higher than the combined number of stored batch operations. Will map to initial entry.",
+  },
   settledPromisesEval: {
     failReport: (
       promisesRejected: number,

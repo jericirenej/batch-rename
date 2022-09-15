@@ -6,7 +6,7 @@ import {
   DEFAULT_SEPARATOR,
   DEFAULT_TARGET_TYPE,
   EXT_REGEX,
-  ROLLBACK_FILE_NAME,
+  ROLLBACK_FILE_NAME
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
@@ -17,11 +17,11 @@ import type {
   ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
+  DetermineRollbackLevel,
   ExtractBaseAndExt,
   ListFiles,
   NumberOfDuplicatedNames,
-  RenameList,
-  TruncateFileName,
+  RenameList, TruncateFileName
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 
@@ -36,6 +36,8 @@ const {
 const { truncateInvalidArgument } = ERRORS.transforms;
 const { noRollbackFile } = ERRORS.cleanRollback;
 const { failReport, failItem } = STATUS.settledPromisesEval;
+const { zeroLevelRollback } = ERRORS.restoreFileMapper;
+const { rollbackLevelOverMax } = STATUS.restoreFileMapper;
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   transformPath,
@@ -322,3 +324,28 @@ export const askQuestion = (question: string): Promise<string> => {
     rl.question(question + "\n", (answer) => resolve(answer));
   });
 };
+
+export const determineRollbackLevel: DetermineRollbackLevel = ({
+  rollbackFile,
+  rollbackLevel = 1,
+}) => {
+  if (rollbackLevel === 0) throw new Error(zeroLevelRollback);
+  let targetRestoreLevel = rollbackLevel;
+  const maximumRestoreLevel = rollbackFile.length;
+  if (rollbackLevel > maximumRestoreLevel) {
+    console.log(rollbackLevelOverMax);
+    targetRestoreLevel = maximumRestoreLevel;
+  }
+  return targetRestoreLevel;
+};
+
+/*  export const restoreFileMapper: RestoreFileMapper = ({
+  rollbackFile,
+  rollbackLevel = 1,
+}) => {
+  const targetLevel = determineRollbackLevel({rollbackFile, rollbackLevel});
+  const rollbackSlice = rollbackFile.slice(0,targetLevel);
+  const sourcePath = rollbackFile[0][0].sourcePath;
+  
+  
+}; */
