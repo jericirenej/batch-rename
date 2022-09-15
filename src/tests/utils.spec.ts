@@ -11,18 +11,19 @@ import {
   composeRenameString,
   createBatchRenameList,
   determineDir,
+  determineRollbackLevel,
   extractBaseAndExt,
   listFiles,
   numberOfDuplicatedNames,
   settledPromisesEval,
-  truncateFile,
+  truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
   ExtractBaseAndExtTemplate,
-  ValidTypes,
+  ValidTypes
 } from "../types.js";
 import {
   createDirentArray,
@@ -33,7 +34,7 @@ import {
   renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
-  truthyArgument,
+  truthyArgument
 } from "./mocks.js";
 
 const {
@@ -44,6 +45,7 @@ const {
   pathIsNotDir,
 } = ERRORS.utils;
 const { noRollbackFile } = ERRORS.cleanRollback;
+const { zeroLevelRollback } = ERRORS.restoreFileMapper;
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -630,5 +632,51 @@ describe("truncateFile", () => {
   });
   it("Should return truncated baseName", () => {
     expect(truncateFile(generalArgs).length).toBe(truncateNum);
+  });
+});
+
+describe.only("determineRollbackLevel", () => {
+  const rollbackLength = 10,
+    rollbackFile = new Array(rollbackLength).fill(renameListDistinct);
+  let spyOnConsole: jest.SpyInstance;
+  beforeEach(
+    () =>
+      (spyOnConsole = jest
+        .spyOn(console, "log")
+        .mockImplementation((message) => {}))
+  );
+  afterEach(() => spyOnConsole.mockRestore());
+  it("Should throw error, if rollback level is 0", () => {
+    expect(() =>
+      determineRollbackLevel({ rollbackFile, rollbackLevel: 0 })
+    ).toThrowError(zeroLevelRollback);
+  });
+  it("Should set restore index to the last array entry (length-1) if rollbackLevel is over maximum", () => {
+    expect(
+      determineRollbackLevel({
+        rollbackFile,
+        rollbackLevel: rollbackLength + 1,
+      })
+    ).toBe(rollbackLength);
+  });
+  it("Should notify the user, if rollbackLevel is over maximum", () => {
+    expect(spyOnConsole).not.toHaveBeenCalled();
+    determineRollbackLevel({
+      rollbackFile,
+      rollbackLevel: rollbackLength + 1,
+    });
+    expect(spyOnConsole).toHaveBeenCalledWith(
+      STATUS.restoreFileMapper.rollbackLevelOverMax
+    );
+  });
+  it("Should return the target index", () => {
+    [1, 2, 3, 5].forEach((rollbackLevel) =>
+      expect(
+        determineRollbackLevel({
+          rollbackFile,
+          rollbackLevel,
+        })
+      ).toBe(rollbackLevel)
+    );
   });
 });

@@ -3,7 +3,7 @@ import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
   VALID_NUMERIC_TRANSFORM_TYPES,
-  VALID_TRANSFORM_TYPES,
+  VALID_TRANSFORM_TYPES
 } from "./constants";
 
 export type ValidTypes = "files" | "dirs" | "all";
@@ -246,3 +246,18 @@ export type KeepTransformArgs = Pick<
 >;
 
 export type KeepTransform = (args: KeepTransformArgs) => RenameList;
+
+export interface BaseFileMapperArgs {
+  rollbackFile: RenameList[];
+  rollbackLevel?: number;
+}
+
+export type RestoreFileMapper = ({
+  rollbackFile,
+  rollbackLevel,
+}: BaseFileMapperArgs) => RenameList;
+
+export type DetermineRollbackLevel = ({
+  rollbackFile,
+  rollbackLevel,
+}: Required<BaseFileMapperArgs>) => number;
