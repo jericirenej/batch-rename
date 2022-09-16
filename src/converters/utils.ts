@@ -19,12 +19,7 @@ import type {
   DetermineDir,
   DetermineRollbackLevel,
   ExtractBaseAndExt,
-  ListFiles,
-  NumberOfDuplicatedNames,
-  RenameItem,
-  RenameList,
-  RestoreFileMapper,
-  TruncateFileName
+  ListFiles, NumberOfDuplicatedNames, RenameList, TruncateFileName
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 
@@ -329,12 +324,12 @@ export const askQuestion = (question: string): Promise<string> => {
 };
 
 export const determineRollbackLevel: DetermineRollbackLevel = ({
-  rollbackFile,
+  rollbackList,
   rollbackLevel = 1,
 }) => {
   if (rollbackLevel === 0) throw new Error(zeroLevelRollback);
   let targetRestoreLevel = rollbackLevel;
-  const maximumRestoreLevel = rollbackFile.length;
+  const maximumRestoreLevel = rollbackList.length;
   if (rollbackLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
     targetRestoreLevel = maximumRestoreLevel;
@@ -342,19 +337,20 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
   return targetRestoreLevel;
 };
 
-export const restoreFileMapper: RestoreFileMapper = ({
+/* export const restoreFileMapper: RestoreFileMapper = ({
   rollbackFile,
   rollbackLevel = 1,
 }) => {
-  const targetLevel = determineRollbackLevel({ rollbackFile, rollbackLevel });
+  const {transforms, sourcePath} = rollbackFile;
+  const targetLevel = determineRollbackLevel({ rollbackList: transforms, rollbackLevel });
   const iterationArray = new Array(targetLevel-1)
       .fill(0)
       .map((el, index) => index+1)
       .reverse(),
-    rollbackSlice = rollbackFile.slice(0, targetLevel);
+    rollbackSlice = transforms.slice(0, targetLevel);
   let finalRollback = [] as RenameList;
 
-  rollbackSlice[0].forEach(({ rename, original, sourcePath }, index) => {
+  rollbackSlice[0].forEach(({ rename, original }, index) => {
     let isIncluded = true,
       targetName = original,
       initialName = "";
@@ -384,10 +380,11 @@ export const restoreFileMapper: RestoreFileMapper = ({
 };
 
 const searchInRollback = (
-  list: RenameList,
+  list: NewRenameItemList,
   targetName: string
 ): RenameItem | undefined => {
   const query = list.filter(({ rename }) => rename === targetName);
   console.log("THIS IS THE QUERY", query[0]);
   return query.length === 1 ? query[0] : undefined;
 };
+ */
