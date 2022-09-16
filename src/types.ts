@@ -249,8 +249,17 @@ export type KeepTransformArgs = Pick<
 
 export type KeepTransform = (args: KeepTransformArgs) => RenameList;
 
+// Temporary types which will become the new RenameList type
+export type NewRenameItem = Omit<RenameItem, "sourcePath"> & {
+  referenceId: string;
+};
+export type NewRenameItemList = NewRenameItem[];
+export interface NewRenameListLevel {
+  sourcePath: string;
+  transforms: NewRenameItemList[];
+}
 export interface BaseFileMapperArgs {
-  rollbackFile: RenameList[];
+  rollbackFile: NewRenameListLevel;
   rollbackLevel?: number;
 }
 
@@ -260,6 +269,9 @@ export type RestoreFileMapper = ({
 }: BaseFileMapperArgs) => RenameList;
 
 export type DetermineRollbackLevel = ({
-  rollbackFile,
+  rollbackList,
   rollbackLevel,
-}: Required<BaseFileMapperArgs>) => number;
+}: {
+  rollbackList: NewRenameItemList[];
+  rollbackLevel: number;
+}) => number;

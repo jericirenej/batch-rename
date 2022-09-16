@@ -2,7 +2,8 @@ import { Dirent, Stats } from "fs";
 import { extractBaseAndExt } from "../converters/utils.js";
 import type {
   ExtractBaseAndExtReturn,
-  ExtractBaseAndExtTemplate,
+  ExtractBaseAndExtTemplate, NewRenameItemList,
+  NewRenameListLevel,
   RenameList
 } from "../types.js";
 
@@ -67,11 +68,11 @@ export const renameWithNewNameRepeat: RenameList = [
   { original: originalNames[2], rename: firstRename, sourcePath },
 ];
 
-const renameListDistinct = JSON.parse(
+export const renameListDistinct = JSON.parse(
   JSON.stringify(renameWithNewNameRepeat)
 ) as RenameList;
 renameListDistinct[2].rename = "rename3";
-const renameListWithDuplicateOldAndNew = JSON.parse(
+export const renameListWithDuplicateOldAndNew = JSON.parse(
   JSON.stringify(renameListDistinct)
 ) as RenameList;
 renameListWithDuplicateOldAndNew[0] = {
@@ -80,16 +81,24 @@ renameListWithDuplicateOldAndNew[0] = {
   sourcePath,
 };
 
-export const renameListArray = [
-  renameListDistinct.map(({ sourcePath, rename }, index) => ({
-    original: rename,
-    rename: `secondRename${index}`,
-    sourcePath,
-  })),
-  renameListDistinct,
-];
-
-export { renameListDistinct, renameListWithDuplicateOldAndNew };
+export const newRenameList: NewRenameItemList = renameListDistinct.map(
+  ({ original, rename }, index) => ({
+    original,
+    rename,
+    referenceId: `000${index}`,
+  })
+);
+export const newRenameListArray: NewRenameListLevel = {
+  sourcePath,
+  transforms: [
+    newRenameList.map(({ original, referenceId, rename }, index) => ({
+      original: rename,
+      rename: `newRename${index}`,
+      referenceId,
+    })),
+    newRenameList,
+  ],
+};
 
 export const truthyArgument = "argument";
 const madeUpTime = 1318289051000.1;
