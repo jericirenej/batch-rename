@@ -19,7 +19,10 @@ import type {
   DetermineDir,
   DetermineRollbackLevel,
   ExtractBaseAndExt,
-  ListFiles, NumberOfDuplicatedNames, RenameList, TruncateFileName
+  ListFiles, NumberOfDuplicatedNames,
+  RenameList,
+  RestoreFileMapper,
+  TruncateFileName
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
 
@@ -337,54 +340,34 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
   return targetRestoreLevel;
 };
 
-/* export const restoreFileMapper: RestoreFileMapper = ({
+export const restoreFileMapper: RestoreFileMapper = ({
   rollbackFile,
   rollbackLevel = 1,
-}) => {
-  const {transforms, sourcePath} = rollbackFile;
-  const targetLevel = determineRollbackLevel({ rollbackList: transforms, rollbackLevel });
-  const iterationArray = new Array(targetLevel-1)
-      .fill(0)
-      .map((el, index) => index+1)
-      .reverse(),
-    rollbackSlice = transforms.slice(0, targetLevel);
-  let finalRollback = [] as RenameList;
-
-  rollbackSlice[0].forEach(({ rename, original }, index) => {
-    let isIncluded = true,
-      targetName = original,
-      initialName = "";
-
-    for (let i=0; i < iterationArray.length; i++) {
-      const targetVal = iterationArray[i]
-      const renameItem = searchInRollback(rollbackSlice[targetVal], targetName);
-      if (!renameItem) {
-        isIncluded = false;
-        break;
-      }
-      targetName = renameItem.original;
-      if (i === iterationArray.length - 1)
-      console.log("ON INDEX", renameItem);
-        initialName = renameItem.original;
-    }
-    if (isIncluded) {
-      return (finalRollback[index] = {
-        sourcePath,
-        rename,
-        original: initialName,
-      });
-    }
+}): any => {
+  const { transforms, sourcePath } = rollbackFile;
+  const targetLevel = determineRollbackLevel({
+    rollbackList: transforms,
+    rollbackLevel,
   });
-  console.log("FINAL ROLLBACK CONFIG", finalRollback);
-  return finalRollback;
-};
+  const iterationArray = new Array(targetLevel)
+      .fill(0)
+      .map((el, index) => index + 1)
+      .reverse(),
+    lookupSlice = transforms.slice(1, targetLevel);
+  let finalRollback = [] as RenameList;
+  const restoreList = {} as Record<string, string[]>;
+  transforms[0].forEach(({ referenceId, rename, original }) => (restoreList[referenceId] = [rename, original]));
+  const referenceList = Object.keys(restoreList);
 
-const searchInRollback = (
-  list: NewRenameItemList,
-  targetName: string
-): RenameItem | undefined => {
-  const query = list.filter(({ rename }) => rename === targetName);
-  console.log("THIS IS THE QUERY", query[0]);
-  return query.length === 1 ? query[0] : undefined;
+  console.log(restoreList, sourcePath);
+
+  lookupSlice.forEach((transformSlice) => {
+    transformSlice.forEach(({ referenceId, original }) => {
+      if(referenceList.includes(referenceId)) {
+        restoreList[referenceId].push(original)
+      } 
+    });
+  });
+  console.log(restoreList);
+
 };
- */
