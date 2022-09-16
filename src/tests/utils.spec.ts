@@ -14,7 +14,7 @@ import {
   determineRollbackLevel,
   extractBaseAndExt,
   listFiles,
-  numberOfDuplicatedNames, settledPromisesEval,
+  numberOfDuplicatedNames, restoreFileMapper, settledPromisesEval,
   truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
@@ -31,7 +31,7 @@ import {
   exampleStats,
   expectedSplit,
   mockFileList,
-  newRenameList, renameListDistinct,
+  newRenameList, newRenameListArray, renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
   truthyArgument
@@ -681,8 +681,8 @@ describe.only("determineRollbackLevel", () => {
   });
 });
 
-/* describe.only("restoreFileMapper", ()=>{
+ describe("restoreFileMapper", ()=>{
   it("Should run", ()=> {
-    restoreFileMapper({rollbackFile: renameListArray, rollbackLevel: 10})
+    restoreFileMapper({rollbackFile: newRenameListArray, rollbackLevel: 10})
   })
-}) */
+})
