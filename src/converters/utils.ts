@@ -12,6 +12,7 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   AreNewNamesDistinct,
+  BuildRestoreFile,
   CheckPath,
   CleanUpRollbackFile,
   ComposeRenameString,
@@ -19,9 +20,11 @@ import type {
   DetermineDir,
   DetermineRollbackLevel,
   ExtractBaseAndExt,
+  FilesWithMissingRestores,
   ListFiles, NumberOfDuplicatedNames,
   RenameList,
   RestoreFileMapper,
+  RestoreList,
   TruncateFileName
 } from "../types.js";
 import { formatFile } from "./formatTextTransform.js";
@@ -38,7 +41,8 @@ const { truncateInvalidArgument } = ERRORS.transforms;
 const { noRollbackFile } = ERRORS.cleanRollback;
 const { failReport, failItem } = STATUS.settledPromisesEval;
 const { zeroLevelRollback } = ERRORS.restoreFileMapper;
-const { rollbackLevelOverMax } = STATUS.restoreFileMapper;
+const { rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
+  STATUS.restoreFileMapper;
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   transformPath,
@@ -340,6 +344,45 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
   return targetRestoreLevel;
 };
 
+/**Evaluate the restore list. For elements that have fewer restores than
+ * the target level, log this to the console. Return a single transform from
+ * the latest file to the target (or earliest available) original name */
+export const buildRestoreFile: BuildRestoreFile = ({
+  restoreList,
+  targetLevel,
+  sourcePath,
+}) => {
+  const filesWithMissingRestores = [] as FilesWithMissingRestores[];
+  const entries = Object.entries(restoreList);
+  const transformRestore: RestoreList = { sourcePath, transforms: [] };
+  entries.forEach(([referenceId, transformList]) => {
+    const [rename, original] = [
+      transformList[0],
+      transformList[transformList.length - 1],
+    ];
+    // Transform list should be equal to number of rollbacks + current name
+    if (transformList.length < targetLevel + 1) {
+      filesWithMissingRestores.push({
+        file: join(sourcePath, rename).replaceAll("\\", "/"),
+        found: transformList.length - 1,
+        requested: targetLevel,
+      });
+    }
+    return transformRestore.transforms.push({ rename, original, referenceId });
+  });
+  // Notify if some transforms restore levels are less than requested
+  if (filesWithMissingRestores.length) {
+    console.log(
+      rollbackLevelsLessThanTarget(
+        filesWithMissingRestores.length,
+        entries.length
+      )
+    );
+    console.table(filesWithMissingRestores);
+  }
+  return transformRestore;
+};
+
 export const restoreFileMapper: RestoreFileMapper = ({
   rollbackFile,
   rollbackLevel = 1,
@@ -348,26 +391,24 @@ export const restoreFileMapper: RestoreFileMapper = ({
   const targetLevel = determineRollbackLevel({
     rollbackList: transforms,
     rollbackLevel,
-  });
-  const iterationArray = new Array(targetLevel)
-      .fill(0)
-      .map((el, index) => index + 1)
-      .reverse(),
+  }),
     lookupSlice = transforms.slice(1, targetLevel);
-  let finalRollback = [] as RenameList;
   const restoreList = {} as Record<string, string[]>;
-  transforms[0].forEach(({ referenceId, rename, original }) => (restoreList[referenceId] = [rename, original]));
+  transforms[0].forEach(
+    ({ referenceId, rename, original }) =>
+      (restoreList[referenceId] = [rename, original])
+  );
   const referenceList = Object.keys(restoreList);
 
   console.log(restoreList, sourcePath);
 
   lookupSlice.forEach((transformSlice) => {
     transformSlice.forEach(({ referenceId, original }) => {
-      if(referenceList.includes(referenceId)) {
-        restoreList[referenceId].push(original)
-      } 
+      if (referenceList.includes(referenceId)) {
+        restoreList[referenceId].push(original);
+      }
     });
   });
-  console.log(restoreList);
-
+  console.log(buildRestoreFile({restoreList, targetLevel, sourcePath}));
+  return buildRestoreFile({restoreList, targetLevel, sourcePath});
 };

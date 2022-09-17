@@ -14,7 +14,7 @@ import {
   determineRollbackLevel,
   extractBaseAndExt,
   listFiles,
-  numberOfDuplicatedNames, restoreFileMapper, settledPromisesEval,
+  numberOfDuplicatedNames, settledPromisesEval,
   truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
@@ -31,7 +31,7 @@ import {
   exampleStats,
   expectedSplit,
   mockFileList,
-  newRenameList, newRenameListArray, renameListDistinct,
+  newRenameList, renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
   truthyArgument
@@ -635,9 +635,11 @@ describe("truncateFile", () => {
   });
 });
 
-describe.only("determineRollbackLevel", () => {
+describe("determineRollbackLevel", () => {
   const rollbackLength = 10,
-    rollbackList = new Array(rollbackLength).fill(newRenameList) as NewRenameItemList[];
+    rollbackList = new Array(rollbackLength).fill(
+      newRenameList
+    ) as NewRenameItemList[];
   let spyOnConsole: jest.SpyInstance;
   beforeEach(
     () =>
@@ -680,9 +682,19 @@ describe.only("determineRollbackLevel", () => {
     );
   });
 });
-
- describe("restoreFileMapper", ()=>{
-  it("Should run", ()=> {
-    restoreFileMapper({rollbackFile: newRenameListArray, rollbackLevel: 10})
-  })
-})
+/* describe("buildRestoreFile", () => {
+  it("Should extract all existing files that share the referenceId", () => {});
+  it("Should inform user if files have fewer rollbacks than requested", ()=> {})
+  it("Should return the expected list with current and earliest names", () => {});
+}); */
+/* 
+describe.only("restoreFileMapper", () => {
+  it("Should call determineRollbackLevel", ()=> {});
+  it("Should call buildRestoreFile", ()=> {});
+  it("Should populate the restoreList with found values", ()=> {});
+  it("The order of single rename lists should not matter", ()=> {}); */
+  
+  /* it("Should run", () => {
+    restoreFileMapper({ rollbackFile: newRenameListArray, rollbackLevel: 10 });
+  }); 
+});*/

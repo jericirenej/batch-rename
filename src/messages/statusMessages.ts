@@ -29,7 +29,18 @@ export const STATUS = {
     exitWithoutRestore: "Exited application without performing restore.",
   },
   restoreFileMapper: {
-    rollbackLevelOverMax: "Specified rollback level is higher than the combined number of stored batch operations. Will map to initial entry.",
+    rollbackLevelOverMax:
+      "Specified rollback level is higher than the combined number of stored batch operations. Will map to initial entry.",
+    rollbackLevelsLessThanTarget: (
+      filesWithLessLevels: number,
+      allFiles: number
+    ) => {
+      const endMessage = "Will rollback to the earliest possible version."
+      if (filesWithLessLevels === allFiles) {
+        return `All files have less rollback levels than requested. ${endMessage}`;
+      }
+      return `${filesWithLessLevels} number of files have less rollback levels than requested. ${endMessage}`;
+    },
   },
   settledPromisesEval: {
     failReport: (
