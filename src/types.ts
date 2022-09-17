@@ -258,6 +258,10 @@ export interface NewRenameListLevel {
   sourcePath: string;
   transforms: NewRenameItemList[];
 }
+export interface RestoreList {
+  sourcePath: string;
+  transforms: NewRenameItemList;
+}
 export interface BaseFileMapperArgs {
   rollbackFile: NewRenameListLevel;
   rollbackLevel?: number;
@@ -266,7 +270,7 @@ export interface BaseFileMapperArgs {
 export type RestoreFileMapper = ({
   rollbackFile,
   rollbackLevel,
-}: BaseFileMapperArgs) => RenameList;
+}: BaseFileMapperArgs) => RestoreList;
 
 export type DetermineRollbackLevel = ({
   rollbackList,
@@ -275,3 +279,18 @@ export type DetermineRollbackLevel = ({
   rollbackList: NewRenameItemList[];
   rollbackLevel: number;
 }) => number;
+
+export type BuildRestoreFile = ({restoreList,
+  targetLevel,
+  sourcePath,
+}: {
+  restoreList: Record<string, string[]>;
+  targetLevel: number;
+  sourcePath: string;
+}) => RestoreList;
+
+export interface FilesWithMissingRestores {
+  file: string;
+  found: number;
+  requested: number;
+}

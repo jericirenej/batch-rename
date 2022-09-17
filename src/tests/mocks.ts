@@ -85,20 +85,20 @@ export const newRenameList: NewRenameItemList = renameListDistinct.map(
   ({ original, rename }, index) => ({
     original,
     rename,
-    referenceId: `000${index}`,
+    referenceId: `000${index+1}`,
   })
 );
 export const newRenameListArray: NewRenameListLevel = {
   sourcePath,
   transforms: [
     newRenameList.map(({ referenceId}, index) => ({
-      original: `secondRename${index}`,
-      rename: `thirdRename${index}`,
+      original: `secondRename${index+1}`,
+      rename: `thirdRename${index+1}`,
       referenceId,
     })).reverse(),
     newRenameList.map(({ referenceId, rename}, index) => ({
       original: rename,
-      rename: `secondRename${index}`,
+      rename: `secondRename${index+1}`,
       referenceId,
     })).reverse(),
     newRenameList,
