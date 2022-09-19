@@ -41,6 +41,7 @@ export const STATUS = {
       }
       return `${filesWithLessLevels} number of files have less rollback levels than requested. ${endMessage}`;
     },
+    legacyConversion: "Legacy rollback file format found. Will be converted to current format."
   },
   settledPromisesEval: {
     failReport: (
