@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { join } from "path";
-import { ERRORS, STATUS } from "../messages/index";
+import { ERRORS, STATUS } from "../messages/index.js";
 import type {
   BuildRestoreFile,
   DetermineRollbackLevel,
@@ -12,6 +12,7 @@ import type {
   RestoreFileMapper,
   RestoreList
 } from "../types";
+
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
   STATUS.restoreFileMapper;
@@ -37,12 +38,11 @@ export const legacyRestoreMapper = (
 ): NewRenameListLevel => {
   const sourcePath = legacyRollbackFile[0].sourcePath;
   const restoreList: RestoreList = { sourcePath, transforms: [] };
-  const referenceId = nanoid();
   const legacyRollbackWithReferenceId: NewRenameItemList =
     legacyRollbackFile.map(({ rename, original }) => ({
       original,
       rename,
-      referenceId,
+      referenceId: nanoid(),
     }));
   return { ...restoreList, transforms: [[...legacyRollbackWithReferenceId]] };
 };
@@ -54,12 +54,17 @@ export const isLegacyRestore = (
   if (!(rollbackFile && Array.isArray(rollbackFile))) return false;
   const legacyProps = ["rename", "original", "sourcePath"];
   const isLegacy = rollbackFile.every((entry) => {
-    if (entry.length !== legacyProps.length) return false;
-    for (const [key, value] of Object.entries(entry)) {
+    const objEntries = Object.entries(entry);
+    if (objEntries.length !== legacyProps.length) return false;
+    for (const [key, value] of objEntries) {
       const isValueString = typeof value === "string";
       const isKeyIncluded = legacyProps.includes(key);
-      return [isValueString, isKeyIncluded].every((evaluation) => evaluation);
+      const conditions = [isValueString, isKeyIncluded].every(
+        (evaluation) => evaluation
+      );
+      if (!conditions) return false;
     }
+    return true;
   });
   return isLegacy;
 };
@@ -94,14 +99,21 @@ export const isCurrentRestore = (
   ];
   const isEachTransformProper = (topLevelObject.transforms as any[]).every(
     (transform) => {
-      if (typeof transform !== "object") return false;
-      return renameItemKeys.every(
-        (key) => transform[key] && typeof transform[key] === "string"
-      );
+      if (!Array.isArray(transform)) return false;
+      for (const fileTransform of transform) {
+        if (Array.isArray(fileTransform) || typeof fileTransform !== "object")
+          return false;
+
+        const areKeysProper = renameItemKeys.every(
+          (key) => fileTransform[key] && typeof fileTransform[key] === "string"
+        );
+        if (!areKeysProper) return false;
+      }
+      return true;
     }
   );
-  if (!isEachTransformProper) return false;
-  return true;
+
+  return isEachTransformProper;
 };
 
 /**Check that the rollbackFile conforms to either the current or legacy

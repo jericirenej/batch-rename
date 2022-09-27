@@ -88,7 +88,7 @@ export const newRenameList: NewRenameItemList = renameListDistinct.map(
     referenceId: `000${index+1}`,
   })
 );
-export const newRenameListArray: NewRenameListLevel = {
+export const newRenameListLevel: NewRenameListLevel = {
   sourcePath,
   transforms: [
     newRenameList.map(({ referenceId}, index) => ({

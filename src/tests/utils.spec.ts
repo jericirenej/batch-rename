@@ -1,5 +1,7 @@
+import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
+import { SpyInstance } from "jest-mock";
 import path, { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
@@ -10,23 +12,27 @@ import {
   cleanUpRollbackFile,
   composeRenameString,
   createBatchRenameList,
-  determineDir, extractBaseAndExt,
+  determineDir,
+  extractBaseAndExt,
   listFiles,
-  numberOfDuplicatedNames, settledPromisesEval,
+  numberOfDuplicatedNames,
+  settledPromisesEval,
   truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate, ValidTypes
+  ExtractBaseAndExtTemplate,
+  ValidTypes
 } from "../types.js";
 import {
   createDirentArray,
   examplePath,
   exampleStats,
   expectedSplit,
-  mockFileList, renameListDistinct,
+  mockFileList,
+  renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
   truthyArgument
@@ -46,7 +52,7 @@ jest.mock("fs");
 jest.mock("fs/promises", () => {
   const originalModule = jest.requireActual("fs/promises");
   return {
-    ...originalModule,
+    ...(originalModule as object),
     rename: jest.fn(),
     readdir: jest.fn(),
     lstat: jest.fn(),
@@ -60,12 +66,14 @@ const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
 describe("cleanUpRollbackFile", () => {
-  let suppressStdOut: jest.SpyInstance;
+  let suppressStdOut: SpyInstance<(message:string) => boolean>;
   beforeEach(
     () =>
       (suppressStdOut = jest
         .spyOn(process.stdout, "write")
-        .mockImplementation())
+        .mockImplementation((message) => {
+          return true;
+        }))
   );
   afterEach(() => suppressStdOut.mockRestore());
   const cleanUpArgs = { transformPath: examplePath };
@@ -520,7 +528,7 @@ describe("createBatchRenameList", () => {
 });
 
 describe("settledPromisesEval", () => {
-  let spyOnConsole: jest.SpyInstance;
+  let spyOnConsole: SpyInstance;
   beforeEach(
     () =>
       (spyOnConsole = jest
