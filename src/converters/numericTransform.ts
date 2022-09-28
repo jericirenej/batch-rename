@@ -22,7 +22,7 @@ export const numericTransform: NumericTransform = ({
   return splitFileList.map((splitFile, index) => {
     const indexWithBase = baseIndex ? baseIndex + index : index;
     const { ext, baseName, sourcePath } = splitFile;
-    let sequenceNumber = generateSequenceNumber(
+    const sequenceNumber = generateSequenceNumber(
       numericTransform!,
       indexWithBase,
       baseIndex

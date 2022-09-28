@@ -62,8 +62,8 @@ export const dateTransform: DateTransform = ({
   noExtensionPreserve
 }) => {
   const statProp = dateTransformCorrespondenceTable[dateRename!];
-  let originalFileList = splitFileList as FileListWithStatsArray;
-  let fileListWithDates: FileListWithDates[] = originalFileList.map(
+  const originalFileList = splitFileList as FileListWithStatsArray;
+  const fileListWithDates: FileListWithDates[] = originalFileList.map(
     (fileInfo) => {
       const { baseName, stats, ext, sourcePath, type } = fileInfo;
       const formattedDate = extractDate(stats[statProp] as number);

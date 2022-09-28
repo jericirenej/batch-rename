@@ -163,7 +163,7 @@ describe("listFiles", () => {
   });
   it("Should not include directories by default", async () => {
     const listLength = mockFileList.length;
-    let exampleDirentArray = createDirentArray(listLength, listLength);
+    const exampleDirentArray = createDirentArray(listLength, listLength);
     exampleDirentArray[0].isFile = () => false;
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundFiles = await listFiles(examplePath);
@@ -171,7 +171,7 @@ describe("listFiles", () => {
   });
   it("Should include only directories, if targetType is set to dirs", async () => {
     const dirNum = 2;
-    let exampleDirentArray = createDirentArray(10, 8, dirNum);
+    const exampleDirentArray = createDirentArray(10, 8, dirNum);
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundDirs = await listFiles(examplePath, undefined, "dirs");
     expect(foundDirs.length).toBe(dirNum);
@@ -179,7 +179,7 @@ describe("listFiles", () => {
   it("Should include files and directories, if targetType is set to all", async () => {
     const dirNum = 2,
       fileNum = 8;
-    let exampleDirentArray = createDirentArray(10, fileNum, dirNum);
+    const exampleDirentArray = createDirentArray(10, fileNum, dirNum);
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundDirs = await listFiles(examplePath, undefined, "all");
     expect(foundDirs.length).toBe(dirNum + fileNum);

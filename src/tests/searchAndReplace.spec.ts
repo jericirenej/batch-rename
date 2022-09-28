@@ -114,7 +114,7 @@ describe("searchAndReplace", () => {
     const customMocksList = generateMockSplitFileList(2);
     customMocksList[0].baseName = "extra-extra";
     // Remove all 'ext' characters, except if preceded by string.
-    let filter = "(?<!\\.)ext";
+    const filter = "(?<!\\.)ext";
     const newArgs: GenerateRenameListArgs = {
       ...exampleArgs,
       searchAndReplace: [filter, "ult"],

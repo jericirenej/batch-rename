@@ -151,7 +151,7 @@ export const createDirentArray = (
 ): Dirent[] => {
   let counter = 1;
   const combinedLength = numberOfDirs + numberOfFiles;
-  let arrLength = combinedLength > length ? combinedLength : length;
+  const arrLength = combinedLength > length ? combinedLength : length;
   const arr = new Array(arrLength).fill(0);
   return arr.map((entry, index) => {
     const isFileReturn = counter <= numberOfFiles;

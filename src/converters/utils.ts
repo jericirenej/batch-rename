@@ -121,7 +121,7 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
 }) => {
   if (checkType === "results") {
     const renames = renameList.map((renameInfo) => renameInfo.rename);
-    let newNamesUniqueLength = new Set(renames).size;
+    const newNamesUniqueLength = new Set(renames).size;
     return renames.length - newNamesUniqueLength;
   }
   if (checkType === "transforms") {

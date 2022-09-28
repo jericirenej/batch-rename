@@ -3,7 +3,7 @@ import * as formatText from "../converters/formatTextTransform.js";
 import * as utils from "../converters/utils.js";
 import type { GenerateRenameListArgs } from "../types.js";
 import { generateMockSplitFileList } from "./mocks.js";
-let splitFileList = generateMockSplitFileList(2);
+const splitFileList = generateMockSplitFileList(2);
 const exampleArgs: GenerateRenameListArgs = {
   addText: "addText",
   textPosition: undefined,
