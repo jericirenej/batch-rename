@@ -2,9 +2,7 @@ import { Dirent, Stats } from "fs";
 import { extractBaseAndExt } from "../converters/utils.js";
 import type {
   ExtractBaseAndExtReturn,
-  ExtractBaseAndExtTemplate, NewRenameItemList,
-  NewRenameListLevel,
-  RenameList
+  ExtractBaseAndExtTemplate, LegacyRenameList, RenameItemsArray, RenameList
 } from "../types.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
@@ -62,7 +60,7 @@ export const expectedSplit = [
 const firstRename = "rename1";
 const sourcePath = examplePath;
 export const originalNames = ["original1", "original2", "original3"];
-export const renameWithNewNameRepeat: RenameList = [
+export const renameWithNewNameRepeat: LegacyRenameList = [
   { original: originalNames[0], rename: firstRename, sourcePath },
   { original: originalNames[1], rename: "rename2", sourcePath },
   { original: originalNames[2], rename: firstRename, sourcePath },
@@ -70,25 +68,25 @@ export const renameWithNewNameRepeat: RenameList = [
 
 export const renameListDistinct = JSON.parse(
   JSON.stringify(renameWithNewNameRepeat)
-) as RenameList;
+) as LegacyRenameList;
 renameListDistinct[2].rename = "rename3";
 export const renameListWithDuplicateOldAndNew = JSON.parse(
   JSON.stringify(renameListDistinct)
-) as RenameList;
+) as LegacyRenameList;
 renameListWithDuplicateOldAndNew[0] = {
   original: renameListDistinct[0].original,
   rename: renameListDistinct[0].original,
   sourcePath,
 };
 
-export const newRenameList: NewRenameItemList = renameListDistinct.map(
+export const newRenameList: RenameItemsArray = renameListDistinct.map(
   ({ original, rename }, index) => ({
     original,
     rename,
     referenceId: `000${index+1}`,
   })
 );
-export const newRenameListLevel: NewRenameListLevel = {
+export const newRenameListLevel: RenameList = {
   sourcePath,
   transforms: [
     newRenameList.map(({ referenceId}, index) => ({

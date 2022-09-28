@@ -8,7 +8,7 @@ import {
   legacyRestoreMapper
 } from "../converters/restoreUtils";
 import { ERRORS, STATUS } from "../messages/index";
-import { NewRenameItemList, NewRenameListLevel } from "../types";
+import { RenameItemsArray, RenameList } from "../types";
 import { newRenameList, newRenameListLevel, renameListDistinct } from "./mocks";
 
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
@@ -22,7 +22,7 @@ describe("determineRollbackLevel", () => {
   const rollbackLength = 10,
     rollbackList = new Array(rollbackLength).fill(
       newRenameList
-    ) as NewRenameItemList[];
+    ) as RenameItemsArray[];
   let spyOnConsole: SpyInstance;
   beforeEach(
     () =>
@@ -93,14 +93,14 @@ describe("legacyRestoreMapper", () => {
       mockedNanoId.mockReturnValueOnce(`nanoCode-${index}`)
     );
     const mappedResult = legacyRestoreMapper(renameListDistinct);
-    const mappedItems: NewRenameItemList[] = [
+    const mappedItems: RenameItemsArray[] = [
       renameListDistinct.map(({ original, rename }, index) => ({
         original,
         rename,
         referenceId: `nanoCode-${index}`,
       })),
     ];
-    const expected: NewRenameListLevel = {
+    const expected: RenameList = {
       sourcePath: renameListDistinct[0].sourcePath,
       transforms: mappedItems,
     };
@@ -136,7 +136,7 @@ describe("isCurrentRestore", () => {
   it("Should return false if one of the transforms has improper key or non-string value", () => {
     const renameCopy = JSON.parse(
       JSON.stringify(newRenameListLevel)
-    ) as NewRenameListLevel;
+    ) as RenameList;
     const improperKey = renameCopy.transforms[0].map(
       ({ original, referenceId, rename }) => ({
         original,

@@ -79,12 +79,12 @@ export type ExtractBaseAndExt = (
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
 
-export interface RenameItem {
+export interface LegacyRenameItem {
   rename: string;
   original: string;
   sourcePath: string;
 }
-export type RenameList = RenameItem[];
+export type LegacyRenameList = LegacyRenameItem[];
 export type RenameListArgs = {
   transformPattern: TransformTypes[];
   addText?: string;
@@ -109,10 +109,10 @@ export type RenameListArgs = {
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
 };
-export type GenerateRenameList = (args: GenerateRenameListArgs) => RenameList;
+export type GenerateRenameList = (args: GenerateRenameListArgs) => LegacyRenameList;
 
 export type DryRunTransformArgs = {
-  transformedNames: RenameList;
+  transformedNames: LegacyRenameList;
   transformPattern: TransformTypes[];
   transformPath: string;
 };
@@ -150,7 +150,7 @@ export type GenerateSearchAndReplaceArgs = (
   args: string[]
 ) => SearchAndReplaceArgs;
 
-export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;
+export type SearchAndReplace = (args: GenerateRenameListArgs) => LegacyRenameList;
 
 export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
@@ -159,7 +159,7 @@ export type TruncateFileNameArgs = {
   format?: string;
 };
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
-export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
+export type TruncateTransform = (args: GenerateRenameListArgs) => LegacyRenameList;
 
 export type AddTextTransform = TruncateTransform;
 
@@ -185,12 +185,12 @@ export type UtilityFunctionsArgs = {
 };
 
 export type CreateBatchRenameList = (
-  renameList: RenameList,
+  renameList: LegacyRenameList,
   filesToRevert?: string[]
 ) => Promise<void>[];
 
 export type RestoreBaseReturn = {
-  rollbackData: RenameList;
+  rollbackData: LegacyRenameList;
   existingFiles: string[];
   missingFiles: string[];
   filesToRestore: string[];
@@ -207,9 +207,9 @@ export type ListFiles = (
   excludeFilter?: string,
   targetType?: ValidTypes
 ) => Promise<Dirent[]>;
-export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
+export type AreNewNamesDistinct = (renameList: LegacyRenameList) => boolean;
 export type NumberOfDuplicatedNamesArgs = {
-  renameList: RenameList;
+  renameList: LegacyRenameList;
   checkType: "results" | "transforms";
 };
 export type NumberOfDuplicatedNames = (
@@ -234,7 +234,7 @@ export type ComposeRenameStringArgs = {
 };
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
-export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;
+export type FormatTextTransform = (args: GenerateRenameListArgs) => LegacyRenameList;
 
 export type KeepTransformArgs = Pick<
   GenerateRenameListArgs,
@@ -247,23 +247,23 @@ export type KeepTransformArgs = Pick<
   | "format"
 >;
 
-export type KeepTransform = (args: KeepTransformArgs) => RenameList;
+export type KeepTransform = (args: KeepTransformArgs) => LegacyRenameList;
 
 // Temporary types which will become the new RenameList type
-export type NewRenameItem = Omit<RenameItem, "sourcePath"> & {
+export type RenameItem = Omit<LegacyRenameItem, "sourcePath"> & {
   referenceId: string;
 };
-export type NewRenameItemList = NewRenameItem[];
-export interface NewRenameListLevel {
+export type RenameItemsArray = RenameItem[];
+export interface RenameList {
   sourcePath: string;
-  transforms: NewRenameItemList[];
+  transforms: RenameItemsArray[];
 }
 export interface RestoreList {
   sourcePath: string;
-  transforms: NewRenameItemList;
+  transforms: RenameItemsArray;
 }
 export interface BaseFileMapperArgs {
-  rollbackFile: NewRenameListLevel;
+  rollbackFile: RenameList;
   rollbackLevel?: number;
 }
 
@@ -276,7 +276,7 @@ export type DetermineRollbackLevel = ({
   rollbackList,
   rollbackLevel,
 }: {
-  rollbackList: NewRenameItemList[];
+  rollbackList: RenameItemsArray[];
   rollbackLevel: number;
 }) => number;
 

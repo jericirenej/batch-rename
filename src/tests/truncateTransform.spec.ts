@@ -3,7 +3,7 @@ import * as formatText from "../converters/formatTextTransform.js";
 import { truncateTransform } from "../converters/truncateTransform.js";
 import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type { GenerateRenameListArgs, RenameList } from "../types.js";
+import type { GenerateRenameListArgs, LegacyRenameList } from "../types.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
 const spyOnCompose = jest.spyOn(utils, "composeRenameString");
@@ -71,7 +71,7 @@ describe("truncateTransform", () => {
     });
   });
   it("Should return proper response", () => {
-    const expected: RenameList = splitFileList.map((fileInfo) => {
+    const expected: LegacyRenameList = splitFileList.map((fileInfo) => {
       const { baseName, ext, sourcePath } = fileInfo;
       return {
         rename: mockComposeResponse,
@@ -81,11 +81,16 @@ describe("truncateTransform", () => {
     });
     expect(truncateTransform(defaultArgs)).toEqual(expected);
   });
-  it("Should call formatFile (via composeRenameString), if format argument passed", ()=> {
+  it("Should call formatFile (via composeRenameString), if format argument passed", () => {
     spyOnCompose.mockRestore();
     const spyOnFormatFile = jest.spyOn(formatText, "formatFile");
-    const argsWithFormat:GenerateRenameListArgs = {...defaultArgs, format: "uppercase"};
-    [defaultArgs, argsWithFormat].forEach(args => truncateTransform(args));
-    expect(spyOnFormatFile).toHaveBeenCalledTimes(defaultArgs.splitFileList.length);
-  })
+    const argsWithFormat: GenerateRenameListArgs = {
+      ...defaultArgs,
+      format: "uppercase",
+    };
+    [defaultArgs, argsWithFormat].forEach((args) => truncateTransform(args));
+    expect(spyOnFormatFile).toHaveBeenCalledTimes(
+      defaultArgs.splitFileList.length
+    );
+  });
 });
