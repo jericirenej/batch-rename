@@ -1,15 +1,18 @@
 import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
-import {
-  determineRollbackLevel,
-  isCurrentRestore,
-  isLegacyRestore,
-  legacyRestoreMapper
-} from "../converters/restoreUtils";
+import * as restoreUtils from "../converters/restoreUtils";
 import { ERRORS, STATUS } from "../messages/index";
 import { RenameItemsArray, RenameList } from "../types";
 import { newRenameList, newRenameListLevel, renameListDistinct } from "./mocks";
+
+const {
+  checkRestoreFile,
+  determineRollbackLevel,
+  isCurrentRestore,
+  isLegacyRestore,
+  legacyRestoreMapper,
+} = restoreUtils;
 
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
@@ -28,9 +31,10 @@ describe("determineRollbackLevel", () => {
     () =>
       (spyOnConsole = jest
         .spyOn(console, "log")
-        .mockImplementation((message) => {}))
+        .mockImplementation((message?: any) => {}))
   );
-  afterEach(() => spyOnConsole.mockRestore());
+  afterEach(()=> jest.clearAllMocks())
+  afterAll(() => spyOnConsole.mockRestore());
   it("Should throw error, if rollback level is 0", () => {
     expect(() =>
       determineRollbackLevel({ rollbackList, rollbackLevel: 0 })
@@ -88,7 +92,6 @@ describe("isLegacyRestore", () => {
 
 describe("legacyRestoreMapper", () => {
   it("Should transform legacy rollback files", () => {
-    const nanoCode = "nanoCode";
     renameListDistinct.forEach((entry, index) =>
       mockedNanoId.mockReturnValueOnce(`nanoCode-${index}`)
     );
@@ -153,6 +156,42 @@ describe("isCurrentRestore", () => {
     );
     for (const testCase of [improperKey, improperValue])
       expect(isCurrentRestore(testCase)).toBe(false);
+  });
+});
+
+describe("checkRestoreFile", () => {
+  const arg = "someArg";
+  const spyOnCurrentRestore = jest.spyOn(restoreUtils, "isCurrentRestore"),
+    spyOnLegacyRestore = jest.spyOn(restoreUtils, "isLegacyRestore"),
+    spyOnLegacyRestoreMapper = jest.spyOn(restoreUtils, "legacyRestoreMapper");
+  let spyOnConsole: SpyInstance;
+  beforeEach(() => {
+    spyOnConsole = jest
+      .spyOn(console, "log")
+      .mockImplementation((message?: any) => {});
+    jest.clearAllMocks();
+  });
+  afterAll(() => spyOnConsole.mockRestore());
+  it("Should throw an error, if supplied param is not legacy or current restore file", () => {
+    [spyOnCurrentRestore, spyOnLegacyRestore].forEach((spy) =>
+      spy.mockReturnValueOnce(false)
+    );
+    expect(() => checkRestoreFile(arg)).toThrowError(incorrectRollbackFormat);
+  });
+  it("Should return current rollback param directly", () => {
+    spyOnCurrentRestore.mockReturnValueOnce(true);
+    expect(checkRestoreFile(arg)).toEqual(arg);
+    [spyOnLegacyRestore, spyOnConsole, spyOnLegacyRestoreMapper].forEach(
+      (spy) => expect(spy).not.toHaveBeenCalled()
+    );
+  });
+  it("Should emit message, and return result o legacyRestoreMapper for legacy restore arg", () => {
+    const mappedResult = "mappedResult";
+    spyOnCurrentRestore.mockReturnValueOnce(false);
+    spyOnLegacyRestore.mockReturnValueOnce(true);
+    spyOnLegacyRestoreMapper.mockReturnValueOnce(mappedResult as any);
+    expect(checkRestoreFile(arg)).toEqual(mappedResult);
+    expect(spyOnConsole).toHaveBeenCalledWith(legacyConversion);
   });
 });
 /*
