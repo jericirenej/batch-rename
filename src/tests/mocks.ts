@@ -2,7 +2,7 @@ import { Dirent, Stats } from "fs";
 import { extractBaseAndExt } from "../converters/utils.js";
 import type {
   ExtractBaseAndExtReturn,
-  ExtractBaseAndExtTemplate, LegacyRenameList, RenameItemsArray, RenameList
+  ExtractBaseAndExtTemplate, LegacyRenameList, RenameItemsArray, RollbackFile
 } from "../types.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
@@ -86,7 +86,7 @@ export const newRenameList: RenameItemsArray = renameListDistinct.map(
     referenceId: `000${index+1}`,
   })
 );
-export const newRenameListLevel: RenameList = {
+export const newRenameListLevel: RollbackFile = {
   sourcePath,
   transforms: [
     newRenameList.map(({ referenceId}, index) => ({

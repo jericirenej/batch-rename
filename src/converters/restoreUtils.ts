@@ -2,10 +2,10 @@ import { nanoid } from "nanoid";
 import { join } from "path";
 import { ERRORS, STATUS } from "../messages/index.js";
 import type {
-    BuildRestoreFile,
-    DetermineRollbackLevel,
-    FilesWithMissingRestores, LegacyRenameList, RenameItem, RenameItemsArray, RenameList, RestoreFileMapper,
-    RestoreList
+  BuildRestoreFile,
+  DetermineRollbackLevel,
+  FilesWithMissingRestores, LegacyRenameList, RenameItem, RenameItemsArray, RestoreFileMapper,
+  RestoreList, RollbackFile
 } from "../types";
 
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
@@ -30,7 +30,7 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
  * rollback format. */
 export const legacyRestoreMapper = (
   legacyRollbackFile: LegacyRenameList
-): RenameList => {
+): RollbackFile => {
   const sourcePath = legacyRollbackFile[0].sourcePath;
   const restoreList: RestoreList = { sourcePath, transforms: [] };
   const legacyRollbackWithReferenceId: RenameItemsArray =
@@ -67,12 +67,12 @@ export const isLegacyRestore = (
 /**Type guard for current restore files */
 export const isCurrentRestore = (
   rollbackFile: unknown
-): rollbackFile is RenameList => {
+): rollbackFile is RollbackFile => {
   if (!rollbackFile) return false;
   if (Array.isArray(rollbackFile)) return false;
   if (typeof rollbackFile !== "object") return false;
   const keys = Object.keys(rollbackFile);
-  const topLevelKeys: (keyof RenameList)[] = [
+  const topLevelKeys: (keyof RollbackFile)[] = [
     "sourcePath",
     "transforms",
   ];
@@ -81,7 +81,7 @@ export const isCurrentRestore = (
     topLevelKeys.every((key) => key in rollbackFile);
   if (!areKeysPresent) return false;
 
-  const topLevelObject = rollbackFile as Record<keyof RenameList, any>;
+  const topLevelObject = rollbackFile as Record<keyof RollbackFile, any>;
   const areTopLevelProperTypes =
     typeof topLevelObject.sourcePath === "string" &&
     Array.isArray(topLevelObject.transforms);
@@ -114,7 +114,7 @@ export const isCurrentRestore = (
 /**Check that the rollbackFile conforms to either the current or legacy
  * rollback file type. Converts legacy rollbacks to current type.
  * Throws error, if file does not conform.*/
-export const checkRestoreFile = (rollbackFile: unknown): RenameList => {
+export const checkRestoreFile = (rollbackFile: unknown): RollbackFile => {
   if (isCurrentRestore(rollbackFile)) return rollbackFile;
   if (isLegacyRestore(rollbackFile)) {
     console.log(legacyConversion);
@@ -179,8 +179,6 @@ export const restoreFileMapper: RestoreFileMapper = ({
   );
   const referenceList = Object.keys(restoreList);
 
-  console.log(restoreList, sourcePath);
-
   lookupSlice.forEach((transformSlice) => {
     transformSlice.forEach(({ referenceId, original }) => {
       if (referenceList.includes(referenceId)) {
@@ -188,6 +186,5 @@ export const restoreFileMapper: RestoreFileMapper = ({
       }
     });
   });
-  console.log(buildRestoreFile({ restoreList, targetLevel, sourcePath }));
   return buildRestoreFile({ restoreList, targetLevel, sourcePath });
 };
