@@ -18,11 +18,11 @@ const {
   isCurrentRestore,
   isLegacyRestore,
   legacyRestoreMapper,
+  restoreFileMapper,
 } = restoreUtils;
 
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
-const { legacyConversion, rollbackLevelOverMax } =
-  STATUS.restoreFileMapper;
+const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
 
 jest.mock("nanoid");
 const mockedNanoId = jest.mocked(nanoid);
@@ -34,7 +34,7 @@ const renameSequence = (baseName: string, length: number) =>
 
 describe("determineRollbackLevel", () => {
   const rollbackLength = 10,
-    rollbackList = new Array(rollbackLength).fill(
+    transformList = new Array(rollbackLength).fill(
       newRenameList
     ) as RenameItemsArray[];
   let spyOnConsole: SpyInstance;
@@ -48,13 +48,13 @@ describe("determineRollbackLevel", () => {
   afterAll(() => spyOnConsole.mockRestore());
   it("Should throw error, if rollback level is 0", () => {
     expect(() =>
-      determineRollbackLevel({ rollbackList, rollbackLevel: 0 })
+      determineRollbackLevel({ transformList, rollbackLevel: 0 })
     ).toThrowError(zeroLevelRollback);
   });
   it("Should set restore index to the last array entry (length-1) if rollbackLevel is over maximum", () => {
     expect(
       determineRollbackLevel({
-        rollbackList,
+        transformList,
         rollbackLevel: rollbackLength + 1,
       })
     ).toBe(rollbackLength);
@@ -62,7 +62,7 @@ describe("determineRollbackLevel", () => {
   it("Should notify the user, if rollbackLevel is over maximum", () => {
     expect(spyOnConsole).not.toHaveBeenCalled();
     determineRollbackLevel({
-      rollbackList,
+      transformList,
       rollbackLevel: rollbackLength + 1,
     });
     expect(spyOnConsole).toHaveBeenCalledWith(rollbackLevelOverMax);
@@ -71,7 +71,7 @@ describe("determineRollbackLevel", () => {
     [1, 2, 3, 5].forEach((rollbackLevel) =>
       expect(
         determineRollbackLevel({
-          rollbackList,
+          transformList,
           rollbackLevel,
         })
       ).toBe(rollbackLevel)
@@ -207,7 +207,8 @@ describe("checkRestoreFile", () => {
 });
 
 describe("buildRestoreFile", () => {
-  let spyOnConsole: SpyInstance<typeof console.log>, spyOnTable: SpyInstance<typeof console.table>;
+  let spyOnConsole: SpyInstance<typeof console.log>,
+    spyOnTable: SpyInstance<typeof console.table>;
   const restoreChain = 5,
     targetLevel = restoreChain - 1,
     refId1 = "refId1",
@@ -217,10 +218,14 @@ describe("buildRestoreFile", () => {
     [refId2]: renameSequence(refId2, restoreChain),
   };
   beforeEach(() => {
-    spyOnConsole = jest.spyOn(console, "log").mockImplementation((message?: any) => {});
+    spyOnConsole = jest
+      .spyOn(console, "log")
+      .mockImplementation((message?: any) => {});
     spyOnTable = jest
       .spyOn(console, "table")
-      .mockImplementation((tabularData: any, properties?: readonly string[]) => {});
+      .mockImplementation(
+        (tabularData: any, properties?: readonly string[]) => {}
+      );
     jest.clearAllMocks();
   });
   afterAll(() => {
@@ -269,22 +274,60 @@ describe("buildRestoreFile", () => {
       expect(result).toEqual(expected);
     });
     it("Should inform the user that some files have less rollback levels", () => {
-      buildRestoreFile({restoreList, sourcePath, targetLevel});
-      [spyOnConsole, spyOnTable].forEach(spy => expect(spy).not.toHaveBeenCalled())
-      buildRestoreFile({restoreList: newRestoreList, sourcePath, targetLevel});
-      [spyOnConsole, spyOnTable].forEach(spy => expect(spy).toHaveBeenCalled())
+      buildRestoreFile({ restoreList, sourcePath, targetLevel });
+      [spyOnConsole, spyOnTable].forEach((spy) =>
+        expect(spy).not.toHaveBeenCalled()
+      );
+      buildRestoreFile({
+        restoreList: newRestoreList,
+        sourcePath,
+        targetLevel,
+      });
+      [spyOnConsole, spyOnTable].forEach((spy) =>
+        expect(spy).toHaveBeenCalled()
+      );
     });
   });
 });
 
-describe.only("restoreFileMapper", () => {
-  const args = {rollbackFile: newRollbackFile}
-  it("Should call determineRollbackLevel", ()=> {
-    const spyOnDetermineRollback = jest.spyOn(restoreUtils, "determineRollbackLevel");
-    
+describe("restoreFileMapper", () => {
+  const args = { rollbackFile: newRollbackFile };
+  it("Should call determineRollbackLevel", () => {
+    const spyOnDetermineRollback = jest.spyOn(
+      restoreUtils,
+      "determineRollbackLevel"
+    );
+    restoreFileMapper(args);
+    expect(spyOnDetermineRollback).toHaveBeenCalledTimes(1);
   });
-  /* it("Should call buildRestoreFile", ()=> {}); */
-  /* it("Should populate the restoreList with found values", ()=> {}); */
-  /* it("The order of single rename lists should not matter", ()=> {});  */
+  it("Should call buildRestoreFile", () => {
+    const spyOnBuildRestoreFile = jest.spyOn(restoreUtils, "buildRestoreFile");
+    restoreFileMapper(args);
+    expect(spyOnBuildRestoreFile).toHaveBeenCalledTimes(1);
+  });
+  it("Should call buildRestoreFile with appropriate args", () => {
+    const spyOnConsole = jest
+      .spyOn(console, "log")
+      .mockImplementationOnce((message?: any) => {});
+    const spyOnBuildRestoreFile = jest.spyOn(restoreUtils, "buildRestoreFile");
+    const { transforms } = newRollbackFile;
+    const targetLevel = transforms.length,
+      sourcePath = newRollbackFile.sourcePath;
+    const restoreList = {} as Record<string, string[]>;
+    [3, 2, 1].forEach((entry) => {
+      const propName = `000${entry}`;
+      restoreList[propName] = [
+        `thirdRename${entry}`,
+        `secondRename${entry}`,
+        `rename${entry}`,
+        `original${entry}`,
+      ];
+    });
+    restoreFileMapper({ ...args, rollbackLevel: Infinity });
+    expect(spyOnBuildRestoreFile).toHaveBeenCalledWith({
+      restoreList,
+      targetLevel,
+      sourcePath,
+    });
+  });
 });
-
