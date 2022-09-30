@@ -7,7 +7,7 @@ import { RenameItemsArray, RestoreList, RollbackFile } from "../types";
 import {
   examplePath as sourcePath,
   newRenameList,
-  newRenameListLevel,
+  newRollbackFile,
   renameListDistinct
 } from "./mocks";
 
@@ -21,7 +21,7 @@ const {
 } = restoreUtils;
 
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
-const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
+const { legacyConversion, rollbackLevelOverMax } =
   STATUS.restoreFileMapper;
 
 jest.mock("nanoid");
@@ -94,7 +94,7 @@ describe("isLegacyRestore", () => {
     }
   });
   it("Should return false for new rename list types", () => {
-    expect(isLegacyRestore(newRenameListLevel)).toBe(false);
+    expect(isLegacyRestore(newRollbackFile)).toBe(false);
   });
   it("Should return true for a legacy restore list", () => {
     expect(isLegacyRestore(renameListDistinct)).toBe(true);
@@ -139,17 +139,17 @@ describe("isCurrentRestore", () => {
   it("Should return false for legacy rollback file", () =>
     expect(isCurrentRestore(renameListDistinct)).toBe(false));
   it("Should return true for new rename list type", () =>
-    expect(isCurrentRestore(newRenameListLevel)).toBe(true));
+    expect(isCurrentRestore(newRollbackFile)).toBe(true));
   it("Should return false for improper top level keys", () => {
     const improperKeys = {
-      firstProp: newRenameListLevel.sourcePath,
-      someTransformProp: [...newRenameListLevel.transforms],
+      firstProp: newRollbackFile.sourcePath,
+      someTransformProp: [...newRollbackFile.transforms],
     };
     expect(isCurrentRestore(improperKeys)).toBe(false);
   });
   it("Should return false if one of the transforms has improper key or non-string value", () => {
     const renameCopy = JSON.parse(
-      JSON.stringify(newRenameListLevel)
+      JSON.stringify(newRollbackFile)
     ) as RollbackFile;
     const improperKey = renameCopy.transforms[0].map(
       ({ original, referenceId, rename }) => ({
@@ -276,14 +276,15 @@ describe("buildRestoreFile", () => {
     });
   });
 });
-/* 
-describe.only("restoreFileMapper", () => {
-  it("Should call determineRollbackLevel", ()=> {});
-  it("Should call buildRestoreFile", ()=> {});
-  it("Should populate the restoreList with found values", ()=> {});
-  it("The order of single rename lists should not matter", ()=> {}); */
 
-/* it("Should run", () => {
-    restoreFileMapper({ rollbackFile: newRenameListArray, rollbackLevel: 10 });
-  }); 
-});*/
+describe.only("restoreFileMapper", () => {
+  const args = {rollbackFile: newRollbackFile}
+  it("Should call determineRollbackLevel", ()=> {
+    const spyOnDetermineRollback = jest.spyOn(restoreUtils, "determineRollbackLevel");
+    
+  });
+  /* it("Should call buildRestoreFile", ()=> {}); */
+  /* it("Should populate the restoreList with found values", ()=> {}); */
+  /* it("The order of single rename lists should not matter", ()=> {});  */
+});
+

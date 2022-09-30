@@ -86,7 +86,7 @@ export const newRenameList: RenameItemsArray = renameListDistinct.map(
     referenceId: `000${index+1}`,
   })
 );
-export const newRenameListLevel: RollbackFile = {
+export const newRollbackFile: RollbackFile = {
   sourcePath,
   transforms: [
     newRenameList.map(({ referenceId}, index) => ({
