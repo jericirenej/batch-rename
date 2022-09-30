@@ -286,10 +286,10 @@ export type RestoreFileMapper = ({
 }: BaseFileMapperArgs) => RestoreList;
 
 export type DetermineRollbackLevel = ({
-  rollbackList,
+  transformList,
   rollbackLevel,
 }: {
-  rollbackList: RenameItemsArray[];
+  transformList: RenameItemsArray[];
   rollbackLevel: number;
 }) => number;
 

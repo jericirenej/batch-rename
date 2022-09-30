@@ -4,8 +4,13 @@ import { ERRORS, STATUS } from "../messages/index.js";
 import type {
   BuildRestoreFile,
   DetermineRollbackLevel,
-  FilesWithMissingRestores, LegacyRenameList, RenameItem, RenameItemsArray, RestoreFileMapper,
-  RestoreList, RollbackFile
+  FilesWithMissingRestores,
+  LegacyRenameList,
+  RenameItem,
+  RenameItemsArray,
+  RestoreFileMapper,
+  RestoreList,
+  RollbackFile
 } from "../types";
 
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
@@ -13,12 +18,12 @@ const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
   STATUS.restoreFileMapper;
 
 export const determineRollbackLevel: DetermineRollbackLevel = ({
-  rollbackList,
+  transformList,
   rollbackLevel = 1,
 }) => {
   if (rollbackLevel === 0) throw new Error(zeroLevelRollback);
   let targetRestoreLevel = rollbackLevel;
-  const maximumRestoreLevel = rollbackList.length;
+  const maximumRestoreLevel = transformList.length;
   if (rollbackLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
     targetRestoreLevel = maximumRestoreLevel;
@@ -72,10 +77,7 @@ export const isCurrentRestore = (
   if (Array.isArray(rollbackFile)) return false;
   if (typeof rollbackFile !== "object") return false;
   const keys = Object.keys(rollbackFile);
-  const topLevelKeys: (keyof RollbackFile)[] = [
-    "sourcePath",
-    "transforms",
-  ];
+  const topLevelKeys: (keyof RollbackFile)[] = ["sourcePath", "transforms"];
   const areKeysPresent =
     keys.length === topLevelKeys.length &&
     topLevelKeys.every((key) => key in rollbackFile);
@@ -168,23 +170,28 @@ export const restoreFileMapper: RestoreFileMapper = ({
 }): any => {
   const { transforms, sourcePath } = rollbackFile;
   const targetLevel = determineRollbackLevel({
-      rollbackList: transforms,
-      rollbackLevel,
-    }),
-    lookupSlice = transforms.slice(1, targetLevel);
+    transformList: transforms,
+    rollbackLevel,
+  });
   const restoreList = {} as Record<string, string[]>;
-  transforms[0].forEach(
-    ({ referenceId, rename, original }) =>
-      (restoreList[referenceId] = [rename, original])
-  );
-  const referenceList = Object.keys(restoreList);
-
-  lookupSlice.forEach((transformSlice) => {
-    transformSlice.forEach(({ referenceId, original }) => {
-      if (referenceList.includes(referenceId)) {
-        restoreList[referenceId].push(original);
-      }
-    });
+  const flatTransform = transforms.slice(0, targetLevel).flat(2);
+  const uniqueReferences = [
+    ...new Set(flatTransform.map(({ referenceId }) => referenceId)),
+  ];
+  uniqueReferences.forEach((reference) => {
+    const referenceTransformSequence = flatTransform.reduce(
+      (acc, { original, rename, referenceId }) => {
+        if (!(referenceId === reference)) return acc;
+        if (!acc.length) {
+          return acc = [rename, original];
+        }
+        // Remove the last element, so we don't get duplication
+        // between the original and previous rename.
+        return acc = [...acc.slice(0, -1), rename, original];
+      },
+      [] as string[]
+    );
+    restoreList[reference] = [...referenceTransformSequence];
   });
   return buildRestoreFile({ restoreList, targetLevel, sourcePath });
 };
