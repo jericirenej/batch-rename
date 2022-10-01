@@ -1,5 +1,5 @@
 import type { KeepTransform } from "../types";
-import { composeRenameString } from "./utils.js";
+import { composeRenameString } from "../utils/utils.js";
 
 export const keepTransform: KeepTransform = ({
   keep,

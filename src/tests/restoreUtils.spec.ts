@@ -1,15 +1,15 @@
 import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
-import * as restoreUtils from "../converters/restoreUtils";
-import { ERRORS, STATUS } from "../messages/index";
-import { RenameItemsArray, RestoreList, RollbackFile } from "../types";
+import { ERRORS, STATUS } from "../messages/index.js";
+import { RenameItemsArray, RestoreList, RollbackFile } from "../types.js";
+import * as restoreUtils from "../utils/restoreUtils.js";
 import {
   examplePath as sourcePath,
   newRenameList,
   newRollbackFile,
   renameListDistinct
-} from "./mocks";
+} from "./mocks.js";
 
 const {
   buildRestoreFile,

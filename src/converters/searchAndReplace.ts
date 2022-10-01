@@ -3,8 +3,8 @@ import type {
   GenerateSearchAndReplaceArgs,
   SearchAndReplace
 } from "../types.js";
+import { extractBaseAndExt, truncateFile } from "../utils/utils.js";
 import { formatFile } from "./formatTextTransform.js";
-import { extractBaseAndExt, truncateFile } from "./utils.js";
 
 export const searchAndReplace: SearchAndReplace = ({
   searchAndReplace,

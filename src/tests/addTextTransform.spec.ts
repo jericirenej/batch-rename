@@ -1,7 +1,7 @@
 import { addTextTransform } from "../converters/addTextTransform.js";
 import * as formatText from "../converters/formatTextTransform.js";
-import * as utils from "../converters/utils.js";
 import type { GenerateRenameListArgs } from "../types.js";
+import * as utils from "../utils/utils.js";
 import { generateMockSplitFileList } from "./mocks.js";
 const splitFileList = generateMockSplitFileList(2);
 const exampleArgs: GenerateRenameListArgs = {

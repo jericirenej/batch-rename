@@ -1,10 +1,10 @@
 import fs, { PathLike } from "fs";
 import { readFile, rename } from "fs/promises";
 import * as restorePoint from "../converters/restorePoint.js";
-import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type { RestoreBaseReturn } from "../types.js";
+import * as utils from "../utils/utils.js";
 import {
   examplePath as transformPath,
   mockDirentEntryAsFile,

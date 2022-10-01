@@ -1,5 +1,5 @@
 import { FormatTextTransform, ValidTextFormats } from "../types.js";
-import { composeRenameString } from "./utils.js";
+import { composeRenameString } from "../utils/utils.js";
 
 export const formatTextTransform: FormatTextTransform = ({
   splitFileList,

@@ -8,6 +8,7 @@ import {
   EXT_REGEX,
   ROLLBACK_FILE_NAME
 } from "../constants.js";
+import { formatFile } from "../converters/formatTextTransform.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
@@ -23,7 +24,6 @@ import type {
   NumberOfDuplicatedNames,
   TruncateFileName
 } from "../types.js";
-import { formatFile } from "./formatTextTransform.js";
 
 const {
   allRenameFailed,

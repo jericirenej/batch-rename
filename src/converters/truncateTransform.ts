@@ -1,6 +1,6 @@
 import { ERRORS } from "../messages/errMessages.js";
 import type { TruncateTransform } from "../types.js";
-import { composeRenameString } from "./utils.js";
+import { composeRenameString } from "../utils/utils.js";
 const {truncateNoPreserveOriginal, truncateInvalidArgument } = ERRORS.transforms;
 
 export const truncateTransform: TruncateTransform = ({

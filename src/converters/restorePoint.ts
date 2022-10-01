@@ -5,19 +5,19 @@ import { ROLLBACK_FILE_NAME, VALID_DRY_RUN_ANSWERS } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
-    DryRunRestore,
-    LegacyRenameList,
-    RestoreBaseFunction,
-    RestoreOriginalFileNames
+  DryRunRestore,
+  LegacyRenameList,
+  RestoreBaseFunction,
+  RestoreOriginalFileNames
 } from "../types";
 import {
-    askQuestion,
-    cleanUpRollbackFile,
-    createBatchRenameList,
-    determineDir,
-    listFiles,
-    settledPromisesEval
-} from "./utils.js";
+  askQuestion,
+  cleanUpRollbackFile,
+  createBatchRenameList,
+  determineDir,
+  listFiles,
+  settledPromisesEval
+} from "../utils/utils.js";
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
   ERRORS.restore;

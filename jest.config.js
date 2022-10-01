@@ -9,9 +9,6 @@ export default {
     "\\.[jt]sx?$": ["ts-jest", {useESM: true}],
   },
   
-  /* moduleNameMapper: {
-    "(.+)\\.js": "$1",
-  }, */
   extensionsToTreatAsEsm: [".ts"],
   maxWorkers: 1,
   coveragePathIgnorePatterns: ["tests/", "programConfiguration"],

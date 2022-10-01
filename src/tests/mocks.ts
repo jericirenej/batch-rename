@@ -1,9 +1,9 @@
 import { Dirent, Stats } from "fs";
-import { extractBaseAndExt } from "../converters/utils.js";
 import type {
   ExtractBaseAndExtReturn,
   ExtractBaseAndExtTemplate, LegacyRenameList, RenameItemsArray, RollbackFile
 } from "../types.js";
+import { extractBaseAndExt } from "../utils/utils.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
   isFile() {

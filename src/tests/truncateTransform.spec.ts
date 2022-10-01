@@ -1,9 +1,9 @@
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as formatText from "../converters/formatTextTransform.js";
 import { truncateTransform } from "../converters/truncateTransform.js";
-import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type { GenerateRenameListArgs, LegacyRenameList } from "../types.js";
+import * as utils from "../utils/utils.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
 const spyOnCompose = jest.spyOn(utils, "composeRenameString");

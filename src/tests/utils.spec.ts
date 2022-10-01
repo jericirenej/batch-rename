@@ -6,6 +6,13 @@ import path, { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import * as formatTransform from "../converters/formatTextTransform.js";
+import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
+import type {
+  ComposeRenameStringArgs,
+  ExtractBaseAndExtTemplate,
+  ValidTypes
+} from "../types.js";
 import {
   areNewNamesDistinct,
   checkPath,
@@ -18,14 +25,7 @@ import {
   numberOfDuplicatedNames,
   settledPromisesEval,
   truncateFile
-} from "../converters/utils.js";
-import { ERRORS } from "../messages/errMessages.js";
-import { STATUS } from "../messages/statusMessages.js";
-import type {
-  ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate,
-  ValidTypes
-} from "../types.js";
+} from "../utils/utils.js";
 import {
   createDirentArray,
   examplePath,

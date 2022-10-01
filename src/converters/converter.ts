@@ -17,14 +17,6 @@ import type {
   LegacyRenameList,
   RenameListArgs
 } from "../types";
-import { addTextTransform } from "./addTextTransform.js";
-import { dateTransform, provideFileStats } from "./dateTransform.js";
-import { extensionModifyTransform } from "./extensionModify.js";
-import { formatTextTransform } from "./formatTextTransform.js";
-import { keepTransform } from "./keepTransform.js";
-import { numericTransform } from "./numericTransform.js";
-import { searchAndReplace } from "./searchAndReplace.js";
-import { truncateTransform } from "./truncateTransform.js";
 import {
   areNewNamesDistinct,
   askQuestion,
@@ -34,7 +26,15 @@ import {
   listFiles,
   numberOfDuplicatedNames,
   settledPromisesEval
-} from "./utils.js";
+} from "../utils/utils.js";
+import { addTextTransform } from "./addTextTransform.js";
+import { dateTransform, provideFileStats } from "./dateTransform.js";
+import { extensionModifyTransform } from "./extensionModify.js";
+import { formatTextTransform } from "./formatTextTransform.js";
+import { keepTransform } from "./keepTransform.js";
+import { numericTransform } from "./numericTransform.js";
+import { searchAndReplace } from "./searchAndReplace.js";
+import { truncateTransform } from "./truncateTransform.js";
 const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
 const {
   exitWithoutTransform,

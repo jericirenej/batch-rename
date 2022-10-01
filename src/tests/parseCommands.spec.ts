@@ -6,12 +6,12 @@ import {
   VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import * as converters from "../converters/converter.js";
-import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   OptionKeysWithValues,
   OptionKeysWithValuesAndRestArgs
 } from "../types.js";
+import * as utils from "../utils/utils.js";
 import { examplePath } from "./mocks.js";
 
 const {

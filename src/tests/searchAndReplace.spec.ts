@@ -1,11 +1,11 @@
 import * as formatText from "../converters/formatTextTransform.js";
 import * as regexTransform from "../converters/searchAndReplace.js";
-import * as utils from "../converters/utils.js";
 import { GenerateRenameListArgs } from "../types.js";
+import * as utils from "../utils/utils.js";
 import {
   generateMockSplitFileList,
   mockDirentEntryAsFile,
-  mockSplitFile,
+  mockSplitFile
 } from "./mocks.js";
 
 const { extractBaseAndExt } = utils;

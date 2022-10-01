@@ -10,7 +10,7 @@ import type {
   FormattedDate,
   ProvideFileStats
 } from "../types";
-import { composeRenameString } from "./utils.js";
+import { composeRenameString } from "../utils/utils.js";
 
 export const provideFileStats: ProvideFileStats = async (splitFileList) => {
   const splitFileListWithStats: FileListWithStatsArray = await Promise.all(

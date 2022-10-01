@@ -5,7 +5,6 @@ import * as dateTransformFunctions from "../converters/dateTransform.js";
 import * as numericTransformFunctions from "../converters/numericTransform.js";
 import * as searchAndReplaceTransformFunctions from "../converters/searchAndReplace.js";
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
-import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   DryRunTransformArgs,
@@ -13,6 +12,7 @@ import type {
   RenameListArgs,
   TransformTypes
 } from "../types.js";
+import * as utils from "../utils/utils.js";
 import {
   examplePath,
   exampleStats,
