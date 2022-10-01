@@ -1,5 +1,5 @@
 import { keepTransform } from "../converters/keepTransform.js";
-import type { KeepTransformArgs, RenameList } from "../types.js";
+import type { KeepTransformArgs, LegacyRenameList } from "../types.js";
 import { mockKeepList as splitFileList } from "./mocks.js";
 
 describe("keepTransform", () => {
@@ -12,14 +12,14 @@ describe("keepTransform", () => {
   }));
   afterEach(() => jest.clearAllMocks());
   it("With only 'keep' arg, return should contain only matched string with extension", () => {
-    const expected: RenameList = splitFileList.map(({ ext }, index) => ({
+    const expected: LegacyRenameList = splitFileList.map(({ ext }, index) => ({
       rename: `Part00${index + 1}${ext}`,
       ...baseExpect[index],
     }));
     expect(keepTransform(baseArgs)).toEqual(expected);
   });
   it("Will perform specified transforms on target files", () => {
-    const testCases: { args: KeepTransformArgs; expected: RenameList }[] = [
+    const testCases: { args: KeepTransformArgs; expected: LegacyRenameList }[] = [
       {
         args: { ...baseArgs, format: "uppercase" },
         expected: splitFileList.map(({ ext }, index) => ({

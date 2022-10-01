@@ -3,7 +3,6 @@ import { stat } from "fs/promises";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as dateTransforms from "../converters/dateTransform.js";
 import * as formatText from "../converters/formatTextTransform.js";
-import * as utils from "../converters/utils.js";
 import type {
   ComposeRenameStringArgs,
   DateTransformCorrespondenceTable,
@@ -11,6 +10,7 @@ import type {
   FormattedDate,
   GenerateRenameListArgs
 } from "../types.js";
+import * as utils from "../utils/utils.js";
 import { exampleStats as stats, generateMockSplitFileList } from "./mocks.js";
 
 jest.mock("fs/promises", () => {

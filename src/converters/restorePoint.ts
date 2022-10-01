@@ -6,9 +6,9 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   DryRunRestore,
-  RenameList,
+  LegacyRenameList,
   RestoreBaseFunction,
-  RestoreOriginalFileNames,
+  RestoreOriginalFileNames
 } from "../types";
 import {
   askQuestion,
@@ -16,8 +16,8 @@ import {
   createBatchRenameList,
   determineDir,
   listFiles,
-  settledPromisesEval,
-} from "./utils.js";
+  settledPromisesEval
+} from "../utils/utils.js";
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
   ERRORS.restore;
@@ -44,7 +44,7 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
     throw new Error(noRollbackFile);
   }
   const readRollback = await readFile(targetPath, "utf8");
-  const rollbackData = JSON.parse(readRollback) as RenameList;
+  const rollbackData = JSON.parse(readRollback) as LegacyRenameList;
 
   const missingFiles: string[] = [];
   rollbackData.forEach((info) => {
@@ -76,7 +76,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   const { rollbackData, filesToRestore } = restoreBaseData;
 
   let batchRename: Promise<void>[] = [],
-    updatedRenameList: RenameList = [];
+    updatedRenameList: LegacyRenameList = [];
   if (filesToRestore.length) {
     batchRename = createBatchRenameList(rollbackData, filesToRestore);
   }

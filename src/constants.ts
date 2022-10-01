@@ -19,6 +19,7 @@ export const VALID_DATE_TRANSFORM_TYPES = [
 ] as const;
 
 export const EXT_REGEX =
+  // eslint-disable-next-line no-useless-escape
   /(?<=[\[\]\(\)\p{Alphabetic}\p{Decimal_Number}\p{Mark}-]+)(\.\w+)$/u;
 
 export const VALID_NUMERIC_TRANSFORM_TYPES = [

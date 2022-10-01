@@ -1,9 +1,18 @@
+import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
+import { SpyInstance } from "jest-mock";
 import path, { join, resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import * as formatTransform from "../converters/formatTextTransform.js";
+import { ERRORS } from "../messages/errMessages.js";
+import { STATUS } from "../messages/statusMessages.js";
+import type {
+  ComposeRenameStringArgs,
+  ExtractBaseAndExtTemplate,
+  ValidTypes
+} from "../types.js";
 import {
   areNewNamesDistinct,
   checkPath,
@@ -16,14 +25,7 @@ import {
   numberOfDuplicatedNames,
   settledPromisesEval,
   truncateFile
-} from "../converters/utils.js";
-import { ERRORS } from "../messages/errMessages.js";
-import { STATUS } from "../messages/statusMessages.js";
-import type {
-  ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate,
-  ValidTypes
-} from "../types.js";
+} from "../utils/utils.js";
 import {
   createDirentArray,
   examplePath,
@@ -44,12 +46,13 @@ const {
   pathIsNotDir,
 } = ERRORS.utils;
 const { noRollbackFile } = ERRORS.cleanRollback;
+const { zeroLevelRollback } = ERRORS.restoreFileMapper;
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
   const originalModule = jest.requireActual("fs/promises");
   return {
-    ...originalModule,
+    ...(originalModule as object),
     rename: jest.fn(),
     readdir: jest.fn(),
     lstat: jest.fn(),
@@ -63,12 +66,14 @@ const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
 describe("cleanUpRollbackFile", () => {
-  let suppressStdOut: jest.SpyInstance;
+  let suppressStdOut: SpyInstance<(message:string) => boolean>;
   beforeEach(
     () =>
       (suppressStdOut = jest
         .spyOn(process.stdout, "write")
-        .mockImplementation())
+        .mockImplementation((message) => {
+          return true;
+        }))
   );
   afterEach(() => suppressStdOut.mockRestore());
   const cleanUpArgs = { transformPath: examplePath };
@@ -158,7 +163,7 @@ describe("listFiles", () => {
   });
   it("Should not include directories by default", async () => {
     const listLength = mockFileList.length;
-    let exampleDirentArray = createDirentArray(listLength, listLength);
+    const exampleDirentArray = createDirentArray(listLength, listLength);
     exampleDirentArray[0].isFile = () => false;
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundFiles = await listFiles(examplePath);
@@ -166,7 +171,7 @@ describe("listFiles", () => {
   });
   it("Should include only directories, if targetType is set to dirs", async () => {
     const dirNum = 2;
-    let exampleDirentArray = createDirentArray(10, 8, dirNum);
+    const exampleDirentArray = createDirentArray(10, 8, dirNum);
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundDirs = await listFiles(examplePath, undefined, "dirs");
     expect(foundDirs.length).toBe(dirNum);
@@ -174,7 +179,7 @@ describe("listFiles", () => {
   it("Should include files and directories, if targetType is set to all", async () => {
     const dirNum = 2,
       fileNum = 8;
-    let exampleDirentArray = createDirentArray(10, fileNum, dirNum);
+    const exampleDirentArray = createDirentArray(10, fileNum, dirNum);
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundDirs = await listFiles(examplePath, undefined, "all");
     expect(foundDirs.length).toBe(dirNum + fileNum);
@@ -523,7 +528,7 @@ describe("createBatchRenameList", () => {
 });
 
 describe("settledPromisesEval", () => {
-  let spyOnConsole: jest.SpyInstance;
+  let spyOnConsole: SpyInstance;
   beforeEach(
     () =>
       (spyOnConsole = jest

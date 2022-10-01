@@ -5,20 +5,20 @@ import * as dateTransformFunctions from "../converters/dateTransform.js";
 import * as numericTransformFunctions from "../converters/numericTransform.js";
 import * as searchAndReplaceTransformFunctions from "../converters/searchAndReplace.js";
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
-import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   DryRunTransformArgs,
-  RenameList,
+  LegacyRenameList,
   RenameListArgs,
-  TransformTypes,
+  TransformTypes
 } from "../types.js";
+import * as utils from "../utils/utils.js";
 import {
   examplePath,
   exampleStats,
   generateMockSplitFileList,
   mockFileList,
-  renameListDistinct,
+  renameListDistinct
 } from "./mocks.js";
 
 jest.mock("fs/promises", () => {
@@ -303,7 +303,7 @@ describe("dryRunTransform", () => {
     expect(checkTypeArgs).toEqual(expectedArgs);
   });
   it("Should return false, if no names would be changed by transform", async () => {
-    const identicalTransform: RenameList = [renameListDistinct[0]];
+    const identicalTransform: LegacyRenameList = [renameListDistinct[0]];
     identicalTransform[0].rename = identicalTransform[0].original;
     expect(
       await dryRunTransform({

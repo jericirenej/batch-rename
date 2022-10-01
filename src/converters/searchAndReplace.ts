@@ -1,10 +1,10 @@
 import { Dirent } from "fs";
 import type {
   GenerateSearchAndReplaceArgs,
-  SearchAndReplace,
+  SearchAndReplace
 } from "../types.js";
+import { extractBaseAndExt, truncateFile } from "../utils/utils.js";
 import { formatFile } from "./formatTextTransform.js";
-import { extractBaseAndExt, truncateFile } from "./utils.js";
 
 export const searchAndReplace: SearchAndReplace = ({
   searchAndReplace,
@@ -16,7 +16,7 @@ export const searchAndReplace: SearchAndReplace = ({
   const generatedArgs = generateSearchAndReplaceArgs(searchAndReplace!);
   const targetList = splitFileList.map((fileInfo) => {
     const { filter, replace } = generatedArgs;
-    let { baseName, sourcePath, ext, type } = fileInfo;
+    const { baseName, sourcePath, ext, type } = fileInfo;
     const original = `${baseName}${ext}`;
     let rename = noExtensionPreserve ? original : baseName;
     if (filter && filter.test(original)) {

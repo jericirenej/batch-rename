@@ -1,8 +1,8 @@
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as formatText from "../converters/formatTextTransform.js";
 import * as numericConverter from "../converters/numericTransform.js";
-import * as utils from "../converters/utils.js";
 import type { GenerateRenameListArgs } from "../types.js";
+import * as utils from "../utils/utils.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
 const { numericTransform, checkBaseIndex } = numericConverter;

@@ -3,7 +3,7 @@ import { resolve } from "path";
 import {
   ROLLBACK_FILE_NAME,
   VALID_DRY_RUN_ANSWERS,
-  VALID_TRANSFORM_TYPES,
+  VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
@@ -11,18 +11,12 @@ import type {
   DryRunTransform,
   ExtractBaseAndExtReturn,
   FileListWithStatsArray,
+  GeneralTransformReturn,
   GenerateRenameList,
   GenerateRenameListArgs,
-  RenameListArgs,
+  LegacyRenameList,
+  RenameListArgs
 } from "../types";
-import { addTextTransform } from "./addTextTransform.js";
-import { dateTransform, provideFileStats } from "./dateTransform.js";
-import { extensionModifyTransform } from "./extensionModify.js";
-import { formatTextTransform } from "./formatTextTransform.js";
-import { keepTransform } from "./keepTransform.js";
-import { numericTransform } from "./numericTransform.js";
-import { searchAndReplace } from "./searchAndReplace.js";
-import { truncateTransform } from "./truncateTransform.js";
 import {
   areNewNamesDistinct,
   askQuestion,
@@ -31,8 +25,16 @@ import {
   extractBaseAndExt,
   listFiles,
   numberOfDuplicatedNames,
-  settledPromisesEval,
-} from "./utils.js";
+  settledPromisesEval
+} from "../utils/utils.js";
+import { addTextTransform } from "./addTextTransform.js";
+import { dateTransform, provideFileStats } from "./dateTransform.js";
+import { extensionModifyTransform } from "./extensionModify.js";
+import { formatTextTransform } from "./formatTextTransform.js";
+import { keepTransform } from "./keepTransform.js";
+import { numericTransform } from "./numericTransform.js";
+import { searchAndReplace } from "./searchAndReplace.js";
+import { truncateTransform } from "./truncateTransform.js";
 const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
 const {
   exitWithoutTransform,
@@ -45,7 +47,7 @@ const {
 
 export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   typeof VALID_TRANSFORM_TYPES[number],
-  Function
+  (args: GenerateRenameListArgs)=> LegacyRenameList|GeneralTransformReturn
 > = {
   addText: (args: GenerateRenameListArgs) => addTextTransform(args),
   dateRename: (args: GenerateRenameListArgs) => dateTransform(args),

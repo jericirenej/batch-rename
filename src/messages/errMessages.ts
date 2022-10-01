@@ -8,6 +8,10 @@ export const ERRORS = {
     couldNotBeParsed: "Restore data could not be parsed for any of the files!",
     noValidData: "No valid data was returned from the restoreBaseFunction!",
   },
+  restoreFileMapper: {
+    zeroLevelRollback: "Restore level 0 provided. No restore performed.",
+    incorrectRollbackFormat: "The rollback file does not conform to the required format!",
+  },
   cleanRollback: {
     noRollbackFile: "No rollback file exists. Exiting.",
     rollbackOperationFail: "Cleaning up rollback file failed!",

@@ -1,10 +1,9 @@
 import { Dirent, Stats } from "fs";
-import { extractBaseAndExt } from "../converters/utils.js";
 import type {
   ExtractBaseAndExtReturn,
-  ExtractBaseAndExtTemplate,
-  RenameList
+  ExtractBaseAndExtTemplate, LegacyRenameList, RenameItemsArray, RollbackFile
 } from "../types.js";
+import { extractBaseAndExt } from "../utils/utils.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
   isFile() {
@@ -61,26 +60,48 @@ export const expectedSplit = [
 const firstRename = "rename1";
 const sourcePath = examplePath;
 export const originalNames = ["original1", "original2", "original3"];
-export const renameWithNewNameRepeat: RenameList = [
+export const renameWithNewNameRepeat: LegacyRenameList = [
   { original: originalNames[0], rename: firstRename, sourcePath },
   { original: originalNames[1], rename: "rename2", sourcePath },
   { original: originalNames[2], rename: firstRename, sourcePath },
 ];
 
-const renameListDistinct = JSON.parse(
+export const renameListDistinct = JSON.parse(
   JSON.stringify(renameWithNewNameRepeat)
-) as RenameList;
+) as LegacyRenameList;
 renameListDistinct[2].rename = "rename3";
-const renameListWithDuplicateOldAndNew = JSON.parse(
+export const renameListWithDuplicateOldAndNew = JSON.parse(
   JSON.stringify(renameListDistinct)
-) as RenameList;
+) as LegacyRenameList;
 renameListWithDuplicateOldAndNew[0] = {
   original: renameListDistinct[0].original,
   rename: renameListDistinct[0].original,
   sourcePath,
 };
 
-export { renameListDistinct, renameListWithDuplicateOldAndNew };
+export const newRenameList: RenameItemsArray = renameListDistinct.map(
+  ({ original, rename }, index) => ({
+    original,
+    rename,
+    referenceId: `000${index+1}`,
+  })
+);
+export const newRollbackFile: RollbackFile = {
+  sourcePath,
+  transforms: [
+    newRenameList.map(({ referenceId}, index) => ({
+      original: `secondRename${index+1}`,
+      rename: `thirdRename${index+1}`,
+      referenceId,
+    })).reverse(),
+    newRenameList.map(({ referenceId, rename}, index) => ({
+      original: rename,
+      rename: `secondRename${index+1}`,
+      referenceId,
+    })).reverse(),
+    newRenameList,
+  ],
+};
 
 export const truthyArgument = "argument";
 const madeUpTime = 1318289051000.1;
@@ -130,7 +151,7 @@ export const createDirentArray = (
 ): Dirent[] => {
   let counter = 1;
   const combinedLength = numberOfDirs + numberOfFiles;
-  let arrLength = combinedLength > length ? combinedLength : length;
+  const arrLength = combinedLength > length ? combinedLength : length;
   const arr = new Array(arrLength).fill(0);
   return arr.map((entry, index) => {
     const isFileReturn = counter <= numberOfFiles;

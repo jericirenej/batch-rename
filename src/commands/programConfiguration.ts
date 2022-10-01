@@ -1,7 +1,7 @@
 import { PROGRAM_VERSION, VALID_DATE_TRANSFORM_TYPES } from "../constants.js";
 import { restoreOriginalFileNames } from "../converters/restorePoint.js";
-import { cleanUpRollbackFile } from "../converters/utils.js";
 import type { ProgramOptions } from "../types.js";
+import { cleanUpRollbackFile } from "../utils/utils.js";
 
 const programOptions: ProgramOptions[] = [
   {

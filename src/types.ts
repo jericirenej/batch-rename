@@ -3,7 +3,7 @@ import {
   UTILITY_ACTIONS,
   VALID_DATE_TRANSFORM_TYPES,
   VALID_NUMERIC_TRANSFORM_TYPES,
-  VALID_TRANSFORM_TYPES,
+  VALID_TRANSFORM_TYPES
 } from "./constants";
 
 export type ValidTypes = "files" | "dirs" | "all";
@@ -78,11 +78,13 @@ export type ExtractBaseAndExt = (
   fileList: Dirent[],
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
-export type RenameList = {
+
+export interface LegacyRenameItem {
   rename: string;
   original: string;
   sourcePath: string;
-}[];
+}
+export type LegacyRenameList = LegacyRenameItem[];
 export type RenameListArgs = {
   transformPattern: TransformTypes[];
   addText?: string;
@@ -107,10 +109,12 @@ export type RenameListArgs = {
 export type GenerateRenameListArgs = RenameListArgs & {
   splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
 };
-export type GenerateRenameList = (args: GenerateRenameListArgs) => RenameList;
+export type GenerateRenameList = (
+  args: GenerateRenameListArgs
+) => LegacyRenameList;
 
 export type DryRunTransformArgs = {
-  transformedNames: RenameList;
+  transformedNames: LegacyRenameList;
   transformPattern: TransformTypes[];
   transformPath: string;
 };
@@ -148,7 +152,9 @@ export type GenerateSearchAndReplaceArgs = (
   args: string[]
 ) => SearchAndReplaceArgs;
 
-export type SearchAndReplace = (args: GenerateRenameListArgs) => RenameList;
+export type SearchAndReplace = (
+  args: GenerateRenameListArgs
+) => LegacyRenameList;
 
 export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
@@ -157,7 +163,9 @@ export type TruncateFileNameArgs = {
   format?: string;
 };
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
-export type TruncateTransform = (args: GenerateRenameListArgs) => RenameList;
+export type TruncateTransform = (
+  args: GenerateRenameListArgs
+) => LegacyRenameList;
 
 export type AddTextTransform = TruncateTransform;
 
@@ -183,12 +191,12 @@ export type UtilityFunctionsArgs = {
 };
 
 export type CreateBatchRenameList = (
-  renameList: RenameList,
+  renameList: LegacyRenameList,
   filesToRevert?: string[]
 ) => Promise<void>[];
 
 export type RestoreBaseReturn = {
-  rollbackData: RenameList;
+  rollbackData: LegacyRenameList;
   existingFiles: string[];
   missingFiles: string[];
   filesToRestore: string[];
@@ -205,9 +213,9 @@ export type ListFiles = (
   excludeFilter?: string,
   targetType?: ValidTypes
 ) => Promise<Dirent[]>;
-export type AreNewNamesDistinct = (renameList: RenameList) => boolean;
+export type AreNewNamesDistinct = (renameList: LegacyRenameList) => boolean;
 export type NumberOfDuplicatedNamesArgs = {
-  renameList: RenameList;
+  renameList: LegacyRenameList;
   checkType: "results" | "transforms";
 };
 export type NumberOfDuplicatedNames = (
@@ -232,7 +240,9 @@ export type ComposeRenameStringArgs = {
 };
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
-export type FormatTextTransform = (args: GenerateRenameListArgs) => RenameList;
+export type FormatTextTransform = (
+  args: GenerateRenameListArgs
+) => LegacyRenameList;
 
 export type KeepTransformArgs = Pick<
   GenerateRenameListArgs,
@@ -245,4 +255,56 @@ export type KeepTransformArgs = Pick<
   | "format"
 >;
 
-export type KeepTransform = (args: KeepTransformArgs) => RenameList;
+export type KeepTransform = (args: KeepTransformArgs) => LegacyRenameList;
+
+export type RenameItem = Omit<LegacyRenameItem, "sourcePath"> & {
+  referenceId: string;
+};
+export type RenameItemsArray = RenameItem[];
+
+/** Rollback file whose transform property that includes a history of transform operations
+ * (i.e. an array of arrays).*/
+export interface RollbackFile {
+  sourcePath: string;
+  transforms: RenameItemsArray[];
+}
+
+/** Restore list whose transform property is an array of
+ * single file transforms that contain the current and target level name. */
+export interface RestoreList {
+  sourcePath: string;
+  transforms: RenameItemsArray;
+}
+export interface BaseFileMapperArgs {
+  rollbackFile: RollbackFile;
+  rollbackLevel?: number;
+}
+
+export type RestoreFileMapper = ({
+  rollbackFile,
+  rollbackLevel,
+}: BaseFileMapperArgs) => RestoreList;
+
+export type DetermineRollbackLevel = ({
+  transformList,
+  rollbackLevel,
+}: {
+  transformList: RenameItemsArray[];
+  rollbackLevel: number;
+}) => number;
+
+export type BuildRestoreFile = ({
+  restoreList,
+  targetLevel,
+  sourcePath,
+}: {
+  restoreList: Record<string, string[]>;
+  targetLevel: number;
+  sourcePath: string;
+}) => RestoreList;
+
+export interface FilesWithMissingRestores {
+  file: string;
+  found: number;
+  requested: number;
+}

@@ -1,5 +1,5 @@
 import type { AddTextTransform } from "../types.js";
-import { composeRenameString, truncateFile } from "./utils.js";
+import { composeRenameString, truncateFile } from "../utils/utils.js";
 
 export const addTextTransform: AddTextTransform = ({
   splitFileList,

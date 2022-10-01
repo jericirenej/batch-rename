@@ -6,8 +6,9 @@ import {
   DEFAULT_SEPARATOR,
   DEFAULT_TARGET_TYPE,
   EXT_REGEX,
-  ROLLBACK_FILE_NAME,
+  ROLLBACK_FILE_NAME
 } from "../constants.js";
+import { formatFile } from "../converters/formatTextTransform.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
@@ -18,12 +19,11 @@ import type {
   CreateBatchRenameList,
   DetermineDir,
   ExtractBaseAndExt,
+  LegacyRenameList,
   ListFiles,
   NumberOfDuplicatedNames,
-  RenameList,
-  TruncateFileName,
+  TruncateFileName
 } from "../types.js";
-import { formatFile } from "./formatTextTransform.js";
 
 const {
   allRenameFailed,
@@ -121,7 +121,7 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
 }) => {
   if (checkType === "results") {
     const renames = renameList.map((renameInfo) => renameInfo.rename);
-    let newNamesUniqueLength = new Set(renames).size;
+    const newNamesUniqueLength = new Set(renames).size;
     return renames.length - newNamesUniqueLength;
   }
   if (checkType === "transforms") {
@@ -272,10 +272,10 @@ export const settledPromisesEval = ({
   promiseResults,
   operationType,
 }: {
-  transformedNames: RenameList;
+  transformedNames: LegacyRenameList;
   promiseResults: PromiseSettledResult<void>[];
   operationType: "convert" | "restore";
-}): RenameList => {
+}): LegacyRenameList => {
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
   ).length;
@@ -285,7 +285,7 @@ export const settledPromisesEval = ({
     throw new Error(allRenameFailed);
 
   console.log(failReport(promisesRejected, operationType));
-  const truncatedList: RenameList = [];
+  const truncatedList: LegacyRenameList = [];
   promiseResults.forEach((settledResult, index) => {
     if (settledResult.status === "rejected") {
       const { original, rename } = transformedNames[index];
