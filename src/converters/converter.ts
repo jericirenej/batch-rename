@@ -17,6 +17,7 @@ import type {
   LegacyRenameList,
   RenameListArgs
 } from "../types";
+import { checkRestoreFile, restoreFileMapper } from "../utils/restoreUtils.js";
 import {
   areNewNamesDistinct,
   askQuestion,
@@ -91,24 +92,33 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
       return;
     }
   }
-
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(duplicateRenames);
+  
+  
 
-  const batchRename = createBatchRenameList(transformedNames);
+  // Tempo remapping to current restore list format, until 
+  // rename functions are fixed.
+  const transform = restoreFileMapper({rollbackFile: checkRestoreFile(transformedNames)})
+
+  const batchRename = createBatchRenameList(transform);
   console.log(`Renaming ${batchRename.length} files...`);
   const promiseResults = await Promise.allSettled(batchRename);
   const updatedRenameList = settledPromisesEval({
     promiseResults,
-    transformedNames,
+    transformedNames: transform.transforms,
     operationType: "convert",
   });
 
+
+  // Temp re-coding to original restore file format
+  const legacy:LegacyRenameList = updatedRenameList.map(({rename, original})=> ({rename, original, sourcePath: transformedNames[0].sourcePath}))
+console.log(legacy);
   console.log("Rename completed!");
   process.stdout.write("Writing rollback file...");
   await writeFile(
     resolve(targetDir, ROLLBACK_FILE_NAME),
-    JSON.stringify(updatedRenameList, undefined, 2),
+    JSON.stringify(legacy, undefined, 2),
     "utf-8"
   );
   process.stdout.write("DONE.\n");

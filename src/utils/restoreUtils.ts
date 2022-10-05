@@ -24,19 +24,15 @@ export const checkExistingFiles: CheckExistingFiles = ({
   existingFiles,
   transforms,
 }) => {
-  const flatTransforms = transforms.flat(),
-    filesToRestore: string[] = [];
-  let fileNames = [...existingFiles];
+  const filesToRestore: string[] = [],
+    fileNames = [...existingFiles],
+    uniqueRenames = new Set(transforms.flat().map(({ rename }) => rename));
 
-  for (const { rename } of flatTransforms) {
-    if (!fileNames.length) break;
-    if (fileNames.includes(rename)) {
-      filesToRestore.push(rename);
-      fileNames = fileNames.filter((fileName) => fileName !== rename);
-    }
+  for (const rename of uniqueRenames) {
+    if (fileNames.includes(rename)) filesToRestore.push(rename);
   }
-  const missingFiles = existingFiles.filter(
-    (fileName) => !filesToRestore.includes(fileName)
+  const missingFiles = [...uniqueRenames].filter(
+    (rename) => !filesToRestore.includes(rename)
   );
   return { filesToRestore, missingFiles };
 };
@@ -193,7 +189,7 @@ export const buildRestoreFile: BuildRestoreFile = ({
 export const restoreFileMapper: RestoreFileMapper = ({
   rollbackFile,
   rollbackLevel = 1,
-}): any => {
+}) => {
   const { transforms, sourcePath } = rollbackFile;
   const targetLevel = determineRollbackLevel({
     transformList: transforms,

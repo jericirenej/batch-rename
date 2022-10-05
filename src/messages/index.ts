@@ -1,2 +1,3 @@
-export * from "./errMessages";
-export * from "./statusMessages";
+export * from "./errMessages.js";
+export * from "./statusMessages.js";
+

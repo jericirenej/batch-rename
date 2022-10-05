@@ -18,10 +18,9 @@ import type {
   ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
-  ExtractBaseAndExt,
-  LegacyRenameList,
-  ListFiles,
+  ExtractBaseAndExt, ListFiles,
   NumberOfDuplicatedNames,
+  RenameItemsArray,
   TruncateFileName
 } from "../types.js";
 
@@ -232,28 +231,27 @@ export const composeRenameString: ComposeRenameString = ({
  * if a filesToRevert argument is supplied.
  */
 export const createBatchRenameList: CreateBatchRenameList = (
-  renameList,
+  {transforms, sourcePath},
   filesToRevert = []
 ) => {
   const batchRename: Promise<void>[] = [];
   if (filesToRevert.length) {
     filesToRevert.forEach((file) => {
-      const targetName = renameList.find((fileInfo) => {
+      const targetName = transforms.find((fileInfo) => {
         const { rename, original } = fileInfo;
         return rename === file && original !== rename;
       });
       if (targetName) {
         const [currentPath, revertPath] = [
-          join(targetName.sourcePath, file),
-          join(targetName.sourcePath, targetName.original),
+          join(sourcePath, file),
+          join(sourcePath, targetName.original),
         ];
         return batchRename.push(rename(currentPath, revertPath));
       }
     });
     return batchRename;
   }
-  renameList.forEach((fileInfo) => {
-    const { original, rename: newName, sourcePath } = fileInfo;
+  transforms.forEach(({original, rename: newName}) => {
     if (original !== newName) {
       const [originalFullPath, newNameFullPath] = [
         join(sourcePath, original),
@@ -272,10 +270,10 @@ export const settledPromisesEval = ({
   promiseResults,
   operationType,
 }: {
-  transformedNames: LegacyRenameList;
+  transformedNames: RenameItemsArray;
   promiseResults: PromiseSettledResult<void>[];
   operationType: "convert" | "restore";
-}): LegacyRenameList => {
+}): RenameItemsArray => {
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
   ).length;
@@ -285,7 +283,7 @@ export const settledPromisesEval = ({
     throw new Error(allRenameFailed);
 
   console.log(failReport(promisesRejected, operationType));
-  const truncatedList: LegacyRenameList = [];
+  const truncatedList: RenameItemsArray = [];
   promiseResults.forEach((settledResult, index) => {
     if (settledResult.status === "rejected") {
       const { original, rename } = transformedNames[index];

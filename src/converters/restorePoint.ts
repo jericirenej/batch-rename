@@ -7,9 +7,16 @@ import { STATUS } from "../messages/statusMessages.js";
 import type {
   DryRunRestore,
   LegacyRenameList,
+  RenameItemsArray,
   RestoreBaseFunction,
-  RestoreOriginalFileNames
+  RestoreOriginalFileNames,
+  RollbackFile
 } from "../types";
+import {
+  checkExistingFiles,
+  checkRestoreFile,
+  restoreFileMapper
+} from "../utils/restoreUtils.js";
 import {
   askQuestion,
   cleanUpRollbackFile,
@@ -44,18 +51,25 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
     throw new Error(noRollbackFile);
   }
   const readRollback = await readFile(targetPath, "utf8");
-  const rollbackData = JSON.parse(readRollback) as LegacyRenameList;
+  const originalRollbackData = JSON.parse(readRollback) as
+    | LegacyRenameList
+    | RollbackFile;
 
-  const missingFiles: string[] = [];
-  rollbackData.forEach((info) => {
-    const { rename } = info;
-    const targetFilePresent = existingFiles.includes(rename);
-    if (!targetFilePresent) missingFiles.push(rename);
+  const rollbackData = checkRestoreFile(originalRollbackData);
+
+  const { filesToRestore, missingFiles } = checkExistingFiles({
+    existingFiles,
+    transforms: rollbackData.transforms,
   });
-  const filesToRestore = existingFiles.filter(
-    (file) => !missingFiles.includes(file)
-  );
-  return { rollbackData, existingFiles, missingFiles, filesToRestore };
+  const restoreList = restoreFileMapper({ rollbackFile: rollbackData });
+
+  return {
+    rollbackData,
+    restoreList,
+    existingFiles,
+    missingFiles,
+    filesToRestore,
+  };
 };
 
 /**Restore original filenames on the basis of the rollbackFile */
@@ -73,18 +87,24 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     const dryRun = await dryRunRestore(restoreBaseData);
     if (!dryRun) return;
   }
-  const { rollbackData, filesToRestore } = restoreBaseData;
+  const {
+    filesToRestore,
+    restoreList,
+  } = restoreBaseData;
 
   let batchRename: Promise<void>[] = [],
-    updatedRenameList: LegacyRenameList = [];
+    updatedRenameList: RenameItemsArray = [];
   if (filesToRestore.length) {
-    batchRename = createBatchRenameList(rollbackData, filesToRestore);
+    batchRename = createBatchRenameList(
+      restoreList,
+      filesToRestore
+    );
   }
   if (!batchRename.length) {
     throw new Error(couldNotBeParsed);
   }
   if (batchRename.length) {
-    updatedRenameList = rollbackData.filter(({ rename }) =>
+    updatedRenameList = restoreList.transforms.filter(({ rename }) =>
       filesToRestore.includes(rename)
     );
 
@@ -104,10 +124,10 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
 export const dryRunRestore: DryRunRestore = async ({
   filesToRestore,
   missingFiles,
-  rollbackData,
+  restoreList: {transforms}
 }) => {
   const missingLength = missingFiles.length;
-  const tableData = rollbackData.map(({ rename, original }) => ({
+  const tableData = transforms.map(({ rename, original }) => ({
     current: rename,
     restored: original,
   }));

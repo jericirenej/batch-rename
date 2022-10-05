@@ -191,12 +191,13 @@ export type UtilityFunctionsArgs = {
 };
 
 export type CreateBatchRenameList = (
-  renameList: LegacyRenameList,
+  restoreList: RestoreList,
   filesToRevert?: string[]
 ) => Promise<void>[];
 
 export type RestoreBaseReturn = {
   rollbackData: RollbackFile;
+  restoreList: RestoreList;
   existingFiles: string[];
   missingFiles: string[];
   filesToRestore: string[];
