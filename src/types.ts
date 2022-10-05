@@ -196,7 +196,7 @@ export type CreateBatchRenameList = (
 ) => Promise<void>[];
 
 export type RestoreBaseReturn = {
-  rollbackData: LegacyRenameList;
+  rollbackData: RollbackFile;
   existingFiles: string[];
   missingFiles: string[];
   filesToRestore: string[];
@@ -307,4 +307,14 @@ export interface FilesWithMissingRestores {
   file: string;
   found: number;
   requested: number;
+}
+
+export interface CheckExistingFiles {
+  ({
+    existingFiles,
+    transforms,
+  }: {
+    existingFiles: string[];
+    transforms: RenameItemsArray[];
+  }): { filesToRestore: string[]; missingFiles: string[] };
 }

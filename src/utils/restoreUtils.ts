@@ -3,6 +3,7 @@ import { join } from "path";
 import { ERRORS, STATUS } from "../messages/index.js";
 import type {
   BuildRestoreFile,
+  CheckExistingFiles,
   DetermineRollbackLevel,
   FilesWithMissingRestores,
   LegacyRenameList,
@@ -17,6 +18,31 @@ const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
   STATUS.restoreFileMapper;
 
+/** Check which existing files names can be found in the rollback file
+ * and which are missing */
+export const checkExistingFiles: CheckExistingFiles = ({
+  existingFiles,
+  transforms,
+}) => {
+  const flatTransforms = transforms.flat(),
+    filesToRestore: string[] = [];
+  let fileNames = [...existingFiles];
+
+  for (const { rename } of flatTransforms) {
+    if (!fileNames.length) break;
+    if (fileNames.includes(rename)) {
+      filesToRestore.push(rename);
+      fileNames = fileNames.filter((fileName) => fileName !== rename);
+    }
+  }
+  const missingFiles = existingFiles.filter(
+    (fileName) => !filesToRestore.includes(fileName)
+  );
+  return { filesToRestore, missingFiles };
+};
+
+/**Determine target rollback level, based on transform list length and passed
+ * rollbackLevel value. */
 export const determineRollbackLevel: DetermineRollbackLevel = ({
   transformList,
   rollbackLevel = 1,
@@ -183,11 +209,11 @@ export const restoreFileMapper: RestoreFileMapper = ({
       (acc, { original, rename, referenceId }) => {
         if (!(referenceId === reference)) return acc;
         if (!acc.length) {
-          return acc = [rename, original];
+          return (acc = [rename, original]);
         }
         // Remove the last element, so we don't get duplication
         // between the original and previous rename.
-        return acc = [...acc.slice(0, -1), rename, original];
+        return (acc = [...acc.slice(0, -1), rename, original]);
       },
       [] as string[]
     );

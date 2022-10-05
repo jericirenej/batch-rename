@@ -1,7 +1,10 @@
 import { Dirent, Stats } from "fs";
 import type {
   ExtractBaseAndExtReturn,
-  ExtractBaseAndExtTemplate, LegacyRenameList, RenameItemsArray, RollbackFile
+  ExtractBaseAndExtTemplate,
+  LegacyRenameList,
+  RenameItemsArray,
+  RollbackFile
 } from "../types.js";
 import { extractBaseAndExt } from "../utils/utils.js";
 
@@ -83,22 +86,26 @@ export const newRenameList: RenameItemsArray = renameListDistinct.map(
   ({ original, rename }, index) => ({
     original,
     rename,
-    referenceId: `000${index+1}`,
+    referenceId: `000${index + 1}`,
   })
 );
 export const newRollbackFile: RollbackFile = {
   sourcePath,
   transforms: [
-    newRenameList.map(({ referenceId}, index) => ({
-      original: `secondRename${index+1}`,
-      rename: `thirdRename${index+1}`,
-      referenceId,
-    })).reverse(),
-    newRenameList.map(({ referenceId, rename}, index) => ({
-      original: rename,
-      rename: `secondRename${index+1}`,
-      referenceId,
-    })).reverse(),
+    newRenameList
+      .map(({ referenceId }, index) => ({
+        original: `secondRename${index + 1}`,
+        rename: `thirdRename${index + 1}`,
+        referenceId,
+      }))
+      .reverse(),
+    newRenameList
+      .map(({ referenceId, rename }, index) => ({
+        original: rename,
+        rename: `secondRename${index + 1}`,
+        referenceId,
+      }))
+      .reverse(),
     newRenameList,
   ],
 };
@@ -217,3 +224,20 @@ export const textFormatRenameList = extractBaseAndExt(
   formatFileList,
   examplePath
 );
+
+export const checkFilesExistingMock = [
+  "firstFile",
+  "secondFile",
+  "thirdFile",
+  "fourthFile",
+];
+const referenceId = "referenceId";
+export const checkFilesTransforms: RenameItemsArray[] = [
+  [
+    { rename: "thirdFile", original: "thirdFileOriginal", referenceId },
+    { rename: "secondFile", original: "secondFileOriginal", referenceId },
+  ],
+  [{ rename: "firstFile", original: "firstFileOriginal", referenceId }],
+  [{ rename: "firstFile", original: "someOtherFileOriginal", referenceId }],
+  [{ rename: "secondFile", original: "secondFileOriginal", referenceId }],
+];

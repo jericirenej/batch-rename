@@ -5,6 +5,8 @@ import { ERRORS, STATUS } from "../messages/index.js";
 import { RenameItemsArray, RestoreList, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
 import {
+  checkFilesExistingMock,
+  checkFilesTransforms,
   examplePath as sourcePath,
   newRenameList,
   newRollbackFile,
@@ -13,6 +15,7 @@ import {
 
 const {
   buildRestoreFile,
+  checkExistingFiles,
   checkRestoreFile,
   determineRollbackLevel,
   isCurrentRestore,
@@ -31,6 +34,20 @@ const renameSequence = (baseName: string, length: number) =>
   new Array(length)
     .fill(0)
     .map((entry, index) => `${length - index}-${baseName}`);
+
+describe("checkExistingFiles", () => {
+  it("Should return proper list of filesToRestore and missingFiles", () => {
+    const expected: { filesToRestore: string[]; missingFiles: string[] } = {
+      filesToRestore: ["thirdFile", "secondFile", "firstFile"],
+      missingFiles: ["fourthFile"],
+    };
+    const result = checkExistingFiles({
+      existingFiles: checkFilesExistingMock,
+      transforms: checkFilesTransforms,
+    });
+    expect(result).toEqual(expected);
+  });
+});
 
 describe("determineRollbackLevel", () => {
   const rollbackLength = 10,
