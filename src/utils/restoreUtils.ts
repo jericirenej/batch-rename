@@ -3,15 +3,12 @@ import { join } from "path";
 import { ERRORS, STATUS } from "../messages/index.js";
 import type {
   BuildRestoreFile,
-  CheckExistingFiles,
-  DetermineRollbackLevel,
+  CheckExistingFiles, ConversionList, DetermineRollbackLevel,
   FilesWithMissingRestores,
   LegacyRenameList,
   RenameItem,
   RenameItemsArray,
-  RestoreFileMapper,
-  RestoreList,
-  RollbackFile
+  RestoreFileMapper, RollbackFile
 } from "../types";
 
 const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
@@ -59,7 +56,7 @@ export const legacyRestoreMapper = (
   legacyRollbackFile: LegacyRenameList
 ): RollbackFile => {
   const sourcePath = legacyRollbackFile[0].sourcePath;
-  const restoreList: RestoreList = { sourcePath, transforms: [] };
+  const restoreList: ConversionList = { sourcePath, transforms: [] };
   const legacyRollbackWithReferenceId: RenameItemsArray =
     legacyRollbackFile.map(({ rename, original }) => ({
       original,
@@ -157,7 +154,7 @@ export const buildRestoreFile: BuildRestoreFile = ({
 }) => {
   const filesWithMissingRestores = [] as FilesWithMissingRestores[];
   const entries = Object.entries(restoreList);
-  const transformRestore: RestoreList = { sourcePath, transforms: [] };
+  const transformRestore: ConversionList = { sourcePath, transforms: [] };
   entries.forEach(([referenceId, transformList]) => {
     const [rename, original] = [
       transformList[0],

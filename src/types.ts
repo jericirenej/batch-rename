@@ -191,13 +191,13 @@ export type UtilityFunctionsArgs = {
 };
 
 export type CreateBatchRenameList = (
-  restoreList: RestoreList,
+  restoreList: ConversionList,
   filesToRevert?: string[]
 ) => Promise<void>[];
 
 export type RestoreBaseReturn = {
   rollbackData: RollbackFile;
-  restoreList: RestoreList;
+  restoreList: ConversionList;
   existingFiles: string[];
   missingFiles: string[];
   filesToRestore: string[];
@@ -270,9 +270,9 @@ export interface RollbackFile {
   transforms: RenameItemsArray[];
 }
 
-/** Restore list whose transform property is an array of
- * single file transforms that contain the current and target level name. */
-export interface RestoreList {
+/** Conversion list represent an array of file transforms with current and
+ * target level name. It is basically a RollbackFile without any history */
+export interface ConversionList {
   sourcePath: string;
   transforms: RenameItemsArray;
 }
@@ -284,7 +284,7 @@ export interface BaseFileMapperArgs {
 export type RestoreFileMapper = ({
   rollbackFile,
   rollbackLevel,
-}: BaseFileMapperArgs) => RestoreList;
+}: BaseFileMapperArgs) => ConversionList;
 
 export type DetermineRollbackLevel = ({
   transformList,
@@ -302,7 +302,7 @@ export type BuildRestoreFile = ({
   restoreList: Record<string, string[]>;
   targetLevel: number;
   sourcePath: string;
-}) => RestoreList;
+}) => ConversionList;
 
 export interface FilesWithMissingRestores {
   file: string;

@@ -2,15 +2,12 @@ import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
 import { ERRORS, STATUS } from "../messages/index.js";
-import { RenameItemsArray, RestoreList, RollbackFile } from "../types.js";
+import { ConversionList, RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
 import {
-  checkFilesExistingMock,
-  checkFilesTransforms,
-  examplePath as sourcePath,
-  newRenameList,
-  newRollbackFile,
-  renameListDistinct
+    checkFilesExistingMock,
+    checkFilesTransforms, currentRenameList, examplePath as sourcePath, newRollbackFile,
+    renameListDistinct
 } from "./mocks.js";
 
 const {
@@ -52,7 +49,7 @@ describe("checkExistingFiles", () => {
 describe("determineRollbackLevel", () => {
   const rollbackLength = 10,
     transformList = new Array(rollbackLength).fill(
-      newRenameList
+      currentRenameList
     ) as RenameItemsArray[];
   let spyOnConsole: SpyInstance;
   beforeEach(
@@ -251,7 +248,7 @@ describe("buildRestoreFile", () => {
   });
 
   it("Should produce a restore list", () => {
-    const expected: RestoreList = {
+    const expected: ConversionList = {
       sourcePath,
       transforms: [refId1, refId2].map((entry) => ({
         rename: `5-${entry}`,
@@ -268,14 +265,14 @@ describe("buildRestoreFile", () => {
     expect(result).toEqual(expected);
   });
   describe("Handling of restore chains with elements that have fewer levels than requested", () => {
-    const newRestoreList = JSON.parse(JSON.stringify(restoreList)) as Record<
+    const newConversionList = JSON.parse(JSON.stringify(restoreList)) as Record<
       string,
       string[]
     >;
 
-    newRestoreList[refId2] = newRestoreList[refId2].slice(0, -2);
+    newConversionList[refId2] = newConversionList[refId2].slice(0, -2);
     it("Should produce a restore list with latest available rollbacks", () => {
-      const expected: RestoreList = {
+      const expected: ConversionList = {
         sourcePath,
         transforms: [refId1, refId2].map((entry) => ({
           rename: `5-${entry}`,
@@ -284,7 +281,7 @@ describe("buildRestoreFile", () => {
         })),
       };
       const result = buildRestoreFile({
-        restoreList: newRestoreList,
+        restoreList: newConversionList,
         sourcePath,
         targetLevel,
       });
@@ -296,7 +293,7 @@ describe("buildRestoreFile", () => {
         expect(spy).not.toHaveBeenCalled()
       );
       buildRestoreFile({
-        restoreList: newRestoreList,
+        restoreList: newConversionList,
         sourcePath,
         targetLevel,
       });

@@ -81,32 +81,41 @@ renameListWithDuplicateOldAndNew[0] = {
   rename: renameListDistinct[0].original,
   sourcePath,
 };
-
-export const newRenameList: RenameItemsArray = renameListDistinct.map(
-  ({ original, rename }, index) => ({
+const transformToCurrent = (list: LegacyRenameList): RenameItemsArray =>
+  list.map(({ original, rename }, index) => ({
     original,
     rename,
     referenceId: `000${index + 1}`,
-  })
-);
+  }));
+
+export const [
+  currentRenameList,
+  currentRenameWithDuplicatedOldAndNew,
+  currentRenameWithNewNameRepeat,
+] = [
+  renameListDistinct,
+  renameListWithDuplicateOldAndNew,
+  renameWithNewNameRepeat,
+].map((list) => transformToCurrent(list));
+
 export const newRollbackFile: RollbackFile = {
   sourcePath,
   transforms: [
-    newRenameList
+    currentRenameList
       .map(({ referenceId }, index) => ({
         original: `secondRename${index + 1}`,
         rename: `thirdRename${index + 1}`,
         referenceId,
       }))
       .reverse(),
-    newRenameList
+    currentRenameList
       .map(({ referenceId, rename }, index) => ({
         original: rename,
         rename: `secondRename${index + 1}`,
         referenceId,
       }))
       .reverse(),
-    newRenameList,
+    currentRenameList,
   ],
 };
 

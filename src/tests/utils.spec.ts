@@ -28,6 +28,8 @@ import {
 } from "../utils/utils.js";
 import {
   createDirentArray,
+  currentRenameList,
+  currentRenameWithDuplicatedOldAndNew,
   examplePath,
   exampleStats,
   expectedSplit,
@@ -421,11 +423,15 @@ describe("composeRenameString", () => {
 });
 
 describe("createBatchRenameList", () => {
+  const conversionList = {
+    sourcePath: examplePath,
+    transforms: currentRenameList,
+  };
   beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
   afterEach(() => mockedRename.mockReset());
   it("Should return renameList of appropriate length", () => {
-    const expectedLength = renameListDistinct.length;
-    const batchPromise = createBatchRenameList(renameListDistinct);
+    const expectedLength = conversionList.transforms.length;
+    const batchPromise = createBatchRenameList(conversionList);
     expect(batchPromise.length).toBe(expectedLength);
   });
   it("batchList should contain appropriate data", async () => {
@@ -438,38 +444,37 @@ describe("createBatchRenameList", () => {
             result.push([originalPath as string, targetPath as string])
           ) as unknown as Promise<void>
       );
-    createBatchRenameList(renameListDistinct);
-    renameListDistinct.forEach((renameInfo, index) => {
-      const { original, rename, sourcePath } = renameInfo;
+    createBatchRenameList(conversionList);
+    conversionList.transforms.forEach((renameInfo, index) => {
+      const { original, rename } = renameInfo,
+        { sourcePath } = conversionList;
       const expected = [join(sourcePath, original), join(sourcePath, rename)];
       expect(result[index]).toEqual(expected);
     });
   });
   it("Should return renameList with length corresponding to unique names", () => {
-    const expectedLength = renameListWithDuplicateOldAndNew.filter(
+    const expectedLength = currentRenameWithDuplicatedOldAndNew.filter(
       (renameInfo) => renameInfo.original !== renameInfo.rename
     ).length;
-    const batchPromise = createBatchRenameList(
-      renameListWithDuplicateOldAndNew
-    );
+    const batchPromise = createBatchRenameList({
+      sourcePath: examplePath,
+      transforms: currentRenameWithDuplicatedOldAndNew,
+    });
     expect(batchPromise.length).toBe(expectedLength);
   });
   describe("Revert operations", () => {
     beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
     afterEach(() => mockedRename.mockReset());
     it("If filesToRevert are supplied, return appropriate batchRename list", () => {
-      const revertList = renameListDistinct.map(
+      const revertList = conversionList.transforms.map(
         (renameInfo) => renameInfo.rename
       );
       const expectedLength = revertList.length;
-      const batchPromise = createBatchRenameList(
-        renameListDistinct,
-        revertList
-      );
+      const batchPromise = createBatchRenameList(conversionList, revertList);
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchList should contain appropriate data", async () => {
-      const revertList = renameListDistinct.map(
+      const revertList = conversionList.transforms.map(
         (renameInfo) => renameInfo.rename
       );
       const result: [string, string][] = [];
@@ -481,22 +486,20 @@ describe("createBatchRenameList", () => {
               result.push([originalPath as string, targetPath as string])
             ) as unknown as Promise<void>
         );
-      createBatchRenameList(renameListDistinct, revertList);
-      renameListDistinct.forEach((renameInfo, index) => {
-        const { original, rename, sourcePath } = renameInfo;
+      createBatchRenameList(conversionList, revertList);
+      conversionList.transforms.forEach((renameInfo, index) => {
+        const { original, rename } = renameInfo,
+          { sourcePath } = conversionList;
         const expected = [join(sourcePath, rename), join(sourcePath, original)];
         expect(result[index]).toEqual(expected);
       });
     });
     it("batchPromise list should not exceed filesToRevert's length", () => {
-      const revertList = renameListDistinct
+      const revertList = conversionList.transforms
         .map((renameInfo) => renameInfo.rename)
         .slice(0, -1);
       const expectedLength = revertList.length;
-      const batchPromise = createBatchRenameList(
-        renameListDistinct,
-        revertList
-      );
+      const batchPromise = createBatchRenameList(conversionList, revertList);
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchPromise list should not contain entries where original and renamed file names are identical", () => {
@@ -506,20 +509,17 @@ describe("createBatchRenameList", () => {
       const expectedLength = renameListWithDuplicateOldAndNew.filter(
         (renameInfo) => renameInfo.original !== renameInfo.rename
       ).length;
-      const batchPromise = createBatchRenameList(
-        renameListDistinct,
-        revertList
-      );
+      const batchPromise = createBatchRenameList(conversionList, revertList);
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchPromise list should not include files whose names are not found in renameList", () => {
-      const revertList = renameListDistinct.map(
+      const revertList = conversionList.transforms.map(
         (renameInfo) => renameInfo.rename
       );
-      const truncatedRenameList = renameListDistinct.slice(0, -1);
+      const truncatedRenameList = conversionList.transforms.slice(0, -1);
       const expectedLength = truncatedRenameList.length;
       const batchPromise = createBatchRenameList(
-        truncatedRenameList,
+        { ...conversionList, transforms: truncatedRenameList },
         revertList
       );
       expect(batchPromise.length).toBe(expectedLength);
@@ -537,10 +537,10 @@ describe("settledPromisesEval", () => {
   );
   afterEach(() => spyOnConsole.mockRestore());
   const args = {
-      transformedNames: renameListDistinct,
+      transformedNames: currentRenameList,
       operationType: "convert" as const,
     },
-    settledLength = renameListDistinct.length,
+    settledLength = currentRenameList.length,
     rejected = {
       status: "rejected",
       reason: "someReason",

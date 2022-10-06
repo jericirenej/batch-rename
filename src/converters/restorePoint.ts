@@ -87,18 +87,12 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     const dryRun = await dryRunRestore(restoreBaseData);
     if (!dryRun) return;
   }
-  const {
-    filesToRestore,
-    restoreList,
-  } = restoreBaseData;
+  const { filesToRestore, restoreList } = restoreBaseData;
 
   let batchRename: Promise<void>[] = [],
     updatedRenameList: RenameItemsArray = [];
   if (filesToRestore.length) {
-    batchRename = createBatchRenameList(
-      restoreList,
-      filesToRestore
-    );
+    batchRename = createBatchRenameList(restoreList, filesToRestore);
   }
   if (!batchRename.length) {
     throw new Error(couldNotBeParsed);
@@ -124,7 +118,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
 export const dryRunRestore: DryRunRestore = async ({
   filesToRestore,
   missingFiles,
-  restoreList: {transforms}
+  restoreList: { transforms },
 }) => {
   const missingLength = missingFiles.length;
   const tableData = transforms.map(({ rename, original }) => ({
