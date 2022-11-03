@@ -15,14 +15,14 @@ import {
   listFiles,
   numberOfDuplicatedNames,
   settledPromisesEval,
-  truncateFile,
+  truncateFile
 } from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
   ExtractBaseAndExtTemplate,
-  ValidTypes,
+  ValidTypes
 } from "../types.js";
 import {
   createDirentArray,
@@ -33,7 +33,7 @@ import {
   renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
-  truthyArgument,
+  truthyArgument
 } from "./mocks.js";
 
 const {
@@ -56,7 +56,7 @@ jest.mock("fs/promises", () => {
     unlink: jest.fn(),
   };
 });
-const mockedFs = jest.mocked(fs, true);
+const mockedFs = jest.mocked(fs);
 const mockedRename = jest.mocked(rename);
 const mockedLstat = jest.mocked(lstat);
 const mockedReadDir = jest.mocked(readdir);
