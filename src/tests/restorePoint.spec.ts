@@ -8,7 +8,7 @@ import type { RestoreBaseReturn } from "../types.js";
 import {
   examplePath as transformPath,
   mockDirentEntryAsFile,
-  renameListDistinct as renameList,
+  renameListDistinct as renameList
 } from "./mocks.js";
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -23,7 +23,7 @@ const { restoreBaseFunction, restoreOriginalFileNames, dryRunRestore } =
   restorePoint;
 
 jest.mock("../messages/statusMessages.js");
-const statusMocked = jest.mocked(STATUS, true);
+const statusMocked = jest.mocked(STATUS);
 
 /** Will return spy if no mock is passed, or restoreMock, if mock is passed */
 const consoleSetSpy = (): jest.SpyInstance => {
@@ -42,7 +42,7 @@ const mockFileList = mockRenamedList.map((file) => ({
   name: file,
   ...mockDirentEntryAsFile,
 }));
-const mockedFs = jest.mocked(fs, true);
+const mockedFs = jest.mocked(fs);
 const mockedReadFile = jest.mocked(readFile);
 const mockedRename = jest.mocked(rename);
 
