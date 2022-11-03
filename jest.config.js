@@ -8,7 +8,7 @@ export default {
   transform: {
     "\\.[jt]sx?$": "ts-jest",
   },
-  moduleNameMapper: {
+ moduleNameMapper: {
     "(.+)\\.js": "$1",
   },
   
@@ -17,8 +17,4 @@ export default {
   coveragePathIgnorePatterns: ["tests/", "programConfiguration"],
   collectCoverageFrom: ["**/*.ts"],
   transformIgnorePatterns: [`/node_modules/(?!${esModules})`],
-  moduleNameMapper: {
-    "(.+)\\.js": "$1",
-    "^nanoid(/(.*)|$)": "nanoid$1",
-}
 };

@@ -66,7 +66,7 @@ const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
 describe("cleanUpRollbackFile", () => {
-  let suppressStdOut: SpyInstance<(message:string) => boolean>;
+  let suppressStdOut: SpyInstance<(message:string|Uint8Array) => boolean>;
   beforeEach(
     () =>
       (suppressStdOut = jest
