@@ -2,12 +2,11 @@ import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
 import { ERRORS, STATUS } from "../messages/index.js";
-import { ConversionList, RenameItemsArray, RollbackFile } from "../types.js";
+import { RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
 import {
-    checkFilesExistingMock,
-    checkFilesTransforms, currentRenameList, examplePath as sourcePath, newRollbackFile,
-    renameListDistinct
+  checkFilesExistingMock,
+  checkFilesTransforms, currentRenameList, newRollbackFile, renameListDistinct
 } from "./mocks.js";
 
 const {
@@ -60,18 +59,21 @@ describe("determineRollbackLevel", () => {
   );
   afterEach(() => jest.clearAllMocks());
   afterAll(() => spyOnConsole.mockRestore());
-  it("Should throw error, if rollback level is 0", () => {
-    expect(() =>
-      determineRollbackLevel({ transformList, rollbackLevel: 0 })
-    ).toThrowError(zeroLevelRollback);
-  });
-  it("Should set restore index to the last array entry (length-1) if rollbackLevel is over maximum", () => {
+  it("Should default to maximum restore level if rollbackLevel is not specified.", ()=> {
+    expect(determineRollbackLevel({transformList})).toBe(rollbackLength)
+  })
+  it("Should set restore level to maximum if rollbackLevel is over maximum", () => {
     expect(
       determineRollbackLevel({
         transformList,
         rollbackLevel: rollbackLength + 1,
       })
     ).toBe(rollbackLength);
+  });
+  it("Should throw error, if rollback level is 0", () => {
+    expect(() =>
+      determineRollbackLevel({ transformList, rollbackLevel: 0 })
+    ).toThrowError(zeroLevelRollback);
   });
   it("Should notify the user, if rollbackLevel is over maximum", () => {
     expect(spyOnConsole).not.toHaveBeenCalled();
@@ -220,6 +222,7 @@ describe("checkRestoreFile", () => {
   });
 });
 
+/*
 describe("buildRestoreFile", () => {
   let spyOnConsole: SpyInstance<typeof console.log>,
     spyOnTable: SpyInstance<typeof console.table>;
@@ -345,3 +348,4 @@ describe("restoreFileMapper", () => {
     });
   });
 });
+ */

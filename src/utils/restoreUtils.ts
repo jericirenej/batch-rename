@@ -22,28 +22,28 @@ export const checkExistingFiles: CheckExistingFiles = ({
   transforms,
 }) => {
   const filesToRestore: string[] = [],
-    fileNames = [...existingFiles],
+    fileNames = [...new Set(existingFiles)],
     uniqueRenames = new Set(transforms.flat().map(({ rename }) => rename));
 
   for (const rename of uniqueRenames) {
     if (fileNames.includes(rename)) filesToRestore.push(rename);
   }
-  const missingFiles = [...uniqueRenames].filter(
-    (rename) => !filesToRestore.includes(rename)
+  const missingFiles = fileNames.filter(
+    (fileName) => !filesToRestore.includes(fileName)
   );
   return { filesToRestore, missingFiles };
 };
 
 /**Determine target rollback level, based on transform list length and passed
- * rollbackLevel value. */
+ * rollbackLevel value. By default, maximum restore level  will be set. */
 export const determineRollbackLevel: DetermineRollbackLevel = ({
   transformList,
-  rollbackLevel = 1,
+  rollbackLevel,
 }) => {
   if (rollbackLevel === 0) throw new Error(zeroLevelRollback);
-  let targetRestoreLevel = rollbackLevel;
   const maximumRestoreLevel = transformList.length;
-  if (rollbackLevel > maximumRestoreLevel) {
+  let targetRestoreLevel = rollbackLevel ?? maximumRestoreLevel;
+  if (targetRestoreLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
     targetRestoreLevel = maximumRestoreLevel;
   }
@@ -156,9 +156,10 @@ export const buildRestoreFile: BuildRestoreFile = ({
   const entries = Object.entries(restoreList);
   const transformRestore: ConversionList = { sourcePath, transforms: [] };
   entries.forEach(([referenceId, transformList]) => {
-    const [rename, original] = [
+    const [rename, original, numberOfRollbacks] = [
       transformList[0],
       transformList[transformList.length - 1],
+      transformList.length
     ];
     // Transform list should be equal to number of rollbacks + current name
     if (transformList.length < targetLevel + 1) {
@@ -168,7 +169,7 @@ export const buildRestoreFile: BuildRestoreFile = ({
         requested: targetLevel,
       });
     }
-    return transformRestore.transforms.push({ rename, original, referenceId });
+    return transformRestore.transforms.push({ rename, original, referenceId, numberOfRollbacks });
   });
   // Notify if some transforms restore levels are less than requested
   if (filesWithMissingRestores.length) {

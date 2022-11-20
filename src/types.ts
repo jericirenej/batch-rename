@@ -79,9 +79,11 @@ export type ExtractBaseAndExt = (
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
 
-export interface LegacyRenameItem {
+interface BaseRenameItem {
   rename: string;
-  original: string;
+  original:string;
+}
+export interface LegacyRenameItem extends BaseRenameItem {
   sourcePath: string;
 }
 export type LegacyRenameList = LegacyRenameItem[];
@@ -208,7 +210,7 @@ export type RestoreBaseFunction = (
 export type RestoreOriginalFileNames = (
   args: UtilityFunctionsArgs
 ) => Promise<void>;
-export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
+export type CleanUpRollbackFile = (conversionList: ConversionList) => Promise<void>;
 export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string,
@@ -258,9 +260,14 @@ export type KeepTransformArgs = Pick<
 
 export type KeepTransform = (args: KeepTransformArgs) => LegacyRenameList;
 
-export type RenameItem = Omit<LegacyRenameItem, "sourcePath"> & {
+export interface RenameItem extends BaseRenameItem {
   referenceId: string;
-};
+}
+
+export interface RestoreItem extends RenameItem {
+  numberOfRollbacks: number;
+}
+
 export type RenameItemsArray = RenameItem[];
 
 /** Rollback file whose transform property that includes a history of transform operations
@@ -270,11 +277,11 @@ export interface RollbackFile {
   transforms: RenameItemsArray[];
 }
 
-/** Conversion list represent an array of file transforms with current and
- * target level name. It is basically a RollbackFile without any history */
+/** Conversion list represent an array of file transforms which includes
+ * the number of rollbacks performed for each file and current and target file name */
 export interface ConversionList {
   sourcePath: string;
-  transforms: RenameItemsArray;
+  transforms: RestoreItem[];
 }
 export interface BaseFileMapperArgs {
   rollbackFile: RollbackFile;
@@ -291,7 +298,7 @@ export type DetermineRollbackLevel = ({
   rollbackLevel,
 }: {
   transformList: RenameItemsArray[];
-  rollbackLevel: number;
+  rollbackLevel?: number;
 }) => number;
 
 export type BuildRestoreFile = ({
