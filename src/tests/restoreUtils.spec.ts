@@ -2,11 +2,15 @@ import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
 import { ERRORS, STATUS } from "../messages/index.js";
-import { RenameItemsArray, RollbackFile } from "../types.js";
+import { ConversionList, RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
 import {
   checkFilesExistingMock,
-  checkFilesTransforms, currentRenameList, newRollbackFile, renameListDistinct
+  checkFilesTransforms,
+  currentRenameList,
+  examplePath as sourcePath,
+  newRollbackFile,
+  renameListDistinct
 } from "./mocks.js";
 
 const {
@@ -59,9 +63,9 @@ describe("determineRollbackLevel", () => {
   );
   afterEach(() => jest.clearAllMocks());
   afterAll(() => spyOnConsole.mockRestore());
-  it("Should default to maximum restore level if rollbackLevel is not specified.", ()=> {
-    expect(determineRollbackLevel({transformList})).toBe(rollbackLength)
-  })
+  it("Should default to maximum restore level if rollbackLevel is not specified.", () => {
+    expect(determineRollbackLevel({ transformList })).toBe(rollbackLength);
+  });
   it("Should set restore level to maximum if rollbackLevel is over maximum", () => {
     expect(
       determineRollbackLevel({
@@ -222,7 +226,6 @@ describe("checkRestoreFile", () => {
   });
 });
 
-/*
 describe("buildRestoreFile", () => {
   let spyOnConsole: SpyInstance<typeof console.log>,
     spyOnTable: SpyInstance<typeof console.table>;
@@ -257,6 +260,7 @@ describe("buildRestoreFile", () => {
         rename: `5-${entry}`,
         original: `1-${entry}`,
         referenceId: entry,
+        numberOfRollbacks: restoreChain,
       })),
     };
 
@@ -281,6 +285,7 @@ describe("buildRestoreFile", () => {
           rename: `5-${entry}`,
           original: `${entry === refId1 ? 1 : 3}-${entry}`,
           referenceId: entry,
+          numberOfRollbacks: entry === refId1 ? restoreChain : restoreChain - 2,
         })),
       };
       const result = buildRestoreFile({
@@ -348,4 +353,4 @@ describe("restoreFileMapper", () => {
     });
   });
 });
- */
+
