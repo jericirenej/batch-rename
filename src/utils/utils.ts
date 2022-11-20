@@ -1,5 +1,12 @@
 import { existsSync } from "fs";
-import { lstat, readdir, rename, unlink } from "fs/promises";
+import {
+  lstat,
+  readdir,
+  readFile,
+  rename,
+  unlink,
+  writeFile
+} from "fs/promises";
 import { join, resolve } from "path";
 import readline from "readline";
 import {
@@ -18,9 +25,12 @@ import type {
   ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
-  ExtractBaseAndExt, ListFiles,
+  ExtractBaseAndExt,
+  ListFiles,
   NumberOfDuplicatedNames,
   RenameItemsArray,
+  RestoreItem,
+  RollbackFile,
   TruncateFileName
 } from "../types.js";
 
@@ -36,17 +46,84 @@ const { truncateInvalidArgument } = ERRORS.transforms;
 const { noRollbackFile } = ERRORS.cleanRollback;
 const { failReport, failItem } = STATUS.settledPromisesEval;
 
+export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
+export const jsonReplicate = <T>(arg: unknown): T =>
+  jsonParseReplicate<T>(JSON.stringify(arg));
+
+export const filterOutReferences = (
+  rollbackTransforms: RenameItemsArray[],
+  rollbackSpecification: RestoreItem[]
+): RenameItemsArray[] => {
+  const rollbackNumbers = rollbackSpecification.reduce(
+    (acc, { referenceId, numberOfRollbacks }) => {
+      acc.set(referenceId, numberOfRollbacks);
+      return acc;
+    },
+    new Map<string, number>()
+  );
+
+  const prunedRenamedItems: RenameItemsArray[] = [];
+
+  for (const transforms of rollbackTransforms) {
+    if (!rollbackNumbers.size) {
+      prunedRenamedItems.push(transforms);
+      continue;
+    }
+    const prunedTransform: RenameItemsArray = [];
+    transforms.reduce((pruned, current) => {
+      const rollbackNumber = rollbackNumbers.get(current.referenceId);
+      if (!rollbackNumber) {
+        if (rollbackNumber === 0) rollbackNumbers.delete(current.referenceId);
+        pruned.push(current);
+        return pruned;
+      }
+      rollbackNumbers.set(current.referenceId, rollbackNumber - 1);
+      return pruned;
+    }, prunedTransform);
+
+    prunedRenamedItems.push(prunedTransform);
+  }
+  // Filter out empty arrays
+  const cleanedPrunedItems = prunedRenamedItems.filter(
+    (transform) => transform.length
+  );
+  return cleanedPrunedItems;
+};
+
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
-  transformPath,
+  sourcePath,
+  transforms,
 }) => {
-  const targetDir = determineDir(transformPath);
+  const targetDir = determineDir(sourcePath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
   if (!rollBackFileExists) {
     throw new Error(noRollbackFile);
   }
-  process.stdout.write("Deleting rollback file...");
-  await unlink(targetPath);
+  const rollbackFile = JSON.parse(
+    await readFile(targetPath, "utf-8")
+  ) as RollbackFile;
+  const rollbackTransforms = filterOutReferences(
+    rollbackFile.transforms,
+    transforms
+  );
+
+  if (!rollbackTransforms.length) {
+    process.stdout.write("Deleting rollback file...");
+    await unlink(targetPath);
+  } else {
+    process.stdout.write("Updating rollback file...");
+    const newRollbackFile: RollbackFile = {
+      sourcePath,
+      transforms: rollbackTransforms,
+    };
+    await writeFile(
+      resolve(targetDir, ROLLBACK_FILE_NAME),
+      JSON.stringify(newRollbackFile, undefined, 2),
+      "utf-8"
+    );
+  }
+
   process.stdout.write("DONE!");
 };
 
@@ -231,7 +308,7 @@ export const composeRenameString: ComposeRenameString = ({
  * if a filesToRevert argument is supplied.
  */
 export const createBatchRenameList: CreateBatchRenameList = (
-  {transforms, sourcePath},
+  { transforms, sourcePath },
   filesToRevert = []
 ) => {
   const batchRename: Promise<void>[] = [];
@@ -251,7 +328,7 @@ export const createBatchRenameList: CreateBatchRenameList = (
     });
     return batchRename;
   }
-  transforms.forEach(({original, rename: newName}) => {
+  transforms.forEach(({ original, rename: newName }) => {
     if (original !== newName) {
       const [originalFullPath, newNameFullPath] = [
         join(sourcePath, original),

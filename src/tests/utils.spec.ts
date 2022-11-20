@@ -2,7 +2,7 @@ import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
 import { lstat, readdir, rename, unlink } from "fs/promises";
 import { SpyInstance } from "jest-mock";
-import path, { join, resolve } from "path";
+import path, { resolve } from "path";
 import process from "process";
 import { DEFAULT_SEPARATOR, ROLLBACK_FILE_NAME } from "../constants.js";
 import * as formatTransform from "../converters/formatTextTransform.js";
@@ -11,16 +11,15 @@ import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
   ExtractBaseAndExtTemplate,
+  RenameItemsArray,
+  RestoreItem,
   ValidTypes
 } from "../types.js";
 import {
   areNewNamesDistinct,
-  checkPath,
-  cleanUpRollbackFile,
-  composeRenameString,
-  createBatchRenameList,
-  determineDir,
+  checkPath, composeRenameString, determineDir,
   extractBaseAndExt,
+  filterOutReferences,
   listFiles,
   numberOfDuplicatedNames,
   settledPromisesEval,
@@ -28,9 +27,7 @@ import {
 } from "../utils/utils.js";
 import {
   createDirentArray,
-  currentRenameList,
-  currentRenameWithDuplicatedOldAndNew,
-  examplePath,
+  currentRenameList, examplePath,
   exampleStats,
   expectedSplit,
   mockFileList,
@@ -67,7 +64,29 @@ const mockedLstat = jest.mocked(lstat);
 const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
-describe("cleanUpRollbackFile", () => {
+describe("filterOutReferences", () => {
+  const rollbackArray = [
+    [
+      { referenceId: "first" },
+      { referenceId: "second" },
+      { referenceId: "third" },
+    ],
+    [{ referenceId: "first" }, { referenceId: "second" }, {referenceId:"third"}],
+    [{ referenceId: "first" }],
+  ] as RenameItemsArray[];
+  const rollbackSpec= [
+    { referenceId: "first", numberOfRollbacks:3 },
+    { referenceId: "second", numberOfRollbacks: 2 },
+    { referenceId: "third", numberOfRollbacks: 2 },
+  ] as RestoreItem[];
+  it("Should return pruned result", ()=> {
+    console.log(filterOutReferences(rollbackArray, rollbackSpec))
+    expect(true).toBe(true);
+  })
+
+});
+
+/* describe("cleanUpRollbackFile", () => {
   let suppressStdOut: SpyInstance<(message:string|Uint8Array) => boolean>;
   beforeEach(
     () =>
@@ -96,7 +115,8 @@ describe("cleanUpRollbackFile", () => {
       resolve(examplePath, ROLLBACK_FILE_NAME)
     );
   });
-});
+}); */
+
 describe("extractBaseAndExt", () => {
   it("Should separate the baseName and extension of differently formatted files", () => {
     const extracted = extractBaseAndExt(mockFileList, examplePath);
@@ -422,7 +442,7 @@ describe("composeRenameString", () => {
   });
 });
 
-describe("createBatchRenameList", () => {
+/* describe("createBatchRenameList", () => {
   const conversionList = {
     sourcePath: examplePath,
     transforms: currentRenameList,
@@ -461,8 +481,8 @@ describe("createBatchRenameList", () => {
       transforms: currentRenameWithDuplicatedOldAndNew,
     });
     expect(batchPromise.length).toBe(expectedLength);
-  });
-  describe("Revert operations", () => {
+  }); */
+/*  describe("Revert operations", () => {
     beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
     afterEach(() => mockedRename.mockReset());
     it("If filesToRevert are supplied, return appropriate batchRename list", () => {
@@ -525,7 +545,7 @@ describe("createBatchRenameList", () => {
       expect(batchPromise.length).toBe(expectedLength);
     });
   });
-});
+}); */
 
 describe("settledPromisesEval", () => {
   let spyOnConsole: SpyInstance;
