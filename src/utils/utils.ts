@@ -29,7 +29,6 @@ import type {
   ListFiles,
   NumberOfDuplicatedNames,
   RenameItemsArray,
-  RestoreItem,
   RollbackFile,
   TruncateFileName
 } from "../types.js";
@@ -47,52 +46,13 @@ const { noRollbackFile } = ERRORS.cleanRollback;
 const { failReport, failItem } = STATUS.settledPromisesEval;
 
 export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
-export const jsonReplicate = <T>(arg: unknown): T =>
-  jsonParseReplicate<T>(JSON.stringify(arg));
+export const jsonReplicate = <T>(arg: T): T =>
+  jsonParseReplicate(JSON.stringify(arg)) as T;
 
-export const filterOutReferences = (
-  rollbackTransforms: RenameItemsArray[],
-  rollbackSpecification: RestoreItem[]
-): RenameItemsArray[] => {
-  const rollbackNumbers = rollbackSpecification.reduce(
-    (acc, { referenceId, numberOfRollbacks }) => {
-      acc.set(referenceId, numberOfRollbacks);
-      return acc;
-    },
-    new Map<string, number>()
-  );
-
-  const prunedRenamedItems: RenameItemsArray[] = [];
-
-  for (const transforms of rollbackTransforms) {
-    if (!rollbackNumbers.size) {
-      prunedRenamedItems.push(transforms);
-      continue;
-    }
-    const prunedTransform: RenameItemsArray = [];
-    transforms.reduce((pruned, current) => {
-      const rollbackNumber = rollbackNumbers.get(current.referenceId);
-      if (!rollbackNumber) {
-        if (rollbackNumber === 0) rollbackNumbers.delete(current.referenceId);
-        pruned.push(current);
-        return pruned;
-      }
-      rollbackNumbers.set(current.referenceId, rollbackNumber - 1);
-      return pruned;
-    }, prunedTransform);
-
-    prunedRenamedItems.push(prunedTransform);
-  }
-  // Filter out empty arrays
-  const cleanedPrunedItems = prunedRenamedItems.filter(
-    (transform) => transform.length
-  );
-  return cleanedPrunedItems;
-};
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   sourcePath,
-  transforms,
+  targetLevel,
 }) => {
   const targetDir = determineDir(sourcePath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
@@ -103,10 +63,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   const rollbackFile = JSON.parse(
     await readFile(targetPath, "utf-8")
   ) as RollbackFile;
-  const rollbackTransforms = filterOutReferences(
-    rollbackFile.transforms,
-    transforms
-  );
+  const rollbackTransforms = rollbackFile.transforms.slice(targetLevel);
 
   if (!rollbackTransforms.length) {
     process.stdout.write("Deleting rollback file...");
@@ -126,6 +83,18 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
 
   process.stdout.write("DONE!");
 };
+
+export const deleteRollbackFile = async (sourcePath: string):Promise<void> => {
+  const targetDir = determineDir(sourcePath);
+  const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
+  const rollBackFileExists = existsSync(targetPath);
+  if (!rollBackFileExists) {
+    throw new Error(noRollbackFile);
+  }
+  process.stdout.write("Deleting rollback file...");
+  await unlink(targetPath);
+  process.stdout.write("DONE!");
+}
 
 /**Will separate the basename and file extension, in addition to providing
  * a sourcePath and type information. If no extension is found, it will return

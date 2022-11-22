@@ -264,10 +264,6 @@ export interface RenameItem extends BaseRenameItem {
   referenceId: string;
 }
 
-export interface RestoreItem extends RenameItem {
-  numberOfRollbacks: number;
-}
-
 export type RenameItemsArray = RenameItem[];
 
 /** Rollback file whose transform property that includes a history of transform operations
@@ -281,17 +277,17 @@ export interface RollbackFile {
  * the number of rollbacks performed for each file and current and target file name */
 export interface ConversionList {
   sourcePath: string;
-  transforms: RestoreItem[];
+  transforms: RenameItem[];
+  targetLevel: number;
 }
+
 export interface BaseFileMapperArgs {
   rollbackFile: RollbackFile;
   rollbackLevel?: number;
 }
 
-export type RestoreFileMapper = ({
-  rollbackFile,
-  rollbackLevel,
-}: BaseFileMapperArgs) => ConversionList;
+export type RestoreByLevels = (args: BaseFileMapperArgs) => ConversionList;
+
 
 export type DetermineRollbackLevel = ({
   transformList,
@@ -301,15 +297,6 @@ export type DetermineRollbackLevel = ({
   rollbackLevel?: number;
 }) => number;
 
-export type BuildRestoreFile = ({
-  restoreList,
-  targetLevel,
-  sourcePath,
-}: {
-  restoreList: Record<string, string[]>;
-  targetLevel: number;
-  sourcePath: string;
-}) => ConversionList;
 
 export interface FilesWithMissingRestores {
   file: string;

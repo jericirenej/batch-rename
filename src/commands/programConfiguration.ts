@@ -1,7 +1,7 @@
 import { PROGRAM_VERSION, VALID_DATE_TRANSFORM_TYPES } from "../constants.js";
 import { restoreOriginalFileNames } from "../converters/restorePoint.js";
 import type { ProgramOptions } from "../types.js";
-import { cleanUpRollbackFile } from "../utils/utils.js";
+import { deleteRollbackFile } from "../utils/utils.js";
 
 const programOptions: ProgramOptions[] = [
   {
@@ -179,7 +179,7 @@ const programConfiguration = {
 
 export const utilityActionsCorrespondenceTable = {
   restore: restoreOriginalFileNames,
-  cleanRollback: cleanUpRollbackFile,
+  cleanRollback: deleteRollbackFile,
 };
 
 export default programConfiguration;

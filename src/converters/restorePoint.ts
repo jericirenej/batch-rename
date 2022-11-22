@@ -14,8 +14,7 @@ import type {
 } from "../types";
 import {
   checkExistingFiles,
-  checkRestoreFile,
-  restoreFileMapper
+  checkRestoreFile, restoreByLevels
 } from "../utils/restoreUtils.js";
 import {
   askQuestion,
@@ -61,7 +60,7 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
     existingFiles,
     transforms: rollbackData.transforms,
   });
-  const restoreList = restoreFileMapper({ rollbackFile: rollbackData });
+  const restoreList = restoreByLevels({ rollbackFile: rollbackData });
 
   return {
     rollbackData,
@@ -88,6 +87,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     if (!dryRun) return;
   }
   const { filesToRestore, restoreList } = restoreBaseData;
+  const {targetLevel, transforms} = restoreList;
 
   let batchRename: Promise<void>[] = [],
     updatedRenameList: RenameItemsArray = [];
@@ -98,7 +98,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     throw new Error(couldNotBeParsed);
   }
   if (batchRename.length) {
-    updatedRenameList = restoreList.transforms.filter(({ rename }) =>
+    updatedRenameList = transforms.filter(({ rename }) =>
       filesToRestore.includes(rename)
     );
 
@@ -111,7 +111,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
       operationType: "restore",
     });
 
-    await cleanUpRollbackFile({ transformPath });
+    await cleanUpRollbackFile({ sourcePath:targetDir, targetLevel, transforms });
   }
 };
 

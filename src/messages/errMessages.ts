@@ -9,7 +9,6 @@ export const ERRORS = {
     noValidData: "No valid data was returned from the restoreBaseFunction!",
   },
   restoreFileMapper: {
-    zeroLevelRollback: "Restore level 0 provided. No restore will be performed.",
     incorrectRollbackFormat: "The rollback file does not conform to the required format!",
   },
   cleanRollback: {

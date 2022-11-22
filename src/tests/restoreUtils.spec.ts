@@ -2,29 +2,28 @@ import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
 import { ERRORS, STATUS } from "../messages/index.js";
-import { ConversionList, RenameItemsArray, RollbackFile } from "../types.js";
+import { RenameItem, RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
 import {
   checkFilesExistingMock,
   checkFilesTransforms,
   currentRenameList,
-  examplePath as sourcePath,
+  examplePath,
   newRollbackFile,
   renameListDistinct
 } from "./mocks.js";
 
 const {
-  buildRestoreFile,
   checkExistingFiles,
   checkRestoreFile,
   determineRollbackLevel,
   isCurrentRestore,
   isLegacyRestore,
   legacyRestoreMapper,
-  restoreFileMapper,
+  restoreByLevels,
 } = restoreUtils;
 
-const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
+const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
 
 jest.mock("nanoid");
@@ -74,10 +73,10 @@ describe("determineRollbackLevel", () => {
       })
     ).toBe(rollbackLength);
   });
-  it("Should throw error, if rollback level is 0", () => {
-    expect(() =>
-      determineRollbackLevel({ transformList, rollbackLevel: 0 })
-    ).toThrowError(zeroLevelRollback);
+  it("Should default to maximum level, if rollback level is 0 or omitted", () => {
+    [{ transformList }, { transformList, rollbackLevel: 0 }].forEach((args) =>
+      expect(determineRollbackLevel(args)).toBe(rollbackLength)
+    );
   });
   it("Should notify the user, if rollbackLevel is over maximum", () => {
     expect(spyOnConsole).not.toHaveBeenCalled();
@@ -226,131 +225,74 @@ describe("checkRestoreFile", () => {
   });
 });
 
-describe("buildRestoreFile", () => {
-  let spyOnConsole: SpyInstance<typeof console.log>,
-    spyOnTable: SpyInstance<typeof console.table>;
-  const restoreChain = 5,
-    targetLevel = restoreChain - 1,
-    refId1 = "refId1",
-    refId2 = "refId2";
-  const restoreList: Record<string, string[]> = {
-    [refId1]: renameSequence(refId1, restoreChain),
-    [refId2]: renameSequence(refId2, restoreChain),
-  };
-  beforeEach(() => {
-    spyOnConsole = jest
-      .spyOn(console, "log")
-      .mockImplementation((message?: any) => {});
-    spyOnTable = jest
-      .spyOn(console, "table")
-      .mockImplementation(
-        (tabularData: any, properties?: readonly string[]) => {}
-      );
-    jest.clearAllMocks();
+describe("restoreByLevels", () => {
+  const item = (
+    name: string,
+    referenceId: string,
+    transform: number
+  ): RenameItem => ({
+    original: `${name}_${transform}`,
+    referenceId,
+    rename: `${name}_${transform + 1}`,
   });
-  afterAll(() => {
-    spyOnConsole.mockRestore();
-    spyOnTable.mockRestore();
-  });
-
-  it("Should produce a restore list", () => {
-    const expected: ConversionList = {
-      sourcePath,
-      transforms: [refId1, refId2].map((entry) => ({
-        rename: `5-${entry}`,
-        original: `1-${entry}`,
-        referenceId: entry,
-        numberOfRollbacks: restoreChain,
-      })),
-    };
-
-    const result = buildRestoreFile({
-      restoreList,
-      sourcePath,
-      targetLevel,
-    });
-    expect(result).toEqual(expected);
-  });
-  describe("Handling of restore chains with elements that have fewer levels than requested", () => {
-    const newConversionList = JSON.parse(JSON.stringify(restoreList)) as Record<
-      string,
-      string[]
-    >;
-
-    newConversionList[refId2] = newConversionList[refId2].slice(0, -2);
-    it("Should produce a restore list with latest available rollbacks", () => {
-      const expected: ConversionList = {
-        sourcePath,
-        transforms: [refId1, refId2].map((entry) => ({
-          rename: `5-${entry}`,
-          original: `${entry === refId1 ? 1 : 3}-${entry}`,
-          referenceId: entry,
-          numberOfRollbacks: entry === refId1 ? restoreChain : restoreChain - 2,
-        })),
-      };
-      const result = buildRestoreFile({
-        restoreList: newConversionList,
-        sourcePath,
-        targetLevel,
+  const [first, second, third, fourth] = [
+    (transform: number) => item("1st", "1", transform),
+    (transform: number) => item("2nd", "2", transform),
+    (transform: number) => item("3rd", "3", transform),
+    (transform: number) => item("4th", "4", transform),
+  ];
+  const transforms: RenameItemsArray[] = [
+    [third(2), first(4), second(3)],
+    [first(3), third(1)],
+    [first(2), fourth(1), second(2)],
+    [first(1), second(1)],
+  ];
+  const rollbackFile: RollbackFile = { sourcePath: examplePath, transforms };
+  const testCases: { rollbackLevel: number; expected: RenameItem[] }[] = [
+    {
+      rollbackLevel: 1,
+      expected: [first(4), third(2), second(3)],
+    },
+    {
+      rollbackLevel: 2,
+      expected: [
+        { ...first(4), original: first(3).original },
+        { ...third(2), original: third(1).original },
+        { ...second(3), original: second(3).original },
+      ],
+    },
+    {
+      rollbackLevel: 3,
+      expected: [
+        { ...first(4), original: first(2).original },
+        { ...third(2), original: third(1).original },
+        { ...second(3), original: second(2).original },
+        fourth(1),
+      ],
+    },
+    {
+      rollbackLevel: 0,
+      expected: [
+        { ...first(4), original: first(1).original },
+        fourth(1),
+        { ...third(2), original: third(1).original },
+        { ...second(3), original: second(1).original },
+      ],
+    },
+  ];
+  it("Should return expected renames and target levels", () => {
+    for (const { expected, rollbackLevel } of testCases) {
+      const resultTransforms = restoreByLevels({
+        rollbackFile,
+        rollbackLevel,
+      }).transforms;
+      expect(resultTransforms.length).toBe(expected.length);
+      expected.forEach((obj) => {
+        const targetTransform = resultTransforms.find(
+          ({ referenceId }) => referenceId === obj.referenceId
+        );
+        expect(targetTransform).toEqual(obj);
       });
-      expect(result).toEqual(expected);
-    });
-    it("Should inform the user that some files have less rollback levels", () => {
-      buildRestoreFile({ restoreList, sourcePath, targetLevel });
-      [spyOnConsole, spyOnTable].forEach((spy) =>
-        expect(spy).not.toHaveBeenCalled()
-      );
-      buildRestoreFile({
-        restoreList: newConversionList,
-        sourcePath,
-        targetLevel,
-      });
-      [spyOnConsole, spyOnTable].forEach((spy) =>
-        expect(spy).toHaveBeenCalled()
-      );
-    });
+    }
   });
 });
-
-describe("restoreFileMapper", () => {
-  const args = { rollbackFile: newRollbackFile };
-  it("Should call determineRollbackLevel", () => {
-    const spyOnDetermineRollback = jest.spyOn(
-      restoreUtils,
-      "determineRollbackLevel"
-    );
-    restoreFileMapper(args);
-    expect(spyOnDetermineRollback).toHaveBeenCalledTimes(1);
-  });
-  it("Should call buildRestoreFile", () => {
-    const spyOnBuildRestoreFile = jest.spyOn(restoreUtils, "buildRestoreFile");
-    restoreFileMapper(args);
-    expect(spyOnBuildRestoreFile).toHaveBeenCalledTimes(1);
-  });
-  it("Should call buildRestoreFile with appropriate args", () => {
-    const spyOnConsole = jest
-      .spyOn(console, "log")
-      .mockImplementationOnce((message?: any) => {});
-    const spyOnBuildRestoreFile = jest.spyOn(restoreUtils, "buildRestoreFile");
-    const { transforms } = newRollbackFile;
-    const targetLevel = transforms.length,
-      sourcePath = newRollbackFile.sourcePath;
-    const restoreList = {} as Record<string, string[]>;
-    [3, 2, 1].forEach((entry) => {
-      const propName = `000${entry}`;
-      restoreList[propName] = [
-        `thirdRename${entry}`,
-        `secondRename${entry}`,
-        `rename${entry}`,
-        `original${entry}`,
-      ];
-    });
-    restoreFileMapper({ ...args, rollbackLevel: Infinity });
-    expect(spyOnBuildRestoreFile).toHaveBeenCalledWith({
-      restoreList,
-      targetLevel,
-      sourcePath,
-    });
-  });
-});
-
