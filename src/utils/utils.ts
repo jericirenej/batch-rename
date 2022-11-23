@@ -20,6 +20,7 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   AreNewNamesDistinct,
+  BaseRenameItem,
   CheckPath,
   CleanUpRollbackFile,
   ComposeRenameString,
@@ -27,9 +28,7 @@ import type {
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
-  NumberOfDuplicatedNames,
-  RenameItemsArray,
-  RollbackFile,
+  NumberOfDuplicatedNames, RollbackFile,
   TruncateFileName
 } from "../types.js";
 
@@ -277,12 +276,11 @@ export const composeRenameString: ComposeRenameString = ({
  * if a filesToRevert argument is supplied.
  */
 export const createBatchRenameList: CreateBatchRenameList = (
-  { transforms, sourcePath },
-  filesToRevert = []
+  { transforms, sourcePath, filesToRestore = [] }
 ) => {
   const batchRename: Promise<void>[] = [];
-  if (filesToRevert.length) {
-    filesToRevert.forEach((file) => {
+  if (filesToRestore.length) {
+    filesToRestore.forEach((file) => {
       const targetName = transforms.find((fileInfo) => {
         const { rename, original } = fileInfo;
         return rename === file && original !== rename;
@@ -316,10 +314,10 @@ export const settledPromisesEval = ({
   promiseResults,
   operationType,
 }: {
-  transformedNames: RenameItemsArray;
+  transformedNames: BaseRenameItem[];
   promiseResults: PromiseSettledResult<void>[];
   operationType: "convert" | "restore";
-}): RenameItemsArray => {
+}): BaseRenameItem[]=> {
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
   ).length;
@@ -329,7 +327,7 @@ export const settledPromisesEval = ({
     throw new Error(allRenameFailed);
 
   console.log(failReport(promisesRejected, operationType));
-  const truncatedList: RenameItemsArray = [];
+  const truncatedList: BaseRenameItem[] = [];
   promiseResults.forEach((settledResult, index) => {
     if (settledResult.status === "rejected") {
       const { original, rename } = transformedNames[index];

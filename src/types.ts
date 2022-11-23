@@ -79,9 +79,9 @@ export type ExtractBaseAndExt = (
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
 
-interface BaseRenameItem {
+export interface BaseRenameItem {
   rename: string;
-  original:string;
+  original: string;
 }
 export interface LegacyRenameItem extends BaseRenameItem {
   sourcePath: string;
@@ -192,10 +192,15 @@ export type UtilityFunctionsArgs = {
   dryRun?: boolean;
 };
 
-export type CreateBatchRenameList = (
-  restoreList: ConversionList,
-  filesToRevert?: string[]
-) => Promise<void>[];
+export type CreateBatchRenameList = ({
+  transforms,
+  filesToRestore,
+  sourcePath
+}: {
+  transforms: BaseRenameItem[];
+  sourcePath: string;
+  filesToRestore?: string[];
+}) => Promise<void>[];
 
 export type RestoreBaseReturn = {
   rollbackData: RollbackFile;
@@ -210,7 +215,9 @@ export type RestoreBaseFunction = (
 export type RestoreOriginalFileNames = (
   args: UtilityFunctionsArgs
 ) => Promise<void>;
-export type CleanUpRollbackFile = (conversionList: ConversionList) => Promise<void>;
+export type CleanUpRollbackFile = (
+  conversionList: ConversionList
+) => Promise<void>;
 export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string,
@@ -288,7 +295,6 @@ export interface BaseFileMapperArgs {
 
 export type RestoreByLevels = (args: BaseFileMapperArgs) => ConversionList;
 
-
 export type DetermineRollbackLevel = ({
   transformList,
   rollbackLevel,
@@ -296,7 +302,6 @@ export type DetermineRollbackLevel = ({
   transformList: RenameItemsArray[];
   rollbackLevel?: number;
 }) => number;
-
 
 export interface FilesWithMissingRestores {
   file: string;

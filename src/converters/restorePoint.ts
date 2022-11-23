@@ -92,7 +92,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   let batchRename: Promise<void>[] = [],
     updatedRenameList: RenameItemsArray = [];
   if (filesToRestore.length) {
-    batchRename = createBatchRenameList(restoreList, filesToRestore);
+    batchRename = createBatchRenameList({transforms, sourcePath: targetDir, filesToRestore});
   }
   if (!batchRename.length) {
     throw new Error(couldNotBeParsed);

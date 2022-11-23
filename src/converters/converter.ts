@@ -1,32 +1,31 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
 import {
-    ROLLBACK_FILE_NAME,
-    VALID_DRY_RUN_ANSWERS,
-    VALID_TRANSFORM_TYPES
+  ROLLBACK_FILE_NAME,
+  VALID_DRY_RUN_ANSWERS,
+  VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
-    DryRunTransform,
-    ExtractBaseAndExtReturn,
-    FileListWithStatsArray,
-    GeneralTransformReturn,
-    GenerateRenameList,
-    GenerateRenameListArgs,
-    LegacyRenameList,
-    RenameListArgs
+  DryRunTransform,
+  ExtractBaseAndExtReturn,
+  FileListWithStatsArray,
+  GeneralTransformReturn,
+  GenerateRenameList,
+  GenerateRenameListArgs,
+  LegacyRenameList,
+  RenameListArgs
 } from "../types";
-import { checkRestoreFile, restoreByFileMapper } from "../utils/restoreUtils.js";
 import {
-    areNewNamesDistinct,
-    askQuestion,
-    createBatchRenameList,
-    determineDir,
-    extractBaseAndExt,
-    listFiles,
-    numberOfDuplicatedNames,
-    settledPromisesEval
+  areNewNamesDistinct,
+  askQuestion,
+  createBatchRenameList,
+  determineDir,
+  extractBaseAndExt,
+  listFiles,
+  numberOfDuplicatedNames,
+  settledPromisesEval
 } from "../utils/utils.js";
 import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
@@ -97,16 +96,15 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   
   
 
-  // Tempo remapping to current restore list format, until 
-  // rename functions are fixed.
-  const transform = restoreByFileMapper({rollbackFile: checkRestoreFile(transformedNames)})
+  // Temp remapping until rename functions are fixed.
+  const transforms ={transforms: transformedNames, sourcePath: targetDir}
 
-  const batchRename = createBatchRenameList(transform);
+  const batchRename = createBatchRenameList(transforms);
   console.log(`Renaming ${batchRename.length} files...`);
   const promiseResults = await Promise.allSettled(batchRename);
   const updatedRenameList = settledPromisesEval({
     promiseResults,
-    transformedNames: transform.transforms,
+    transformedNames: transforms.transforms,
     operationType: "convert",
   });
 
