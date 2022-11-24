@@ -50,10 +50,6 @@ export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
 export const jsonReplicate = <T>(arg: T): T =>
   jsonParseReplicate(JSON.stringify(arg)) as T;
 
-export const typedAsyncReadFile = async <T>(
-  ...args: Parameters<typeof readFile>
-): Promise<T> => readFile(...args) as Promise<T>;
-
 export const extractCurrentReferences = (
   rollbackTransforms: RenameItemsArray[],
   currentNames: string[]

@@ -1,5 +1,6 @@
 import { Dirent, Stats } from "fs";
 import type {
+  BaseRenameItem,
   ExtractBaseAndExtReturn,
   ExtractBaseAndExtTemplate,
   LegacyRenameList,
@@ -278,7 +279,12 @@ const mockRollbackFile: RollbackFile = {
   transforms: mockTransforms,
 };
 
+const removeReference = (...items: RenameItemsArray): BaseRenameItem[] =>
+items.map(({ original, rename }) => ({ original, rename }));
+
 export const mockRollbackToolSet = {
+  sourcePath: examplePath,
+  removeReference,
   mockItemFunction,
   mockItems: {mockItem1, mockItem2, mockItem3, mockItem4},
   mockTransforms,
