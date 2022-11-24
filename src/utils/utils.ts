@@ -28,7 +28,9 @@ import type {
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
-  NumberOfDuplicatedNames, RollbackFile,
+  NumberOfDuplicatedNames,
+  RenameItemsArray,
+  RollbackFile,
   TruncateFileName
 } from "../types.js";
 
@@ -48,6 +50,44 @@ export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
 export const jsonReplicate = <T>(arg: T): T =>
   jsonParseReplicate(JSON.stringify(arg)) as T;
 
+export const typedAsyncReadFile = async <T>(
+  ...args: Parameters<typeof readFile>
+): Promise<T> => readFile(...args) as Promise<T>;
+
+export const extractCurrentReferences = (
+  rollbackTransforms: RenameItemsArray[],
+  currentNames: string[]
+): { withIds: Record<string, string>; noIds: string[] } => {
+  const alreadyCheckedRefs: string[] = [];
+  let namesLeftToCheck = [...currentNames];
+  const namesAndReferences: Record<string, string> = {};
+  for (const rollback of rollbackTransforms) {
+    if (!namesLeftToCheck.length) break;
+
+    // Names to filter out in the next round;
+    const namesToExclude: string[] = [];
+    let eligible = rollback;
+    if (alreadyCheckedRefs.length) {
+      eligible = eligible.filter(
+        ({ referenceId }) => !alreadyCheckedRefs.includes(referenceId)
+      );
+    }
+    if (!eligible.length) continue;
+
+    namesLeftToCheck.forEach((name) => {
+      const found = eligible.find(({ rename }) => name === rename);
+      if (found) {
+        namesAndReferences[name] = found.referenceId;
+        namesToExclude.push(name);
+      }
+    });
+
+    namesLeftToCheck = namesLeftToCheck.filter(
+      (name) => !namesToExclude.includes(name)
+    );
+  }
+  return { withIds: namesAndReferences, noIds: namesLeftToCheck };
+};
 
 export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   sourcePath,
@@ -83,7 +123,7 @@ export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
   process.stdout.write("DONE!");
 };
 
-export const deleteRollbackFile = async (sourcePath: string):Promise<void> => {
+export const deleteRollbackFile = async (sourcePath: string): Promise<void> => {
   const targetDir = determineDir(sourcePath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
@@ -93,7 +133,7 @@ export const deleteRollbackFile = async (sourcePath: string):Promise<void> => {
   process.stdout.write("Deleting rollback file...");
   await unlink(targetPath);
   process.stdout.write("DONE!");
-}
+};
 
 /**Will separate the basename and file extension, in addition to providing
  * a sourcePath and type information. If no extension is found, it will return
@@ -275,9 +315,11 @@ export const composeRenameString: ComposeRenameString = ({
  * for either a transform or a revert operation. Restore operations are triggered
  * if a filesToRevert argument is supplied.
  */
-export const createBatchRenameList: CreateBatchRenameList = (
-  { transforms, sourcePath, filesToRestore = [] }
-) => {
+export const createBatchRenameList: CreateBatchRenameList = ({
+  transforms,
+  sourcePath,
+  filesToRestore = [],
+}) => {
   const batchRename: Promise<void>[] = [];
   if (filesToRestore.length) {
     filesToRestore.forEach((file) => {
@@ -317,7 +359,7 @@ export const settledPromisesEval = ({
   transformedNames: BaseRenameItem[];
   promiseResults: PromiseSettledResult<void>[];
   operationType: "convert" | "restore";
-}): BaseRenameItem[]=> {
+}): BaseRenameItem[] => {
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
   ).length;

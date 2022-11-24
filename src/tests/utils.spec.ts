@@ -12,14 +12,15 @@ import type {
   ComposeRenameStringArgs,
   ExtractBaseAndExtTemplate,
   RenameItemsArray,
-  RestoreItem,
   ValidTypes
 } from "../types.js";
 import {
   areNewNamesDistinct,
-  checkPath, composeRenameString, determineDir,
+  checkPath,
+  composeRenameString,
+  determineDir,
   extractBaseAndExt,
-  filterOutReferences,
+  extractCurrentReferences,
   listFiles,
   numberOfDuplicatedNames,
   settledPromisesEval,
@@ -27,11 +28,11 @@ import {
 } from "../utils/utils.js";
 import {
   createDirentArray,
-  currentRenameList, examplePath,
+  currentRenameList,
+  examplePath,
   exampleStats,
   expectedSplit,
-  mockFileList,
-  renameListDistinct,
+  mockFileList, mockRollbackToolSet, renameListDistinct,
   renameListWithDuplicateOldAndNew,
   renameWithNewNameRepeat,
   truthyArgument
@@ -45,7 +46,6 @@ const {
   pathIsNotDir,
 } = ERRORS.utils;
 const { noRollbackFile } = ERRORS.cleanRollback;
-const { zeroLevelRollback } = ERRORS.restoreFileMapper;
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -64,26 +64,25 @@ const mockedLstat = jest.mocked(lstat);
 const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
-describe("filterOutReferences", () => {
-  const rollbackArray = [
-    [
-      { referenceId: "first" },
-      { referenceId: "second" },
-      { referenceId: "third" },
-    ],
-    [{ referenceId: "first" }, { referenceId: "second" }, {referenceId:"third"}],
-    [{ referenceId: "first" }],
-  ] as RenameItemsArray[];
-  const rollbackSpec= [
-    { referenceId: "first", numberOfRollbacks:3 },
-    { referenceId: "second", numberOfRollbacks: 2 },
-    { referenceId: "third", numberOfRollbacks: 2 },
-  ] as RestoreItem[];
-  it("Should return pruned result", ()=> {
-    console.log(filterOutReferences(rollbackArray, rollbackSpec))
-    expect(true).toBe(true);
-  })
+describe("extractCurrentReferences", ()=> {
+  const {mockItems:{mockItem1, mockItem2, mockItem3}} = mockRollbackToolSet;
+  const transforms:RenameItemsArray[] = [
+    [mockItem1(2), mockItem2(1)],
+    [mockItem1(1), mockItem3(1)]
+  ]
+  const missingNames = ["missing1", "missing2"];
+  const namesWithHistory = [mockItem1(2),  mockItem1(1), mockItem3(1)];
+  const suppliedNames = [...namesWithHistory.map(({rename})=> rename), ...missingNames];
 
+  it("Should allocate referenceIds to passed names", ()=> {
+    const {noIds, withIds} = extractCurrentReferences(transforms, suppliedNames);
+    const expectedWithIds = namesWithHistory.reduce((acc, current)=> {
+      acc[current.rename] = current.referenceId;
+      return acc;
+    }, {} as Record<string,string>)
+    expect(noIds).toEqual(missingNames);
+    expect(withIds).toEqual(expectedWithIds);
+  })
 });
 
 /* describe("cleanUpRollbackFile", () => {
