@@ -3,6 +3,7 @@ import type {
   ExtractBaseAndExtReturn,
   ExtractBaseAndExtTemplate,
   LegacyRenameList,
+  RenameItem,
   RenameItemsArray,
   RollbackFile
 } from "../types.js";
@@ -250,3 +251,36 @@ export const checkFilesTransforms: RenameItemsArray[] = [
   [{ rename: "firstFile", original: "someOtherFileOriginal", referenceId }],
   [{ rename: "secondFile", original: "secondFileOriginal", referenceId }],
 ];
+
+const mockItemFunction = (
+  name: string,
+  referenceId: string,
+  transform: number
+): RenameItem => ({
+  original: `${name}_${transform}`,
+  referenceId,
+  rename: `${name}_${transform + 1}`,
+});
+const [mockItem1, mockItem2, mockItem3, mockItem4] = [
+  (transform: number) => mockItemFunction("1st", "1", transform),
+  (transform: number) => mockItemFunction("2nd", "2", transform),
+  (transform: number) => mockItemFunction("3rd", "3", transform),
+  (transform: number) => mockItemFunction("4th", "4", transform),
+];
+const mockTransforms: RenameItemsArray[] = [
+  [mockItem3(2), mockItem1(4), mockItem2(3)],
+  [mockItem1(3), mockItem3(1)],
+  [mockItem1(2), mockItem4(1), mockItem2(2)],
+  [mockItem1(1), mockItem2(1)],
+];
+const mockRollbackFile: RollbackFile = {
+  sourcePath: examplePath,
+  transforms: mockTransforms,
+};
+
+export const mockRollbackToolSet = {
+  mockItemFunction,
+  mockItems: {mockItem1, mockItem2, mockItem3, mockItem4},
+  mockTransforms,
+  mockRollbackFile,
+};

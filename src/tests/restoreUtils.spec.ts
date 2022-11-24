@@ -7,9 +7,7 @@ import * as restoreUtils from "../utils/restoreUtils.js";
 import {
   checkFilesExistingMock,
   checkFilesTransforms,
-  currentRenameList,
-  examplePath,
-  newRollbackFile,
+  currentRenameList, mockRollbackToolSet, newRollbackFile,
   renameListDistinct
 } from "./mocks.js";
 
@@ -29,10 +27,6 @@ const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
 jest.mock("nanoid");
 const mockedNanoId = jest.mocked(nanoid);
 
-const renameSequence = (baseName: string, length: number) =>
-  new Array(length)
-    .fill(0)
-    .map((entry, index) => `${length - index}-${baseName}`);
 
 describe("checkExistingFiles", () => {
   it("Should return proper list of filesToRestore and missingFiles", () => {
@@ -226,64 +220,47 @@ describe("checkRestoreFile", () => {
 });
 
 describe("restoreByLevels", () => {
-  const item = (
-    name: string,
-    referenceId: string,
-    transform: number
-  ): RenameItem => ({
-    original: `${name}_${transform}`,
-    referenceId,
-    rename: `${name}_${transform + 1}`,
-  });
-  const [first, second, third, fourth] = [
-    (transform: number) => item("1st", "1", transform),
-    (transform: number) => item("2nd", "2", transform),
-    (transform: number) => item("3rd", "3", transform),
-    (transform: number) => item("4th", "4", transform),
-  ];
-  const transforms: RenameItemsArray[] = [
-    [third(2), first(4), second(3)],
-    [first(3), third(1)],
-    [first(2), fourth(1), second(2)],
-    [first(1), second(1)],
-  ];
-  const rollbackFile: RollbackFile = { sourcePath: examplePath, transforms };
+  const {
+    mockItems: { mockItem1, mockItem2, mockItem3, mockItem4 },
+    mockRollbackFile,
+  } = mockRollbackToolSet;
+
   const testCases: { rollbackLevel: number; expected: RenameItem[] }[] = [
     {
       rollbackLevel: 1,
-      expected: [first(4), third(2), second(3)],
+      expected: [mockItem1(4), mockItem3(2), mockItem2(3)],
     },
     {
       rollbackLevel: 2,
       expected: [
-        { ...first(4), original: first(3).original },
-        { ...third(2), original: third(1).original },
-        { ...second(3), original: second(3).original },
+        { ...mockItem1(4), original: mockItem1(3).original },
+        { ...mockItem3(2), original: mockItem3(1).original },
+        { ...mockItem2(3), original: mockItem2(3).original },
       ],
     },
     {
       rollbackLevel: 3,
       expected: [
-        { ...first(4), original: first(2).original },
-        { ...third(2), original: third(1).original },
-        { ...second(3), original: second(2).original },
-        fourth(1),
+        { ...mockItem1(4), original: mockItem1(2).original },
+        { ...mockItem3(2), original: mockItem3(1).original },
+        { ...mockItem2(3), original: mockItem2(2).original },
+        mockItem4(1),
       ],
     },
     {
       rollbackLevel: 0,
       expected: [
-        { ...first(4), original: first(1).original },
-        fourth(1),
-        { ...third(2), original: third(1).original },
-        { ...second(3), original: second(1).original },
+        { ...mockItem1(4), original: mockItem1(1).original },
+        mockItem4(1),
+        { ...mockItem3(2), original: mockItem3(1).original },
+        { ...mockItem2(3), original: mockItem2(1).original },
       ],
     },
   ];
   it("Should return expected renames and target levels", () => {
     for (const { expected, rollbackLevel } of testCases) {
       const resultTransforms = restoreByLevels({
-        rollbackFile,
+        rollbackFile: mockRollbackFile,
         rollbackLevel,
       }).transforms;
       expect(resultTransforms.length).toBe(expected.length);

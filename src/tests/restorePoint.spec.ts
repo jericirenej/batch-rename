@@ -5,7 +5,7 @@ import * as restorePoint from "../converters/restorePoint.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type { RestoreBaseReturn } from "../types.js";
-import { restoreFileMapper } from "../utils/restoreUtils.js";
+import { restoreByLevels } from "../utils/restoreUtils.js";
 import * as utils from "../utils/utils.js";
 import {
   examplePath as transformPath,
@@ -57,7 +57,7 @@ const mockConversionList: RestoreBaseReturn = {
   existingFiles: mockFileList.map((file) => file.name),
   filesToRestore: mockFileList.map((file) => file.name),
   missingFiles: [],
-  restoreList: restoreFileMapper({
+  restoreList: restoreByLevels({
     rollbackFile: newRollbackFile,
     rollbackLevel: newRollbackFile.transforms.length,
   }),

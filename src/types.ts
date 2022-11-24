@@ -195,7 +195,7 @@ export type UtilityFunctionsArgs = {
 export type CreateBatchRenameList = ({
   transforms,
   filesToRestore,
-  sourcePath
+  sourcePath,
 }: {
   transforms: BaseRenameItem[];
   sourcePath: string;
@@ -317,4 +317,14 @@ export interface CheckExistingFiles {
     existingFiles: string[];
     transforms: RenameItemsArray[];
   }): { filesToRestore: string[]; missingFiles: string[] };
+}
+
+export interface CreateRollbackFile {
+  ({
+    transforms,
+    sourcePath,
+  }: {
+    transforms: BaseRenameItem[];
+    sourcePath: string;
+  }): Promise<RollbackFile>;
 }
