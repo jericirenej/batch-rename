@@ -17,6 +17,7 @@ import type {
   LegacyRenameList,
   RenameListArgs
 } from "../types";
+import { createRollback } from "../utils/createRollback.js";
 import {
   areNewNamesDistinct,
   askQuestion,
@@ -109,14 +110,12 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   });
 
 
-  // Temp re-coding to original restore file format
-  const legacy:LegacyRenameList = updatedRenameList.map(({rename, original})=> ({rename, original, sourcePath: transformedNames[0].sourcePath}))
-console.log(legacy);
+  const createdRollback = await createRollback({transforms: updatedRenameList, sourcePath: targetDir})
   console.log("Rename completed!");
   process.stdout.write("Writing rollback file...");
   await writeFile(
     resolve(targetDir, ROLLBACK_FILE_NAME),
-    JSON.stringify(legacy, undefined, 2),
+    JSON.stringify(createdRollback, undefined, 2),
     "utf-8"
   );
   process.stdout.write("DONE.\n");

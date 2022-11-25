@@ -33,6 +33,7 @@ import type {
   TrimRollbackFile,
   TruncateFileName
 } from "../types.js";
+import { checkRestoreFile } from "./restoreUtils.js";
 
 const {
   allRenameFailed,
@@ -97,8 +98,10 @@ export const trimRollbackFile: TrimRollbackFile = async ({
   }
   const rollbackFile = JSON.parse(
     await readFile(targetPath, "utf-8")
-  ) as RollbackFile;
-  const rollbackTransforms = rollbackFile.transforms.slice(targetLevel);
+  );
+
+  const verifiedRollback = checkRestoreFile(rollbackFile);
+  const rollbackTransforms = verifiedRollback.transforms.slice(targetLevel);
 
   if (!rollbackTransforms.length) {
     process.stdout.write("Deleting rollback file...");

@@ -4,14 +4,12 @@ import { nanoid } from "nanoid";
 import { resolve } from "path";
 import { ROLLBACK_FILE_NAME } from "../constants.js";
 import type {
-  CreateRollbackFile, RenameItemsArray,
+  CreateRollbackFile,
+  RenameItemsArray,
   RollbackFile
 } from "../types.js";
 import { checkRestoreFile } from "./restoreUtils.js";
-import {
-  determineDir,
-  extractCurrentReferences
-} from "./utils.js";
+import { determineDir, extractCurrentReferences } from "./utils.js";
 
 export const readRollbackFile = async (
   sourcePath?: string
@@ -21,7 +19,7 @@ export const readRollbackFile = async (
   const rollBackFileExists = existsSync(targetPath);
   if (!rollBackFileExists) return null;
 
-  const stringified =  await readFile(targetPath, "utf-8");
+  const stringified = await readFile(targetPath, "utf-8");
   const parsedRollbackFile = JSON.parse(stringified);
   const verifiedRollbackFile = checkRestoreFile(parsedRollbackFile);
   return verifiedRollbackFile;
@@ -33,10 +31,13 @@ export const createRollback: CreateRollbackFile = async ({
 }) => {
   const currentRollback = await readRollbackFile(sourcePath);
   if (currentRollback === null) {
-    const renameItems: RenameItemsArray = transforms.map((entry) => ({
-      ...entry,
-      referenceId: nanoid(),
-    }));
+    const renameItems: RenameItemsArray = transforms.map(
+      ({ original, rename }) => ({
+        original,
+        rename,
+        referenceId: nanoid(),
+      })
+    );
     return { sourcePath, transforms: [renameItems] };
   }
   const existingTransforms = currentRollback.transforms;
