@@ -33,7 +33,8 @@ const {
 } = STATUS.restore;
 
 export const restoreBaseFunction: RestoreBaseFunction = async (
-  transformPath
+  transformPath,
+  rollbackLevel,
 ) => {
   const targetDir = determineDir(transformPath);
   const targetPath = join(targetDir, ROLLBACK_FILE_NAME);
@@ -58,7 +59,7 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
     existingFiles,
     transforms: rollbackData.transforms,
   });
-  const restoreList = restoreByLevels({ rollbackFile: rollbackData });
+  const restoreList = restoreByLevels({ rollbackFile: rollbackData, rollbackLevel });
 
   return {
     rollbackData,
@@ -73,9 +74,10 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
 export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   dryRun,
   transformPath,
+  rollbackLevel
 }) => {
   const targetDir = determineDir(transformPath);
-  const restoreBaseData = await restoreBaseFunction(targetDir);
+  const restoreBaseData = await restoreBaseFunction(targetDir, rollbackLevel);
   if (!restoreBaseData) throw new Error(noValidData);
   if (!restoreBaseData.filesToRestore.length) {
     throw new Error(couldNotBeParsed);

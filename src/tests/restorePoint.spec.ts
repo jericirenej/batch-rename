@@ -10,7 +10,7 @@ import * as utils from "../utils/utils.js";
 import {
   examplePath as transformPath,
   mockDirentEntryAsFile,
-  newRollbackFile,
+  mockRollbackToolSet,
   renameListDistinct as renameList
 } from "./mocks.js";
 jest.mock("fs");
@@ -53,15 +53,16 @@ const mockedRename = jest.mocked(rename);
 
 const baseArg = { transformPath };
 
+const {mockRollbackFile,mockTransforms } = mockRollbackToolSet;
 const mockConversionList: RestoreBaseReturn = {
   existingFiles: mockFileList.map((file) => file.name),
   filesToRestore: mockFileList.map((file) => file.name),
   missingFiles: [],
   restoreList: restoreByLevels({
-    rollbackFile: newRollbackFile,
-    rollbackLevel: newRollbackFile.transforms.length,
+    rollbackFile: mockRollbackFile,
+    rollbackLevel: mockTransforms.length,
   }),
-  rollbackData: newRollbackFile,
+  rollbackData: mockRollbackFile,
 };
 
 describe("restoreBaseFunction", () => {

@@ -33,7 +33,7 @@ export type OptionKeys =
 
 export type OptionKeysWithValues = Record<
   OptionKeys,
-  boolean | string | string[]
+  unknown
 >;
 
 export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {
@@ -190,6 +190,7 @@ export type UtilityActionsCheck = (
 export type UtilityFunctionsArgs = {
   transformPath?: string;
   dryRun?: boolean;
+  rollbackLevel?: number;
 };
 
 export type CreateBatchRenameList = ({
@@ -210,7 +211,8 @@ export type RestoreBaseReturn = {
   filesToRestore: string[];
 };
 export type RestoreBaseFunction = (
-  transformPath?: string
+  transformPath?: string,
+  rollbackLevel?:number
 ) => Promise<RestoreBaseReturn>;
 export type RestoreOriginalFileNames = (
   args: UtilityFunctionsArgs

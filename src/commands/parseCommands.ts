@@ -5,6 +5,7 @@ import {
   VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
+import { restoreOriginalFileNames } from "../converters/restorePoint.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   OptionKeysWithValues,
@@ -13,11 +14,11 @@ import type {
   SetTransformationPath,
   TransformTypes,
   UtilityActions,
-  UtilityActionsCheck
+  UtilityActionsCheck,
+  UtilityFunctionsArgs
 } from "../types";
-import { checkPath } from "../utils/utils.js";
+import { checkPath, deleteRollbackFile } from "../utils/utils.js";
 import program from "./generateCommands.js";
-import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
 
 const { noTransformationPicked, onlyOneUtilAction } = ERRORS.transforms;
 
@@ -26,18 +27,27 @@ export const parseOptions = async (
 ) => {
   try {
     if (!Object.keys(options).length) return program.help();
-    const { preserveOriginal, dryRun, target, restArgs } = options;
+    const { preserveOriginal, dryRun, target, restore, restArgs } = options;
 
     const transformPath = await setTransformationPath(
       target as string | undefined,
       restArgs
     );
+
+    let rollbackLevel: number;
+    try {
+      rollbackLevel = Number(restore);
+    } catch {
+      rollbackLevel = 0;
+    }
+
     // Run util actions first.
     const utilityActions = utilityActionsCheck(options);
     if (utilityActions) {
       return await utilityActionsCorrespondenceTable[utilityActions]({
         dryRun: dryRun as boolean | undefined,
         transformPath,
+        rollbackLevel,
       });
     }
     const transformPattern = transformationCheck(options);
@@ -94,6 +104,12 @@ export const setTransformationPath: SetTransformationPath = async (
     return await checkPath(restArgs[0]);
   }
   return undefined;
+};
+
+export const utilityActionsCorrespondenceTable = {
+  restore: (args: UtilityFunctionsArgs) => restoreOriginalFileNames(args),
+  cleanRollback: ({ transformPath }: UtilityFunctionsArgs) =>
+    deleteRollbackFile(transformPath),
 };
 
 export const utilityActionsCheck: UtilityActionsCheck = (options) => {

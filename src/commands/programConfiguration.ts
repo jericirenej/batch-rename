@@ -1,7 +1,5 @@
 import { PROGRAM_VERSION, VALID_DATE_TRANSFORM_TYPES } from "../constants.js";
-import { restoreOriginalFileNames } from "../converters/restorePoint.js";
 import type { ProgramOptions } from "../types.js";
-import { deleteRollbackFile } from "../utils/utils.js";
 
 const programOptions: ProgramOptions[] = [
   {
@@ -71,10 +69,9 @@ const programOptions: ProgramOptions[] = [
   {
     short: "r",
     long: "restore",
-    type: "",
+    type: "[number]",
     description:
-      "Restore transformed files to original names, if restore file is available.",
-    defaultValue: "",
+      "Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used",
   },
   {
     short: "",
@@ -175,11 +172,6 @@ const programConfiguration = {
   programName,
   programDescription,
   programOptions,
-};
-
-export const utilityActionsCorrespondenceTable = {
-  restore: restoreOriginalFileNames,
-  cleanRollback: deleteRollbackFile,
 };
 
 export default programConfiguration;

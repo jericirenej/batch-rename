@@ -21,14 +21,17 @@ import { STATUS } from "../messages/statusMessages.js";
 import type {
   AreNewNamesDistinct,
   BaseRenameItem,
-  CheckPath, ComposeRenameString,
+  CheckPath,
+  ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
   NumberOfDuplicatedNames,
   RenameItemsArray,
-  RollbackFile, TrimRollbackFile, TruncateFileName
+  RollbackFile,
+  TrimRollbackFile,
+  TruncateFileName
 } from "../types.js";
 
 const {
@@ -116,8 +119,10 @@ export const trimRollbackFile: TrimRollbackFile = async ({
   process.stdout.write("DONE!");
 };
 
-export const deleteRollbackFile = async (sourcePath: string): Promise<void> => {
-  const targetDir = determineDir(sourcePath);
+export const deleteRollbackFile = async (
+  transformPath?: string,
+): Promise<void> => {
+  const targetDir = determineDir(transformPath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
   if (!rollBackFileExists) {

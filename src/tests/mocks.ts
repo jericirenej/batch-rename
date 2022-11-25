@@ -100,26 +100,6 @@ export const [
   renameWithNewNameRepeat,
 ].map((list) => transformToCurrent(list));
 
-export const newRollbackFile: RollbackFile = {
-  sourcePath,
-  transforms: [
-    currentRenameList
-      .map(({ referenceId }, index) => ({
-        original: `secondRename${index + 1}`,
-        rename: `thirdRename${index + 1}`,
-        referenceId,
-      }))
-      .reverse(),
-    currentRenameList
-      .map(({ referenceId, rename }, index) => ({
-        original: rename,
-        rename: `secondRename${index + 1}`,
-        referenceId,
-      }))
-      .reverse(),
-    currentRenameList,
-  ],
-};
 
 export const truthyArgument = "argument";
 const madeUpTime = 1318289051000.1;
@@ -253,6 +233,7 @@ export const checkFilesTransforms: RenameItemsArray[] = [
   [{ rename: "secondFile", original: "secondFileOriginal", referenceId }],
 ];
 
+// MOCK-ROLLBACK-TOOLSET
 const mockItemFunction = (
   name: string,
   referenceId: string,
