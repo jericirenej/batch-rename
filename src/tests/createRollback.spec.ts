@@ -3,6 +3,7 @@ import { readFile } from "fs/promises";
 import { nanoid } from "nanoid";
 import { BaseRenameItem, RenameItemsArray, RollbackFile } from "../types.js";
 import * as rollbackUtils from "../utils/createRollback.js";
+import * as restoreUtils from "../utils/restoreUtils.js";
 import { mockRollbackToolSet } from "./mocks.js";
 
 jest.mock("fs");
@@ -20,6 +21,7 @@ const mockedNano = jest.mocked(nanoid);
 
 const mockedExistsSync = jest.mocked(existsSync);
 const mockedReadFile = jest.mocked(readFile);
+const spyOnCheckRestoreFile = jest.spyOn(restoreUtils, "checkRestoreFile");
 
 const { readRollbackFile, createRollback } = rollbackUtils;
 
@@ -30,6 +32,13 @@ describe("readRollbackFile", () => {
     mockedExistsSync.mockReturnValueOnce(false);
     expect(await readRollbackFile(sourcePath)).toBeNull();
   });
+  it("Should call spyOnCheckRestoreFile", async()=> {
+    expect(spyOnCheckRestoreFile).not.toHaveBeenCalled();
+    mockedExistsSync.mockReturnValueOnce(true);
+    mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollbackFile));
+    await readRollbackFile(sourcePath);
+    expect(spyOnCheckRestoreFile).toHaveBeenCalledTimes(1)
+  })
   it("Should return rollbackFile if it exists", async () => {
     mockedExistsSync.mockReturnValueOnce(true);
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollbackFile));

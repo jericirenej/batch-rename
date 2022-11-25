@@ -7,10 +7,10 @@ import type {
   CreateRollbackFile, RenameItemsArray,
   RollbackFile
 } from "../types.js";
+import { checkRestoreFile } from "./restoreUtils.js";
 import {
   determineDir,
-  extractCurrentReferences,
-  jsonParseReplicate
+  extractCurrentReferences
 } from "./utils.js";
 
 export const readRollbackFile = async (
@@ -22,7 +22,9 @@ export const readRollbackFile = async (
   if (!rollBackFileExists) return null;
 
   const stringified =  await readFile(targetPath, "utf-8");
-  return jsonParseReplicate<RollbackFile>(stringified);
+  const parsedRollbackFile = JSON.parse(stringified);
+  const verifiedRollbackFile = checkRestoreFile(parsedRollbackFile);
+  return verifiedRollbackFile;
 };
 
 export const createRollback: CreateRollbackFile = async ({
