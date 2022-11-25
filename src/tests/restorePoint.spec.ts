@@ -36,7 +36,7 @@ const consoleSetSpy = (): jest.SpyInstance => {
 };
 
 const spyOnListFiles = jest.spyOn(utils, "listFiles"),
-  spyOnCleanUpRollbackFile = jest.spyOn(utils, "cleanUpRollbackFile"),
+  spyOnTrimRollbackFile = jest.spyOn(utils, "trimRollbackFile"),
   spyOnCreateBatchRenameList = jest.spyOn(utils, "createBatchRenameList"),
   spyOnDryRunRestore = jest.spyOn(restorePoint, "dryRunRestore"),
   spyOnRestoreBase = jest.spyOn(restorePoint, "restoreBaseFunction"),
@@ -139,7 +139,7 @@ describe("restoreOriginalFileNames", () => {
       spyOnDryRunRestore.mockResolvedValueOnce(testCase);
       spyOnRestoreBase.mockResolvedValueOnce(mockConversionList);
       if (testCase) {
-        spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
+        spyOnTrimRollbackFile.mockImplementationOnce((baseArg) =>
           Promise.resolve()
         );
         spyOnCreateBatchRenameList.mockReturnValueOnce([Promise.resolve()]);
@@ -160,7 +160,7 @@ describe("restoreOriginalFileNames", () => {
     );
   });
   it("Should notify user about the number of files that will be reverted", async () => {
-    spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
+    spyOnTrimRollbackFile.mockImplementationOnce((baseArg) =>
       Promise.resolve()
     );
     spyOnCreateBatchRenameList.mockReturnValueOnce(
@@ -173,7 +173,7 @@ describe("restoreOriginalFileNames", () => {
     expect(logCalledWith).toContain(expected);
   });
   it("Should call settledPromisesEval with appropriate args", async () => {
-    spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
+    spyOnTrimRollbackFile.mockImplementationOnce((baseArg) =>
       Promise.resolve()
     );
     // Presume that last file is missing.
@@ -208,7 +208,7 @@ describe("restoreOriginalFileNames", () => {
     mockedRename.mockImplementation((oldPath: PathLike, newPath: PathLike) =>
       Promise.resolve()
     );
-    spyOnCleanUpRollbackFile.mockImplementationOnce((baseArg) =>
+    spyOnTrimRollbackFile.mockImplementationOnce((baseArg) =>
       Promise.resolve()
     );
     spyOnCreateBatchRenameList.mockReturnValueOnce(
@@ -220,7 +220,7 @@ describe("restoreOriginalFileNames", () => {
     spyOnRestoreBase.mockResolvedValueOnce(mockConversionList);
     await restoreOriginalFileNames(baseArg);
     expect(resolved).toBe(mockFileList.length);
-    expect(spyOnCleanUpRollbackFile).toHaveBeenCalledTimes(1);
+    expect(spyOnTrimRollbackFile).toHaveBeenCalledTimes(1);
   });
 });
 

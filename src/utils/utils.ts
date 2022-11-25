@@ -21,17 +21,14 @@ import { STATUS } from "../messages/statusMessages.js";
 import type {
   AreNewNamesDistinct,
   BaseRenameItem,
-  CheckPath,
-  CleanUpRollbackFile,
-  ComposeRenameString,
+  CheckPath, ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
   ExtractBaseAndExt,
   ListFiles,
   NumberOfDuplicatedNames,
   RenameItemsArray,
-  RollbackFile,
-  TruncateFileName
+  RollbackFile, TrimRollbackFile, TruncateFileName
 } from "../types.js";
 
 const {
@@ -85,7 +82,7 @@ export const extractCurrentReferences = (
   return { withIds: namesAndReferences, noIds: namesLeftToCheck };
 };
 
-export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
+export const trimRollbackFile: TrimRollbackFile = async ({
   sourcePath,
   targetLevel,
 }) => {

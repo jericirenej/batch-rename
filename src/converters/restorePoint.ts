@@ -17,12 +17,10 @@ import {
   checkRestoreFile, restoreByLevels
 } from "../utils/restoreUtils.js";
 import {
-  askQuestion,
-  cleanUpRollbackFile,
-  createBatchRenameList,
+  askQuestion, createBatchRenameList,
   determineDir,
   listFiles,
-  settledPromisesEval
+  settledPromisesEval, trimRollbackFile
 } from "../utils/utils.js";
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
@@ -111,7 +109,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
       operationType: "restore",
     });
 
-    await cleanUpRollbackFile({ sourcePath:targetDir, targetLevel, transforms });
+    await trimRollbackFile({ sourcePath:targetDir, targetLevel, transforms });
   }
 };
 

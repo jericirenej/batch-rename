@@ -215,7 +215,7 @@ export type RestoreBaseFunction = (
 export type RestoreOriginalFileNames = (
   args: UtilityFunctionsArgs
 ) => Promise<void>;
-export type CleanUpRollbackFile = (
+export type TrimRollbackFile = (
   conversionList: ConversionList
 ) => Promise<void>;
 export type ListFiles = (
