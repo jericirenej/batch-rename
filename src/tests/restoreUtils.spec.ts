@@ -7,7 +7,8 @@ import * as restoreUtils from "../utils/restoreUtils.js";
 import {
   checkFilesExistingMock,
   checkFilesTransforms,
-  currentRenameList, mockRollbackToolSet, newRollbackFile,
+  currentRenameList,
+  mockRollbackToolSet,
   renameListDistinct
 } from "./mocks.js";
 
@@ -26,7 +27,6 @@ const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
 
 jest.mock("nanoid");
 const mockedNanoId = jest.mocked(nanoid);
-
 
 describe("checkExistingFiles", () => {
   it("Should return proper list of filesToRestore and missingFiles", () => {
@@ -107,7 +107,7 @@ describe("isLegacyRestore", () => {
     }
   });
   it("Should return false for new rename list types", () => {
-    expect(isLegacyRestore(newRollbackFile)).toBe(false);
+    expect(isLegacyRestore(mockRollbackToolSet.mockRollbackFile)).toBe(false);
   });
   it("Should return true for a legacy restore list", () => {
     expect(isLegacyRestore(renameListDistinct)).toBe(true);
@@ -136,6 +136,7 @@ describe("legacyRestoreMapper", () => {
 });
 
 describe("isCurrentRestore", () => {
+  const {sourcePath, mockRollbackFile} = mockRollbackToolSet
   it("Should return false for falsy values, arrays and primitives", () => {
     for (const testCase of [
       undefined,
@@ -152,17 +153,17 @@ describe("isCurrentRestore", () => {
   it("Should return false for legacy rollback file", () =>
     expect(isCurrentRestore(renameListDistinct)).toBe(false));
   it("Should return true for new rename list type", () =>
-    expect(isCurrentRestore(newRollbackFile)).toBe(true));
+    expect(isCurrentRestore(mockRollbackFile)).toBe(true));
   it("Should return false for improper top level keys", () => {
     const improperKeys = {
-      firstProp: newRollbackFile.sourcePath,
-      someTransformProp: [...newRollbackFile.transforms],
+      firstProp: sourcePath,
+      someTransformProp: [...mockRollbackFile.transforms],
     };
     expect(isCurrentRestore(improperKeys)).toBe(false);
   });
   it("Should return false if one of the transforms has improper key or non-string value", () => {
     const renameCopy = JSON.parse(
-      JSON.stringify(newRollbackFile)
+      JSON.stringify(mockRollbackFile)
     ) as RollbackFile;
     const improperKey = renameCopy.transforms[0].map(
       ({ original, referenceId, rename }) => ({
