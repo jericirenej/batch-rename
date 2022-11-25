@@ -1,4 +1,4 @@
-import type { ExtensionModifyTransform } from "../types.js";
+import type { BaseRenameItem, ExtensionModifyTransform } from "../types.js";
 
 export const extensionModifyTransform: ExtensionModifyTransform = ({
   splitFileList,
@@ -9,11 +9,11 @@ export const extensionModifyTransform: ExtensionModifyTransform = ({
     newExtension = `.${newExtension}`;
   }
   return splitFileList.map((fileInfo) => {
-    const { baseName, ext, sourcePath } = fileInfo;
-    return {
+    const { baseName, ext } = fileInfo;
+    const renameItem:BaseRenameItem = {
       original: `${baseName}${ext}`,
       rename: `${baseName}${newExtension}`,
-      sourcePath,
     };
+    return renameItem;
   });
 };

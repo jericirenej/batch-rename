@@ -1,4 +1,4 @@
-import type { AddTextTransform } from "../types.js";
+import type { AddTextTransform, BaseRenameItem } from "../types.js";
 import { composeRenameString, truncateFile } from "../utils/utils.js";
 
 export const addTextTransform: AddTextTransform = ({
@@ -28,6 +28,7 @@ export const addTextTransform: AddTextTransform = ({
       noExtensionPreserve,
     });
     const original = `${baseName}${ext}`;
-    return { original, rename, sourcePath };
+    const renameItem:BaseRenameItem = {original, rename};
+    return renameItem;
   });
 };

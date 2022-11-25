@@ -1,5 +1,5 @@
 import { ERRORS } from "../messages/errMessages.js";
-import type { TruncateTransform } from "../types.js";
+import type { BaseRenameItem, TruncateTransform } from "../types.js";
 import { composeRenameString } from "../utils/utils.js";
 const {truncateNoPreserveOriginal, truncateInvalidArgument } = ERRORS.transforms;
 
@@ -34,10 +34,7 @@ export const truncateTransform: TruncateTransform = ({
       format,
       noExtensionPreserve,
     });
-    return {
-      rename,
-      original: `${baseName}${ext}`,
-      sourcePath,
-    };
+    const renameItem:BaseRenameItem = {rename, original: `${baseName}${ext}`,}
+    return renameItem;
   });
 };

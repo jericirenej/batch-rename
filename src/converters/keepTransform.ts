@@ -1,4 +1,4 @@
-import type { KeepTransform } from "../types";
+import type { BaseRenameItem, KeepTransform } from "../types";
 import { composeRenameString } from "../utils/utils.js";
 
 export const keepTransform: KeepTransform = ({
@@ -28,10 +28,7 @@ export const keepTransform: KeepTransform = ({
       addText,
       format,
     });
-    return {
-      rename: `${newName}`,
-      original,
-      sourcePath,
-    };
+    const renameItem: BaseRenameItem = { rename: `${newName}`, original };
+    return renameItem;
   });
 };

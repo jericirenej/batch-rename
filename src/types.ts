@@ -113,10 +113,10 @@ export type GenerateRenameListArgs = RenameListArgs & {
 };
 export type GenerateRenameList = (
   args: GenerateRenameListArgs
-) => LegacyRenameList;
+) => BaseRenameItem[];
 
 export type DryRunTransformArgs = {
-  transformedNames: LegacyRenameList;
+  transformedNames: BaseRenameItem[];
   transformPattern: TransformTypes[];
   transformPath: string;
 };
@@ -127,7 +127,6 @@ export type DryRunRestore = (args: RestoreBaseReturn) => Promise<boolean>;
 export type GeneralTransformReturn = {
   rename: string;
   original: string;
-  sourcePath: string;
 }[];
 
 export type NumericTransform = (
@@ -156,7 +155,7 @@ export type GenerateSearchAndReplaceArgs = (
 
 export type SearchAndReplace = (
   args: GenerateRenameListArgs
-) => LegacyRenameList;
+) => BaseRenameItem[];
 
 export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
@@ -167,7 +166,7 @@ export type TruncateFileNameArgs = {
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
 export type TruncateTransform = (
   args: GenerateRenameListArgs
-) => LegacyRenameList;
+) => BaseRenameItem[];
 
 export type AddTextTransform = TruncateTransform;
 
@@ -225,9 +224,9 @@ export type ListFiles = (
   excludeFilter?: string,
   targetType?: ValidTypes
 ) => Promise<Dirent[]>;
-export type AreNewNamesDistinct = (renameList: LegacyRenameList) => boolean;
+export type AreNewNamesDistinct = (renameList: BaseRenameItem[]) => boolean;
 export type NumberOfDuplicatedNamesArgs = {
-  renameList: LegacyRenameList;
+  renameList: BaseRenameItem[];
   checkType: "results" | "transforms";
 };
 export type NumberOfDuplicatedNames = (
@@ -254,7 +253,7 @@ export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
 export type FormatTextTransform = (
   args: GenerateRenameListArgs
-) => LegacyRenameList;
+) => BaseRenameItem[];
 
 export type KeepTransformArgs = Pick<
   GenerateRenameListArgs,
@@ -267,7 +266,7 @@ export type KeepTransformArgs = Pick<
   | "format"
 >;
 
-export type KeepTransform = (args: KeepTransformArgs) => LegacyRenameList;
+export type KeepTransform = (args: KeepTransformArgs) => BaseRenameItem[];
 
 export interface RenameItem extends BaseRenameItem {
   referenceId: string;
@@ -302,7 +301,7 @@ export type DetermineRollbackLevel = ({
   rollbackLevel,
 }: {
   transformList: RenameItemsArray[];
-  rollbackLevel?: number;
+  rollbackLevel: number;
 }) => number;
 
 export interface FilesWithMissingRestores {

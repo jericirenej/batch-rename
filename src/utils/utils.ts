@@ -96,9 +96,7 @@ export const trimRollbackFile: TrimRollbackFile = async ({
   if (!rollBackFileExists) {
     throw new Error(noRollbackFile);
   }
-  const rollbackFile = JSON.parse(
-    await readFile(targetPath, "utf-8")
-  );
+  const rollbackFile = JSON.parse(await readFile(targetPath, "utf-8"));
 
   const verifiedRollback = checkRestoreFile(rollbackFile);
   const rollbackTransforms = verifiedRollback.transforms.slice(targetLevel);
@@ -123,7 +121,7 @@ export const trimRollbackFile: TrimRollbackFile = async ({
 };
 
 export const deleteRollbackFile = async (
-  transformPath?: string,
+  transformPath?: string
 ): Promise<void> => {
   const targetDir = determineDir(transformPath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
@@ -205,13 +203,13 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
   checkType,
 }) => {
   if (checkType === "results") {
-    const renames = renameList.map((renameInfo) => renameInfo.rename);
+    const renames = renameList.map(({ rename }) => rename);
     const newNamesUniqueLength = new Set(renames).size;
     return renames.length - newNamesUniqueLength;
   }
   if (checkType === "transforms") {
     const duplicatedTransforms = renameList.filter(
-      (renameInfo) => renameInfo.original === renameInfo.rename
+      ({ original, rename }) => original === rename
     );
     return duplicatedTransforms.length;
   }

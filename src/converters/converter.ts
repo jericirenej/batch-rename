@@ -8,14 +8,11 @@ import {
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
+  BaseRenameItem,
   DryRunTransform,
   ExtractBaseAndExtReturn,
-  FileListWithStatsArray,
-  GeneralTransformReturn,
-  GenerateRenameList,
-  GenerateRenameListArgs,
-  LegacyRenameList,
-  RenameListArgs
+  FileListWithStatsArray, GenerateRenameList,
+  GenerateRenameListArgs, RenameListArgs
 } from "../types";
 import { createRollback } from "../utils/createRollback.js";
 import {
@@ -48,7 +45,7 @@ const {
 
 export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   typeof VALID_TRANSFORM_TYPES[number],
-  (args: GenerateRenameListArgs)=> LegacyRenameList|GeneralTransformReturn
+  (args: GenerateRenameListArgs)=> BaseRenameItem[]
 > = {
   addText: (args: GenerateRenameListArgs) => addTextTransform(args),
   dateRename: (args: GenerateRenameListArgs) => dateTransform(args),

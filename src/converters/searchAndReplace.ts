@@ -1,5 +1,6 @@
 import { Dirent } from "fs";
 import type {
+  BaseRenameItem,
   GenerateSearchAndReplaceArgs,
   SearchAndReplace
 } from "../types.js";
@@ -35,7 +36,8 @@ export const searchAndReplace: SearchAndReplace = ({
         rename = optionalTruncate(truncate, rename, sourcePath, type);
       }
     }
-    return { original, rename, sourcePath };
+    const renameItem:BaseRenameItem = {original, rename};
+    return renameItem;
   });
   return targetList;
 };

@@ -1,5 +1,5 @@
 import { VALID_NUMERIC_TRANSFORM_TYPES as numericTransformFunctions } from "../constants.js";
-import type { NumericTransform } from "../types";
+import type { BaseRenameItem, NumericTransform } from "../types";
 import { composeRenameString } from "../utils/utils.js";
 
 /**Return a list of odd|even names, along with original file names */
@@ -21,7 +21,7 @@ export const numericTransform: NumericTransform = ({
     : splitFileList.length.toString().length;
   return splitFileList.map((splitFile, index) => {
     const indexWithBase = baseIndex ? baseIndex + index : index;
-    const { ext, baseName, sourcePath } = splitFile;
+    const { ext, baseName } = splitFile;
     const sequenceNumber = generateSequenceNumber(
       numericTransform!,
       indexWithBase,
@@ -41,7 +41,8 @@ export const numericTransform: NumericTransform = ({
       format,
       noExtensionPreserve,
     });
-    return { rename, original: baseName + ext, sourcePath };
+    const renameItem:BaseRenameItem = { rename, original: baseName + ext }
+    return renameItem;
   });
 };
 
