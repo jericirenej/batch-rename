@@ -7,20 +7,33 @@ import * as searchAndReplaceTransformFunctions from "../converters/searchAndRepl
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
+  AreNewNamesDistinct,
+  CreateBatchRenameList,
   DryRunTransformArgs,
-  LegacyRenameList,
   RenameListArgs,
   TransformTypes
 } from "../types.js";
+import * as rollbackUtils from "../utils/createRollback.js";
 import * as utils from "../utils/utils.js";
 import {
   examplePath,
   exampleStats,
   generateMockSplitFileList,
   mockFileList,
-  renameListDistinct
+  renameListToolSet
 } from "./mocks.js";
 
+const { renameLists: mockRenameLists } = renameListToolSet;
+const { distinct: mockDistinctList } = mockRenameLists;
+
+const splitFileList = generateMockSplitFileList(10);
+const splitFileListWithStats = splitFileList.map((fileList) => ({
+  ...fileList,
+  stats: exampleStats,
+}));
+const { convertFiles, dryRunTransform, generateRenameList } = converter;
+
+// SPIES AND MOCKS SETUP
 jest.mock("fs/promises", () => {
   const originalModule = jest.requireActual("fs/promises");
   return {
@@ -33,10 +46,6 @@ const mockedWriteFile = jest
   .mocked(writeFile)
   .mockImplementation((path, data, options) => Promise.resolve());
 
-const splitFileList = generateMockSplitFileList(10);
-
-const { convertFiles, dryRunTransform, generateRenameList } = converter;
-
 const createSpyOnProcessWrite = () =>
   jest.spyOn(process.stdout, "write").mockImplementation();
 const createSpyOnLog = () =>
@@ -46,11 +55,6 @@ const createSpyOnTable = () =>
 
 const restoreMocks = (...spies: jest.SpyInstance[]) =>
   spies.forEach((spy) => spy.mockRestore());
-
-const splitFileListWithStats = splitFileList.map((fileList) => ({
-  ...fileList,
-  stats: exampleStats,
-}));
 
 const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
   spyOnDryRunTransform = jest.spyOn(converter, "dryRunTransform"),
@@ -81,7 +85,12 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
   spyOnProvideFileStats = jest
     .spyOn(dateTransformFunctions, "provideFileStats")
     .mockResolvedValue(splitFileListWithStats),
-  spyOnAskQuestion = jest.spyOn(utils, "askQuestion");
+  spyOnAskQuestion = jest.spyOn(utils, "askQuestion"),
+  spyOnCreateRollback = jest
+    .spyOn(rollbackUtils, "createRollback")
+    .mockImplementation(({ transforms, sourcePath }) =>
+      Promise.resolve(renameListToolSet.mockRollback)
+    );
 
 [
   spyOnDateTransform,
@@ -89,7 +98,7 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
   spyOnNumericTransform,
   spyOnTruncateTransform,
 ].forEach((transformOperation) =>
-  transformOperation.mockImplementation((args) => renameListDistinct)
+  transformOperation.mockImplementation((args) => mockDistinctList)
 );
 
 describe("convertFiles", () => {
@@ -185,10 +194,14 @@ describe("convertFiles", () => {
     expect(lastCalled[0].splitFileList).toEqual(splitFileListWithStats);
   });
   it("Should call areNewNamesDistinct and createBatchRename with result from generateRenameList", async () => {
-    spyOnGenerateRenameList.mockReturnValueOnce(renameListDistinct);
+    spyOnGenerateRenameList.mockReturnValueOnce(mockDistinctList);
     await convertFiles(exampleArgs);
-    expect(spyOnAreNewNamesDistinct).toHaveBeenCalledWith(renameListDistinct);
-    expect(spyOnCreateBatchRename).toHaveBeenCalledWith(renameListDistinct);
+    expect(spyOnAreNewNamesDistinct).toHaveBeenCalledWith<
+      Parameters<AreNewNamesDistinct>
+    >(mockDistinctList);
+    expect(spyOnCreateBatchRename).toHaveBeenCalledWith<
+      Parameters<CreateBatchRenameList>
+    >({ sourcePath: examplePath, transforms: mockDistinctList });
   });
   it("Should throw error, if duplication of names occurs", async () => {
     spyOnAreNewNamesDistinct.mockReturnValueOnce(false);
@@ -197,7 +210,7 @@ describe("convertFiles", () => {
     );
   });
   it("Should call writeFile and process stdout for rollbackFile write", async () => {
-    spyOnGenerateRenameList.mockReturnValueOnce(renameListDistinct);
+    spyOnGenerateRenameList.mockReturnValueOnce(mockDistinctList);
     await convertFiles(exampleArgs);
     expect(mockedWriteFile).toHaveBeenCalledTimes(1);
     expect(spyOnProcessWrite).toHaveBeenCalledTimes(2);
@@ -213,10 +226,10 @@ describe("convertFiles", () => {
     spyOnPromiseAllSettled.mockRestore();
   });
   it("Should call settledPromisesEval with appropriate arguments", async () => {
-    const mockBatchPromises = [...renameListDistinct].map(() =>
+    const mockBatchPromises = [...mockDistinctList].map(() =>
       Promise.resolve()
     );
-    spyOnGenerateRenameList.mockImplementationOnce(() => renameListDistinct);
+    spyOnGenerateRenameList.mockImplementationOnce(() => mockDistinctList);
     mockBatchPromises[0] = Promise.reject();
     spyOnCreateBatchRename.mockReturnValueOnce(mockBatchPromises);
     const promiseResults = await Promise.allSettled(mockBatchPromises);
@@ -227,11 +240,11 @@ describe("convertFiles", () => {
     expect(spyOnSettledPromisesEval).toHaveBeenCalledTimes(1);
     expect(spyOnSettledPromisesEval).toHaveBeenCalledWith({
       promiseResults,
-      transformedNames: renameListDistinct,
+      transformedNames: mockDistinctList,
       operationType: "convert",
     });
     expect(spyOnSettledPromisesEval).toHaveReturnedWith(
-      renameListDistinct.slice(1)
+      mockDistinctList.slice(1)
     );
   });
   it("Should call console.log twice", async () => {
@@ -280,7 +293,7 @@ describe("dryRunTransform", () => {
   const exampleArgs: DryRunTransformArgs = {
     transformPath: examplePath,
     transformPattern: ["searchAndReplace"],
-    transformedNames: renameListDistinct,
+    transformedNames: mockDistinctList,
   };
   beforeEach(() => {
     spyOnConsole = createSpyOnLog();
@@ -290,20 +303,8 @@ describe("dryRunTransform", () => {
     [spyOnConsole, spyOnTable].forEach((spy) => spy.mockRestore());
     spyOnNumberOfDuplicatedNames.mockReset();
   });
-  it("Should call numberOfDuplicatedNames 2 times", async () => {
-    spyOnAskQuestion.mockImplementationOnce((question) => Promise.resolve(""));
-    spyOnNumberOfDuplicatedNames.mockReturnValue(0);
-    await dryRunTransform(exampleArgs);
-    expect(spyOnNumberOfDuplicatedNames).toHaveBeenCalledTimes(2);
-
-    const checkTypeArgs = spyOnNumberOfDuplicatedNames.mock.calls
-      .flat()
-      .map((config) => config.checkType);
-    const expectedArgs = ["transforms", "results"];
-    expect(checkTypeArgs).toEqual(expectedArgs);
-  });
   it("Should return false, if no names would be changed by transform", async () => {
-    const identicalTransform: LegacyRenameList = [renameListDistinct[0]];
+    const identicalTransform = [mockDistinctList[0]];
     identicalTransform[0].rename = identicalTransform[0].original;
     expect(
       await dryRunTransform({

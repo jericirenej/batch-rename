@@ -92,9 +92,6 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const newNamesDistinct = areNewNamesDistinct(transformedNames);
   if (!newNamesDistinct) throw new Error(duplicateRenames);
   
-  
-
-  // Temp remapping until rename functions are fixed.
   const transforms ={transforms: transformedNames, sourcePath: targetDir}
 
   const batchRename = createBatchRenameList(transforms);
