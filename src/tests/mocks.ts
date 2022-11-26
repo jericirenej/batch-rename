@@ -294,7 +294,7 @@ interface RenameListToolSet {
   mockRollback: RollbackFile;
 }
 
-export const renameListToolSet:RenameListToolSet = {
+export const mockRenameListToolSet:RenameListToolSet = {
   originalNames,
   renameLists,
   mockRollback: {sourcePath, transforms: [singleLevelTransform]}

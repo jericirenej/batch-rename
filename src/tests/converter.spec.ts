@@ -7,23 +7,23 @@ import * as searchAndReplaceTransformFunctions from "../converters/searchAndRepl
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-  AreNewNamesDistinct,
-  CreateBatchRenameList,
-  DryRunTransformArgs,
-  RenameListArgs,
-  TransformTypes
+    AreNewNamesDistinct,
+    CreateBatchRenameList,
+    DryRunTransformArgs,
+    RenameListArgs,
+    TransformTypes
 } from "../types.js";
 import * as rollbackUtils from "../utils/createRollback.js";
 import * as utils from "../utils/utils.js";
 import {
-  examplePath,
-  exampleStats,
-  generateMockSplitFileList,
-  mockFileList,
-  renameListToolSet
+    examplePath,
+    exampleStats,
+    generateMockSplitFileList,
+    mockFileList,
+    mockRenameListToolSet
 } from "./mocks.js";
 
-const { renameLists: mockRenameLists } = renameListToolSet;
+const { renameLists: mockRenameLists } = mockRenameListToolSet;
 const { distinct: mockDistinctList } = mockRenameLists;
 
 const splitFileList = generateMockSplitFileList(10);
@@ -89,7 +89,7 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
   spyOnCreateRollback = jest
     .spyOn(rollbackUtils, "createRollback")
     .mockImplementation(({ transforms, sourcePath }) =>
-      Promise.resolve(renameListToolSet.mockRollback)
+      Promise.resolve(mockRenameListToolSet.mockRollback)
     );
 
 [
