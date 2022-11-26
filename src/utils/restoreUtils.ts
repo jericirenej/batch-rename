@@ -22,15 +22,17 @@ export const checkExistingFiles: CheckExistingFiles = ({
   transforms,
 }) => {
   const filesToRestore: string[] = [],
+    missingFiles: string[] = [],
     fileNames = [...new Set(existingFiles)],
-    uniqueRenames = new Set(transforms.flat().map(({ rename }) => rename));
+    uniqueRenames = [...new Set(transforms.flat().map(({ rename }) => rename))];
 
+  // Check that all rename files can be mapped to existing
   for (const rename of uniqueRenames) {
-    if (fileNames.includes(rename)) filesToRestore.push(rename);
+    fileNames.includes(rename)
+      ? filesToRestore.push(rename)
+      : missingFiles.push(rename);
   }
-  const missingFiles = fileNames.filter(
-    (fileName) => !filesToRestore.includes(fileName)
-  );
+
   return { filesToRestore, missingFiles };
 };
 
