@@ -1,7 +1,7 @@
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as formatText from "../converters/formatTextTransform.js";
 import * as numericConverter from "../converters/numericTransform.js";
-import type { GenerateRenameListArgs } from "../types.js";
+import type { BaseRenameItem, GenerateRenameListArgs } from "../types.js";
 import * as utils from "../utils/utils.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
@@ -97,12 +97,11 @@ describe("numericTransform", () => {
     const transformReturn = numericTransform(defaultArgs);
     transformReturn.map((transformation, index) => {
       const keys = Object.keys(transformation);
-      const expected = ["rename", "original", "sourcePath"];
+      const expected:(keyof BaseRenameItem)[] = ["rename", "original"];
       expect(keys).toEqual(expected);
       const { baseName, ext, sourcePath } = splitFileList[index];
       expect(transformation.original).toEqual(`${baseName}${ext}`);
       expect(transformation.rename).toEqual(mockComposeResponse);
-      expect(transformation.sourcePath).toEqual(sourcePath);
     });
   });
 });
