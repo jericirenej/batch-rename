@@ -1,5 +1,6 @@
 import { Dirent } from "fs";
 import type {
+  BaseRenameItem,
   GenerateSearchAndReplaceArgs,
   SearchAndReplace
 } from "../types.js";
@@ -14,12 +15,16 @@ export const searchAndReplace: SearchAndReplace = ({
   format,
 }) => {
   const generatedArgs = generateSearchAndReplaceArgs(searchAndReplace!);
-  const targetList = splitFileList.map((fileInfo) => {
+  const targetList: BaseRenameItem[] = [];
+  splitFileList.forEach((fileInfo) => {
     const { filter, replace } = generatedArgs;
+    // Early return if filter is invalid.
+    if(!filter) return;
+
     const { baseName, sourcePath, ext, type } = fileInfo;
     const original = `${baseName}${ext}`;
     let rename = noExtensionPreserve ? original : baseName;
-    if (filter && filter.test(original)) {
+    if (filter.test(original)) {
       rename = rename.replaceAll(filter, replace);
     }
     // Perform text formatting, if needed.
@@ -35,7 +40,11 @@ export const searchAndReplace: SearchAndReplace = ({
         rename = optionalTruncate(truncate, rename, sourcePath, type);
       }
     }
-    return { original, rename, sourcePath };
+    // Do not push identical transform entries to output.
+    if (original !== rename) {
+      const renameItem: BaseRenameItem = { original, rename };
+      targetList.push(renameItem);
+    }
   });
   return targetList;
 };

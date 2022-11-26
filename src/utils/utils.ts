@@ -1,5 +1,12 @@
 import { existsSync } from "fs";
-import { lstat, readdir, rename, unlink } from "fs/promises";
+import {
+  lstat,
+  readdir,
+  readFile,
+  rename,
+  unlink,
+  writeFile
+} from "fs/promises";
 import { join, resolve } from "path";
 import readline from "readline";
 import {
@@ -13,17 +20,22 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   AreNewNamesDistinct,
+  AreTransformsDistinct,
+  BaseRenameItem,
+  BaseRenameList,
   CheckPath,
-  CleanUpRollbackFile,
   ComposeRenameString,
   CreateBatchRenameList,
   DetermineDir,
   ExtractBaseAndExt,
-  LegacyRenameList,
   ListFiles,
   NumberOfDuplicatedNames,
+  RenameItemsArray,
+  RollbackFile,
+  TrimRollbackFile,
   TruncateFileName
 } from "../types.js";
+import { checkRestoreFile } from "./restoreUtils.js";
 
 const {
   allRenameFailed,
@@ -37,9 +49,95 @@ const { truncateInvalidArgument } = ERRORS.transforms;
 const { noRollbackFile } = ERRORS.cleanRollback;
 const { failReport, failItem } = STATUS.settledPromisesEval;
 
-export const cleanUpRollbackFile: CleanUpRollbackFile = async ({
-  transformPath,
+export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
+export const jsonReplicate = <T>(arg: T): T =>
+  jsonParseReplicate(JSON.stringify(arg)) as T;
+
+export const parseRestoreArg = (arg: unknown): number => {
+  try {
+    if (typeof arg === "boolean") {
+      return 0;
+    } else {
+      const num = Number(arg);
+      return Number.isNaN(num) ? 0 : Math.abs(Math.floor(num));
+    }
+  } catch {
+    return 0;
+  }
+};
+
+export const extractCurrentReferences = (
+  rollbackTransforms: RenameItemsArray[],
+  currentNames: string[]
+): { withIds: Record<string, string>; noIds: string[] } => {
+  const alreadyCheckedRefs: string[] = [];
+  let namesLeftToCheck = [...currentNames];
+  const namesAndReferences: Record<string, string> = {};
+  for (const rollback of rollbackTransforms) {
+    if (!namesLeftToCheck.length) break;
+
+    // Names to filter out in the next round;
+    const namesToExclude: string[] = [];
+    let eligible = rollback;
+    if (alreadyCheckedRefs.length) {
+      eligible = eligible.filter(
+        ({ referenceId }) => !alreadyCheckedRefs.includes(referenceId)
+      );
+    }
+    if (!eligible.length) continue;
+
+    namesLeftToCheck.forEach((name) => {
+      const found = eligible.find(({ rename }) => name === rename);
+      if (found) {
+        namesAndReferences[name] = found.referenceId;
+        namesToExclude.push(name);
+      }
+    });
+
+    namesLeftToCheck = namesLeftToCheck.filter(
+      (name) => !namesToExclude.includes(name)
+    );
+  }
+  return { withIds: namesAndReferences, noIds: namesLeftToCheck };
+};
+
+export const trimRollbackFile: TrimRollbackFile = async ({
+  sourcePath,
+  targetLevel,
 }) => {
+  const targetDir = determineDir(sourcePath);
+  const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
+  const rollBackFileExists = existsSync(targetPath);
+  if (!rollBackFileExists) {
+    throw new Error(noRollbackFile);
+  }
+  const rollbackFile = JSON.parse(await readFile(targetPath, "utf-8"));
+
+  const verifiedRollback = checkRestoreFile(rollbackFile);
+  const rollbackTransforms = verifiedRollback.transforms.slice(targetLevel);
+
+  if (!rollbackTransforms.length) {
+    process.stdout.write("Deleting rollback file...");
+    await unlink(targetPath);
+  } else {
+    process.stdout.write("Updating rollback file...");
+    const newRollbackFile: RollbackFile = {
+      sourcePath,
+      transforms: rollbackTransforms,
+    };
+    await writeFile(
+      resolve(targetDir, ROLLBACK_FILE_NAME),
+      JSON.stringify(newRollbackFile, undefined, 2),
+      "utf-8"
+    );
+  }
+
+  process.stdout.write("DONE!");
+};
+
+export const deleteRollbackFile = async (
+  transformPath?: string
+): Promise<void> => {
   const targetDir = determineDir(transformPath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
@@ -109,6 +207,14 @@ export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
   return duplicates <= 0;
 };
 
+export const areTransformsDistinct: AreTransformsDistinct = (renameList) => {
+  const duplicates = numberOfDuplicatedNames({
+    renameList,
+    checkType: "transforms",
+  });
+  return duplicates <= 0;
+};
+
 /** Check for duplicated fileNames which would lead to errors. Takes in an
  * @param args.renameList - Supply rename list of appropriate type.
     @param {"results"|"transforms"} args.checkType - If *'results'* are specified,functions checks if there are duplicated among the target transformed names. 
@@ -120,18 +226,23 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
   checkType,
 }) => {
   if (checkType === "results") {
-    const renames = renameList.map((renameInfo) => renameInfo.rename);
+    const renames = renameList.map(({ rename }) => rename);
     const newNamesUniqueLength = new Set(renames).size;
     return renames.length - newNamesUniqueLength;
   }
   if (checkType === "transforms") {
     const duplicatedTransforms = renameList.filter(
-      (renameInfo) => renameInfo.original === renameInfo.rename
+      ({ original, rename }) => original === rename
     );
     return duplicatedTransforms.length;
   }
   return -1;
 };
+
+export const filterOutDuplicatedTransforms = (
+  renameList: BaseRenameList
+): BaseRenameList =>
+  renameList.filter(({ original, rename }) => original !== rename);
 
 export const checkPath: CheckPath = async (
   path,
@@ -231,29 +342,29 @@ export const composeRenameString: ComposeRenameString = ({
  * for either a transform or a revert operation. Restore operations are triggered
  * if a filesToRevert argument is supplied.
  */
-export const createBatchRenameList: CreateBatchRenameList = (
-  renameList,
-  filesToRevert = []
-) => {
+export const createBatchRenameList: CreateBatchRenameList = ({
+  transforms,
+  sourcePath,
+  filesToRestore = [],
+}) => {
   const batchRename: Promise<void>[] = [];
-  if (filesToRevert.length) {
-    filesToRevert.forEach((file) => {
-      const targetName = renameList.find((fileInfo) => {
+  if (filesToRestore.length) {
+    filesToRestore.forEach((file) => {
+      const targetName = transforms.find((fileInfo) => {
         const { rename, original } = fileInfo;
         return rename === file && original !== rename;
       });
       if (targetName) {
         const [currentPath, revertPath] = [
-          join(targetName.sourcePath, file),
-          join(targetName.sourcePath, targetName.original),
+          join(sourcePath, file),
+          join(sourcePath, targetName.original),
         ];
         return batchRename.push(rename(currentPath, revertPath));
       }
     });
     return batchRename;
   }
-  renameList.forEach((fileInfo) => {
-    const { original, rename: newName, sourcePath } = fileInfo;
+  transforms.forEach(({ original, rename: newName }) => {
     if (original !== newName) {
       const [originalFullPath, newNameFullPath] = [
         join(sourcePath, original),
@@ -272,10 +383,10 @@ export const settledPromisesEval = ({
   promiseResults,
   operationType,
 }: {
-  transformedNames: LegacyRenameList;
+  transformedNames: BaseRenameItem[];
   promiseResults: PromiseSettledResult<void>[];
   operationType: "convert" | "restore";
-}): LegacyRenameList => {
+}): BaseRenameItem[] => {
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
   ).length;
@@ -285,7 +396,7 @@ export const settledPromisesEval = ({
     throw new Error(allRenameFailed);
 
   console.log(failReport(promisesRejected, operationType));
-  const truncatedList: LegacyRenameList = [];
+  const truncatedList: BaseRenameItem[] = [];
   promiseResults.forEach((settledResult, index) => {
     if (settledResult.status === "rejected") {
       const { original, rename } = transformedNames[index];

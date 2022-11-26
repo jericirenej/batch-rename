@@ -8,13 +8,14 @@ export default {
   transform: {
     "\\.[jt]sx?$": "ts-jest",
   },
- moduleNameMapper: {
+  moduleNameMapper: {
     "(.+)\\.js": "$1",
   },
-  
+
   extensionsToTreatAsEsm: [".ts"],
   maxWorkers: 1,
-  coveragePathIgnorePatterns: ["tests/", "programConfiguration"],
+  // eslint-disable-next-line no-useless-escape
+  coveragePathIgnorePatterns: ["tests/", "programConfiguration", "index.ts", "/\.\w+/"],
   collectCoverageFrom: ["**/*.ts"],
   transformIgnorePatterns: [`/node_modules/(?!${esModules})`],
 };

@@ -6,6 +6,7 @@ import {
   VALID_TRANSFORM_TYPES
 } from "./constants";
 
+// PROGRAM PARSE AND CONFIG TYPES
 export type ValidTypes = "files" | "dirs" | "all";
 
 export type ValidTextFormats = "uppercase" | "lowercase" | "capitalize";
@@ -31,10 +32,16 @@ export type OptionKeys =
   | "format"
   | "targetType";
 
-export type OptionKeysWithValues = Record<
-  OptionKeys,
-  boolean | string | string[]
->;
+export type OptionKeysWithValues = Record<OptionKeys, unknown>;
+
+export type ProgramCLIOptions = {
+  short: string;
+  long: OptionKeys;
+  description: string;
+  type?: string;
+  defaultValue?: string | boolean;
+  choices?: string[];
+};
 
 export type OptionKeysWithValuesAndRestArgs = OptionKeysWithValues & {
   restArgs?: string[];
@@ -79,12 +86,6 @@ export type ExtractBaseAndExt = (
   sourcePath: string
 ) => ExtractBaseAndExtReturn;
 
-export interface LegacyRenameItem {
-  rename: string;
-  original: string;
-  sourcePath: string;
-}
-export type LegacyRenameList = LegacyRenameItem[];
 export type RenameListArgs = {
   transformPattern: TransformTypes[];
   addText?: string;
@@ -111,10 +112,10 @@ export type GenerateRenameListArgs = RenameListArgs & {
 };
 export type GenerateRenameList = (
   args: GenerateRenameListArgs
-) => LegacyRenameList;
+) => BaseRenameList;
 
 export type DryRunTransformArgs = {
-  transformedNames: LegacyRenameList;
+  transformedNames: BaseRenameList;
   transformPattern: TransformTypes[];
   transformPath: string;
 };
@@ -122,20 +123,21 @@ export type DryRunTransform = (args: DryRunTransformArgs) => Promise<boolean>;
 
 export type DryRunRestore = (args: RestoreBaseReturn) => Promise<boolean>;
 
-export type GeneralTransformReturn = {
-  rename: string;
-  original: string;
-  sourcePath: string;
-}[];
+// TRANSFORM TYPES
+interface GeneralTransformOperation {
+  (args: GenerateRenameListArgs): BaseRenameList;
+}
+export type NumericTransform = GeneralTransformOperation;
+export type DateTransform = GeneralTransformOperation;
+export type SearchAndReplace = GeneralTransformOperation;
+export type TruncateTransform = GeneralTransformOperation;
+export type AddTextTransform = GeneralTransformOperation;
+export type ExtensionModifyTransform = GeneralTransformOperation;
+export type FormatTextTransform = GeneralTransformOperation;
 
-export type NumericTransform = (
-  args: GenerateRenameListArgs
-) => GeneralTransformReturn;
+export type KeepTransform = (args: KeepTransformArgs) => BaseRenameList;
 
-export type DateTransform = (
-  args: GenerateRenameListArgs
-) => GeneralTransformReturn;
-
+// TRANSFORM RELATED TYPES AND UTILS
 export type DateTransformOptions = typeof VALID_DATE_TRANSFORM_TYPES[number];
 export type DateTransformTypes = {
   type: DateTransformOptions;
@@ -152,9 +154,16 @@ export type GenerateSearchAndReplaceArgs = (
   args: string[]
 ) => SearchAndReplaceArgs;
 
-export type SearchAndReplace = (
-  args: GenerateRenameListArgs
-) => LegacyRenameList;
+export type KeepTransformArgs = Pick<
+  GenerateRenameListArgs,
+  | "keep"
+  | "addText"
+  | "separator"
+  | "textPosition"
+  | "splitFileList"
+  | "noExtensionPreserve"
+  | "format"
+>;
 
 export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
@@ -163,22 +172,6 @@ export type TruncateFileNameArgs = {
   format?: string;
 };
 export type TruncateFileName = (args: TruncateFileNameArgs) => string;
-export type TruncateTransform = (
-  args: GenerateRenameListArgs
-) => LegacyRenameList;
-
-export type AddTextTransform = TruncateTransform;
-
-export type ExtensionModifyTransform = TruncateTransform;
-
-export type ProgramOptions = {
-  short: string;
-  long: OptionKeys;
-  description: string;
-  type?: string;
-  defaultValue?: string | boolean;
-  choices?: string[];
-};
 
 export type UtilityActions = typeof UTILITY_ACTIONS[number] | undefined;
 export type UtilityActionsCheck = (
@@ -188,34 +181,49 @@ export type UtilityActionsCheck = (
 export type UtilityFunctionsArgs = {
   transformPath?: string;
   dryRun?: boolean;
+  rollbackLevel?: number;
 };
 
-export type CreateBatchRenameList = (
-  renameList: LegacyRenameList,
-  filesToRevert?: string[]
-) => Promise<void>[];
+export type CreateBatchRenameList = ({
+  transforms,
+  filesToRestore,
+  sourcePath,
+}: {
+  transforms: BaseRenameList;
+  sourcePath: string;
+  filesToRestore?: string[];
+}) => Promise<void>[];
 
 export type RestoreBaseReturn = {
-  rollbackData: LegacyRenameList;
+  rollbackData: RollbackFile;
+  restoreList: ConversionList;
   existingFiles: string[];
   missingFiles: string[];
   filesToRestore: string[];
 };
 export type RestoreBaseFunction = (
-  transformPath?: string
+  transformPath?: string,
+  rollbackLevel?: number
 ) => Promise<RestoreBaseReturn>;
 export type RestoreOriginalFileNames = (
   args: UtilityFunctionsArgs
 ) => Promise<void>;
-export type CleanUpRollbackFile = (args: UtilityFunctionsArgs) => Promise<void>;
+
+export type TrimRollbackFile = (
+  args: Omit<ConversionList, "transforms">
+) => Promise<void>;
+
 export type ListFiles = (
   transformPath?: string,
   excludeFilter?: string,
   targetType?: ValidTypes
 ) => Promise<Dirent[]>;
-export type AreNewNamesDistinct = (renameList: LegacyRenameList) => boolean;
+
+export type AreNewNamesDistinct = (renameList: BaseRenameList) => boolean;
+export type AreTransformsDistinct = AreNewNamesDistinct;
+
 export type NumberOfDuplicatedNamesArgs = {
-  renameList: LegacyRenameList;
+  renameList: BaseRenameList;
   checkType: "results" | "transforms";
 };
 export type NumberOfDuplicatedNames = (
@@ -240,26 +248,17 @@ export type ComposeRenameStringArgs = {
 };
 export type ComposeRenameString = (args: ComposeRenameStringArgs) => string;
 
-export type FormatTextTransform = (
-  args: GenerateRenameListArgs
-) => LegacyRenameList;
+// RENAME ITEMS AND ROLLBACKS
+export interface BaseRenameItem {
+  rename: string;
+  original: string;
+}
 
-export type KeepTransformArgs = Pick<
-  GenerateRenameListArgs,
-  | "keep"
-  | "addText"
-  | "separator"
-  | "textPosition"
-  | "splitFileList"
-  | "noExtensionPreserve"
-  | "format"
->;
-
-export type KeepTransform = (args: KeepTransformArgs) => LegacyRenameList;
-
-export type RenameItem = Omit<LegacyRenameItem, "sourcePath"> & {
+export type BaseRenameList = BaseRenameItem[];
+export interface RenameItem extends BaseRenameItem {
   referenceId: string;
-};
+}
+
 export type RenameItemsArray = RenameItem[];
 
 /** Rollback file whose transform property that includes a history of transform operations
@@ -269,42 +268,51 @@ export interface RollbackFile {
   transforms: RenameItemsArray[];
 }
 
-/** Restore list whose transform property is an array of
- * single file transforms that contain the current and target level name. */
-export interface RestoreList {
+/** Conversion list represent an array of file transforms which includes
+ * the number of rollbacks performed for each file and current and target file name */
+export interface ConversionList {
   sourcePath: string;
-  transforms: RenameItemsArray;
+  transforms: RenameItem[];
+  targetLevel: number;
 }
+
 export interface BaseFileMapperArgs {
   rollbackFile: RollbackFile;
   rollbackLevel?: number;
 }
 
-export type RestoreFileMapper = ({
-  rollbackFile,
-  rollbackLevel,
-}: BaseFileMapperArgs) => RestoreList;
+export type RestoreByLevels = (args: BaseFileMapperArgs) => ConversionList;
 
 export type DetermineRollbackLevel = ({
   transformList,
   rollbackLevel,
 }: {
   transformList: RenameItemsArray[];
-  rollbackLevel: number;
+  rollbackLevel?: number;
 }) => number;
-
-export type BuildRestoreFile = ({
-  restoreList,
-  targetLevel,
-  sourcePath,
-}: {
-  restoreList: Record<string, string[]>;
-  targetLevel: number;
-  sourcePath: string;
-}) => RestoreList;
 
 export interface FilesWithMissingRestores {
   file: string;
   found: number;
   requested: number;
+}
+
+export interface CheckExistingFiles {
+  ({
+    existingFiles,
+    transforms,
+  }: {
+    existingFiles: string[];
+    transforms: RenameItemsArray[];
+  }): { filesToRestore: string[]; missingFiles: string[] };
+}
+
+export interface CreateRollbackFile {
+  ({
+    transforms,
+    sourcePath,
+  }: {
+    transforms: BaseRenameList;
+    sourcePath: string;
+  }): Promise<RollbackFile>;
 }

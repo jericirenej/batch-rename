@@ -155,12 +155,6 @@ describe("dateTransform", () => {
       spyOnExtractDate.mockClear();
     });
   });
-  it("Should call composeRenameString appropriate number of times", () => {
-    dateTransform(baseArgs);
-    expect(spyOnComposeRenameString).toHaveBeenCalledTimes(
-      baseArgs.splitFileList.length
-    );
-  });
   it("Should call composeRenameString with appropriate arguments", () => {
     const argsToWatch = {
       textPosition: "append" as const,
@@ -240,7 +234,6 @@ describe("dateTransform", () => {
       const targetFile = splitFileList[index];
       const expectedOriginal = `${targetFile.baseName}${targetFile.ext}`;
       expect(transform.original).toBe(expectedOriginal);
-      expect(transform.sourcePath).toBe(targetFile.sourcePath);
       const datePart = [year, month, day].join(DEFAULT_SEPARATOR);
       expect(transform.rename.includes(datePart)).toBe(true);
     });

@@ -1,34 +1,55 @@
 import { nanoid } from "nanoid";
-import { join } from "path";
+import type { LegacyRenameList } from "../legacyTypes.js";
 import { ERRORS, STATUS } from "../messages/index.js";
 import type {
-  BuildRestoreFile,
+  CheckExistingFiles,
   DetermineRollbackLevel,
-  FilesWithMissingRestores,
-  LegacyRenameList,
   RenameItem,
   RenameItemsArray,
-  RestoreFileMapper,
-  RestoreList,
+  RestoreByLevels,
   RollbackFile
 } from "../types";
+import { jsonReplicate } from "./utils.js";
 
-const { incorrectRollbackFormat, zeroLevelRollback } = ERRORS.restoreFileMapper;
+const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
   STATUS.restoreFileMapper;
 
+/** Check which existing files names can be found in the rollback file
+ * and which are missing */
+export const checkExistingFiles: CheckExistingFiles = ({
+  existingFiles,
+  transforms,
+}) => {
+  const filesToRestore: string[] = [],
+    missingFiles: string[] = [],
+    fileNames = [...new Set(existingFiles)],
+    uniqueRenames = [...new Set(transforms.flat().map(({ rename }) => rename))];
+
+  // Check that all rename files can be mapped to existing
+  for (const rename of uniqueRenames) {
+    fileNames.includes(rename)
+      ? filesToRestore.push(rename)
+      : missingFiles.push(rename);
+  }
+
+  return { filesToRestore, missingFiles };
+};
+
+/**Determine target rollback level, based on transform list length and passed
+ * rollbackLevel value. By default, maximum restore level  will be set. */
 export const determineRollbackLevel: DetermineRollbackLevel = ({
   transformList,
-  rollbackLevel = 1,
+  rollbackLevel,
 }) => {
-  if (rollbackLevel === 0) throw new Error(zeroLevelRollback);
-  let targetRestoreLevel = rollbackLevel;
   const maximumRestoreLevel = transformList.length;
+  if (rollbackLevel === 0 || rollbackLevel === undefined)
+    return maximumRestoreLevel;
   if (rollbackLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
-    targetRestoreLevel = maximumRestoreLevel;
+    return maximumRestoreLevel
   }
-  return targetRestoreLevel;
+  return rollbackLevel;
 };
 
 /**Convert legacy rollback file which supported only single rollbacks to the new
@@ -37,7 +58,10 @@ export const legacyRestoreMapper = (
   legacyRollbackFile: LegacyRenameList
 ): RollbackFile => {
   const sourcePath = legacyRollbackFile[0].sourcePath;
-  const restoreList: RestoreList = { sourcePath, transforms: [] };
+  const restoreList: RollbackFile = {
+    sourcePath,
+    transforms: [],
+  };
   const legacyRollbackWithReferenceId: RenameItemsArray =
     legacyRollbackFile.map(({ rename, original }) => ({
       original,
@@ -79,7 +103,8 @@ export const isCurrentRestore = (
   const keys = Object.keys(rollbackFile);
   const topLevelKeys: (keyof RollbackFile)[] = ["sourcePath", "transforms"];
   const areKeysPresent =
-    keys.length === topLevelKeys.length &&
+    // Allow for extra properties
+    // keys.length === topLevelKeys.length &&
     topLevelKeys.every((key) => key in rollbackFile);
   if (!areKeysPresent) return false;
 
@@ -94,7 +119,7 @@ export const isCurrentRestore = (
     "referenceId",
     "rename",
   ];
-  const isEachTransformProper = (topLevelObject.transforms as any[]).every(
+  const isEachTransformProper = (topLevelObject.transforms as unknown[]).every(
     (transform) => {
       if (!Array.isArray(transform)) return false;
       for (const fileTransform of transform) {
@@ -125,73 +150,46 @@ export const checkRestoreFile = (rollbackFile: unknown): RollbackFile => {
   throw new Error(incorrectRollbackFormat);
 };
 
-/**Evaluate the restore list. For elements that have fewer restores than
- * the target level, log this to the console. Return a single transform from
- * the latest file to the target (or earliest available) original name */
-export const buildRestoreFile: BuildRestoreFile = ({
-  restoreList,
-  targetLevel,
-  sourcePath,
-}) => {
-  const filesWithMissingRestores = [] as FilesWithMissingRestores[];
-  const entries = Object.entries(restoreList);
-  const transformRestore: RestoreList = { sourcePath, transforms: [] };
-  entries.forEach(([referenceId, transformList]) => {
-    const [rename, original] = [
-      transformList[0],
-      transformList[transformList.length - 1],
-    ];
-    // Transform list should be equal to number of rollbacks + current name
-    if (transformList.length < targetLevel + 1) {
-      filesWithMissingRestores.push({
-        file: join(sourcePath, rename).replaceAll("\\", "/"),
-        found: transformList.length - 1,
-        requested: targetLevel,
-      });
-    }
-    return transformRestore.transforms.push({ rename, original, referenceId });
-  });
-  // Notify if some transforms restore levels are less than requested
-  if (filesWithMissingRestores.length) {
-    console.log(
-      rollbackLevelsLessThanTarget(
-        filesWithMissingRestores.length,
-        entries.length
-      )
-    );
-    console.table(filesWithMissingRestores);
-  }
-  return transformRestore;
-};
-
-export const restoreFileMapper: RestoreFileMapper = ({
+/** Return current and target rename for files. If a file's reference
+ * is not found at target level, the next most recent name will be supplied. */
+export const restoreByLevels: RestoreByLevels = ({
   rollbackFile,
-  rollbackLevel = 1,
-}): any => {
+  rollbackLevel = 0,
+}) => {
   const { transforms, sourcePath } = rollbackFile;
   const targetLevel = determineRollbackLevel({
     transformList: transforms,
     rollbackLevel,
   });
-  const restoreList = {} as Record<string, string[]>;
-  const flatTransform = transforms.slice(0, targetLevel).flat(2);
+  const targetSlice = transforms.slice(0, targetLevel).flat();
+  const reverseSlice = jsonReplicate(targetSlice).reverse();
   const uniqueReferences = [
-    ...new Set(flatTransform.map(({ referenceId }) => referenceId)),
+    ...new Set(targetSlice.map(({ referenceId }) => referenceId)),
   ];
-  uniqueReferences.forEach((reference) => {
-    const referenceTransformSequence = flatTransform.reduce(
-      (acc, { original, rename, referenceId }) => {
-        if (!(referenceId === reference)) return acc;
-        if (!acc.length) {
-          return acc = [rename, original];
-        }
-        // Remove the last element, so we don't get duplication
-        // between the original and previous rename.
-        return acc = [...acc.slice(0, -1), rename, original];
-      },
-      [] as string[]
-    );
-    restoreList[reference] = [...referenceTransformSequence];
+  const mappedTransform = new Map<
+    string,
+    { rename: string; original: string }
+  >();
+
+  uniqueReferences.forEach((ref) => {
+    const rename = targetSlice.find(
+      ({ referenceId }) => referenceId === ref
+    )?.rename;
+    const original = reverseSlice.find(
+      ({ referenceId }) => referenceId === ref
+    )?.original;
+    if (rename && original) {
+      mappedTransform.set(ref, { original, rename });
+    }
   });
-  return buildRestoreFile({ restoreList, targetLevel, sourcePath });
+
+  const restoreTransforms: RenameItem[] = [...mappedTransform.entries()].map(
+    ([referenceId, { original, rename }]) => ({ referenceId, original, rename })
+  );
+
+  return {
+    sourcePath,
+    transforms: restoreTransforms,
+    targetLevel,
+  };
 };

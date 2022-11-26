@@ -3,6 +3,9 @@
 
 <br>
 
+## New feature
+Multi level rollback is now implemented. This means that you can perform multiple transformation on existing / newly added files, and then restore back to previous file names by levels. Just add the number of rollbacks you wish to perform next to the `restore` flag. Or omit the argument to roll back to the beginning!
+
 ## How to run
 Clone the repo, then run `npm install`.
 Afterwards, the script can be used in one of the following ways:
@@ -67,7 +70,7 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-a, --addText`|`<string>`|Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.|
 |`--target`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
 |`--targetType`|`['files'\|'dirs'\|'all']`|Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.|
-|`-r, --restore`||Restore transformed files to original names, if restore file is available.|
+|`-r, --restore`|`[number]`|Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used.|
 |`-D, --dryRun`||Run transform operation without writing to disk. Will log properties of expected output. Prompts user for transform execution, if no errors detected.|
 |`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
 |`--exclude`|`<string\|regex>`|Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions|

@@ -1,6 +1,13 @@
 import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
-import { lstat, readdir, rename, unlink } from "fs/promises";
+import {
+  lstat,
+  readdir,
+  readFile,
+  rename,
+  unlink,
+  writeFile
+} from "fs/promises";
 import { SpyInstance } from "jest-mock";
 import path, { join, resolve } from "path";
 import process from "process";
@@ -11,33 +18,36 @@ import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
   ExtractBaseAndExtTemplate,
+  RenameItemsArray,
   ValidTypes
 } from "../types.js";
-import {
-  areNewNamesDistinct,
-  checkPath,
-  cleanUpRollbackFile,
-  composeRenameString,
-  createBatchRenameList,
-  determineDir,
-  extractBaseAndExt,
-  listFiles,
-  numberOfDuplicatedNames,
-  settledPromisesEval,
-  truncateFile
-} from "../utils/utils.js";
+import * as utils from "../utils/utils.js";
 import {
   createDirentArray,
   examplePath,
   exampleStats,
   expectedSplit,
   mockFileList,
-  renameListDistinct,
-  renameListWithDuplicateOldAndNew,
-  renameWithNewNameRepeat,
+  mockRenameListToolSet,
+  mockRollbackToolSet,
   truthyArgument
 } from "./mocks.js";
 
+const {
+  areNewNamesDistinct,
+  checkPath,
+  composeRenameString,
+  createBatchRenameList,
+  determineDir,
+  extractBaseAndExt,
+  extractCurrentReferences,
+  listFiles,
+  numberOfDuplicatedNames,
+  parseRestoreArg,
+  settledPromisesEval,
+  truncateFile,
+  trimRollbackFile,
+} = utils;
 const {
   noChildFiles,
   noChildDirs,
@@ -46,7 +56,9 @@ const {
   pathIsNotDir,
 } = ERRORS.utils;
 const { noRollbackFile } = ERRORS.cleanRollback;
-const { zeroLevelRollback } = ERRORS.restoreFileMapper;
+
+const { mockRollback, originalNames, renameLists } = mockRenameListToolSet;
+const { distinct, duplicateOriginalAndRename, newNameRepeat } = renameLists;
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -57,16 +69,70 @@ jest.mock("fs/promises", () => {
     readdir: jest.fn(),
     lstat: jest.fn(),
     unlink: jest.fn(),
+    readFile: jest.fn(),
+    writeFile: jest.fn(),
   };
 });
-const mockedFs = jest.mocked(fs);
-const mockedRename = jest.mocked(rename);
-const mockedLstat = jest.mocked(lstat);
-const mockedReadDir = jest.mocked(readdir);
-const mockedUnlink = jest.mocked(unlink);
+const mockedFs = jest.mocked(fs),
+  mockedRename = jest.mocked(rename),
+  mockedLstat = jest.mocked(lstat),
+  mockedReadDir = jest.mocked(readdir),
+  mockedUnlink = jest.mocked(unlink),
+  mockedReadFile = jest.mocked(readFile),
+  mockedWriteFile = jest.mocked(writeFile);
 
-describe("cleanUpRollbackFile", () => {
-  let suppressStdOut: SpyInstance<(message:string|Uint8Array) => boolean>;
+describe("parseRestoreArg", () => {
+  it("Should return an integer for stringified number values", () => {
+    for (const [arg, expected] of [
+      ["1", 1],
+      ["2", 2],
+      ["-1", 1],
+      ["2.15", 2],
+    ]) {
+      expect(parseRestoreArg(arg)).toBe(expected);
+    }
+  });
+  it("True and false should be converted to 0", () => {
+    [true, false].forEach((arg) => expect(parseRestoreArg(arg)).toBe(0));
+  });
+  it("Undefined, null, etc. should convert to 0", () => {
+    [null, NaN, undefined].forEach((arg) =>
+      expect(parseRestoreArg(arg)).toBe(0)
+    );
+  });
+});
+
+describe("extractCurrentReferences", () => {
+  const {
+    mockItems: { mockItem1, mockItem2, mockItem3 },
+  } = mockRollbackToolSet;
+  const transforms: RenameItemsArray[] = [
+    [mockItem1(2), mockItem2(1)],
+    [mockItem1(1), mockItem3(1)],
+  ];
+  const missingNames = ["missing1", "missing2"];
+  const namesWithHistory = [mockItem1(2), mockItem1(1), mockItem3(1)];
+  const suppliedNames = [
+    ...namesWithHistory.map(({ rename }) => rename),
+    ...missingNames,
+  ];
+
+  it("Should allocate referenceIds to passed names", () => {
+    const { noIds, withIds } = extractCurrentReferences(
+      transforms,
+      suppliedNames
+    );
+    const expectedWithIds = namesWithHistory.reduce((acc, current) => {
+      acc[current.rename] = current.referenceId;
+      return acc;
+    }, {} as Record<string, string>);
+    expect(noIds).toEqual(missingNames);
+    expect(withIds).toEqual(expectedWithIds);
+  });
+});
+
+describe("trimRollbackFile", () => {
+  let suppressStdOut: SpyInstance<(message: string | Uint8Array) => boolean>;
   beforeEach(
     () =>
       (suppressStdOut = jest
@@ -76,25 +142,74 @@ describe("cleanUpRollbackFile", () => {
         }))
   );
   afterEach(() => suppressStdOut.mockRestore());
-  const cleanUpArgs = { transformPath: examplePath };
+
+  const trimArgs = {
+    sourcePath: examplePath,
+    targetLevel: 0,
+  };
   afterAll(() => suppressStdOut.mockRestore());
   afterEach(() => jest.resetAllMocks());
   it("Should throw error if rollback file does not exist", async () => {
     mockedFs.existsSync.mockReturnValueOnce(false);
-    await expect(() => cleanUpRollbackFile(cleanUpArgs)).rejects.toThrowError(
+    await expect(() => trimRollbackFile(trimArgs)).rejects.toThrowError(
       noRollbackFile
     );
   });
-  it("Should call unlink with target path, if rollbackFile exists", async () => {
+  it("Should call unlink with target path, if target level is high enough to rollback all changes", async () => {
+    for (const modLength of [0, 1]) {
+      mockedFs.existsSync.mockReturnValueOnce(true);
+      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
+      const targetLevel = mockRollback.transforms.length + modLength;
+      mockedUnlink.mockImplementationOnce(() => Promise.resolve());
+      await trimRollbackFile({ ...trimArgs, targetLevel });
+      expect(mockedUnlink).toHaveBeenCalledTimes(1);
+      expect(mockedUnlink).toHaveBeenLastCalledWith(
+        resolve(examplePath, ROLLBACK_FILE_NAME)
+      );
+      mockedUnlink.mockClear();
+    }
+  });
+  it("Should call writeFile with trimmed rollback file", async () => {
+    for (const modLength of [-1, -2]) {
+      mockedFs.existsSync.mockReturnValueOnce(true);
+      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
+      const targetLevel = mockRollback.transforms.length + modLength;
+      mockedWriteFile.mockImplementationOnce((args) => Promise.resolve());
+      await trimRollbackFile({ ...trimArgs, targetLevel });
+      const expectedRollback = {
+        ...mockRollback,
+        transforms: mockRollback.transforms.slice(targetLevel),
+      };
+      expect(mockedWriteFile).toHaveBeenCalledTimes(1);
+      expect(mockedWriteFile).toHaveBeenLastCalledWith(
+        resolve(examplePath, ROLLBACK_FILE_NAME),
+        JSON.stringify(expectedRollback, undefined, 2),
+        "utf-8"
+      );
+      mockedWriteFile.mockClear();
+    }
+  });
+});
+
+describe("deleteRollbackFile", () => {
+  it("Should throw error if rollback file does not exist", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(false);
+    await expect(() => utils.deleteRollbackFile()).rejects.toThrowError(
+      noRollbackFile
+    );
+  });
+  it("Should call unlink with target path, if rollback exists", async () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
     mockedUnlink.mockImplementationOnce(() => Promise.resolve());
-    await cleanUpRollbackFile(cleanUpArgs);
+    await utils.deleteRollbackFile(examplePath);
     expect(mockedUnlink).toHaveBeenCalledTimes(1);
     expect(mockedUnlink).toHaveBeenLastCalledWith(
       resolve(examplePath, ROLLBACK_FILE_NAME)
     );
+    mockedUnlink.mockClear();
   });
 });
+
 describe("extractBaseAndExt", () => {
   it("Should separate the baseName and extension of differently formatted files", () => {
     const extracted = extractBaseAndExt(mockFileList, examplePath);
@@ -169,20 +284,17 @@ describe("listFiles", () => {
     const foundFiles = await listFiles(examplePath);
     expect(foundFiles.length).toBe(listLength - 1);
   });
-  it("Should include only directories, if targetType is set to dirs", async () => {
-    const dirNum = 2;
-    const exampleDirentArray = createDirentArray(10, 8, dirNum);
-    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
-    const foundDirs = await listFiles(examplePath, undefined, "dirs");
-    expect(foundDirs.length).toBe(dirNum);
-  });
-  it("Should include files and directories, if targetType is set to all", async () => {
+  it("Should include only directories, if targetType is set to dirs or all", async () => {
     const dirNum = 2,
       fileNum = 8;
-    const exampleDirentArray = createDirentArray(10, fileNum, dirNum);
-    mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
-    const foundDirs = await listFiles(examplePath, undefined, "all");
-    expect(foundDirs.length).toBe(dirNum + fileNum);
+    const sum = dirNum + fileNum;
+    for (const target of ["dirs", "all"] as const) {
+      const exampleDirentArray = createDirentArray(sum, fileNum, dirNum);
+      mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
+      const foundDirs = await listFiles(examplePath, undefined, target);
+      const expected = target === "dirs" ? dirNum : sum;
+      expect(foundDirs.length).toBe(expected);
+    }
   });
   it("Should exclude files that match the exclude filter", async () => {
     const excludeFilter = "John";
@@ -202,40 +314,40 @@ describe("listFiles", () => {
 });
 describe("areNewNamesDistinct", () => {
   it("areNewNamesDistinct should return false if any of the new names are identical", () => {
-    expect(areNewNamesDistinct(renameListDistinct)).toBe(true);
-    expect(areNewNamesDistinct(renameWithNewNameRepeat)).toBe(false);
+    expect(areNewNamesDistinct(distinct)).toBe(true);
+    expect(areNewNamesDistinct(newNameRepeat)).toBe(false);
   });
 });
 
 describe("numberOfDuplicatedNames", () => {
   it("Should properly evaluate transform duplicates", () => {
     const checkType = "transforms";
-    expect(
-      numberOfDuplicatedNames({ renameList: renameListDistinct, checkType })
-    ).toBe(0);
+    expect(numberOfDuplicatedNames({ renameList: distinct, checkType })).toBe(
+      0
+    );
     expect(
       numberOfDuplicatedNames({
-        renameList: renameListWithDuplicateOldAndNew,
+        renameList: duplicateOriginalAndRename,
         checkType,
       })
     ).toBe(1);
   });
   it("Should properly evaluate rename duplicates", () => {
     const checkType = "results";
-    expect(
-      numberOfDuplicatedNames({ renameList: renameListDistinct, checkType })
-    ).toBe(0);
+    expect(numberOfDuplicatedNames({ renameList: distinct, checkType })).toBe(
+      0
+    );
     expect(
       numberOfDuplicatedNames({
-        renameList: renameWithNewNameRepeat,
+        renameList: newNameRepeat,
         checkType,
       })
     ).toBe(1);
   });
-  it("Should return -1, if checkType is not properly specified", () => {
+  it("Should return -1, if checkType is invalid", () => {
     expect(
       numberOfDuplicatedNames({
-        renameList: renameListDistinct,
+        renameList: distinct,
         checkType: "inexistent" as any,
       })
     ).toBe(-1);
@@ -421,11 +533,15 @@ describe("composeRenameString", () => {
 });
 
 describe("createBatchRenameList", () => {
+  const conversionList = {
+    sourcePath: examplePath,
+    transforms: distinct,
+  };
   beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
   afterEach(() => mockedRename.mockReset());
   it("Should return renameList of appropriate length", () => {
-    const expectedLength = renameListDistinct.length;
-    const batchPromise = createBatchRenameList(renameListDistinct);
+    const expectedLength = conversionList.transforms.length;
+    const batchPromise = createBatchRenameList(conversionList);
     expect(batchPromise.length).toBe(expectedLength);
   });
   it("batchList should contain appropriate data", async () => {
@@ -438,38 +554,41 @@ describe("createBatchRenameList", () => {
             result.push([originalPath as string, targetPath as string])
           ) as unknown as Promise<void>
       );
-    createBatchRenameList(renameListDistinct);
-    renameListDistinct.forEach((renameInfo, index) => {
-      const { original, rename, sourcePath } = renameInfo;
+    createBatchRenameList(conversionList);
+    conversionList.transforms.forEach((renameInfo, index) => {
+      const { original, rename } = renameInfo,
+        { sourcePath } = conversionList;
       const expected = [join(sourcePath, original), join(sourcePath, rename)];
       expect(result[index]).toEqual(expected);
     });
   });
   it("Should return renameList with length corresponding to unique names", () => {
-    const expectedLength = renameListWithDuplicateOldAndNew.filter(
+    const expectedLength = duplicateOriginalAndRename.filter(
       (renameInfo) => renameInfo.original !== renameInfo.rename
     ).length;
-    const batchPromise = createBatchRenameList(
-      renameListWithDuplicateOldAndNew
-    );
+    const batchPromise = createBatchRenameList({
+      sourcePath: examplePath,
+      transforms: duplicateOriginalAndRename,
+    });
     expect(batchPromise.length).toBe(expectedLength);
   });
+
   describe("Revert operations", () => {
     beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
     afterEach(() => mockedRename.mockReset());
     it("If filesToRevert are supplied, return appropriate batchRename list", () => {
-      const revertList = renameListDistinct.map(
+      const revertList = conversionList.transforms.map(
         (renameInfo) => renameInfo.rename
       );
       const expectedLength = revertList.length;
-      const batchPromise = createBatchRenameList(
-        renameListDistinct,
-        revertList
-      );
+      const batchPromise = createBatchRenameList({
+        ...conversionList,
+        filesToRestore: revertList,
+      });
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchList should contain appropriate data", async () => {
-      const revertList = renameListDistinct.map(
+      const filesToRestore = conversionList.transforms.map(
         (renameInfo) => renameInfo.rename
       );
       const result: [string, string][] = [];
@@ -481,47 +600,49 @@ describe("createBatchRenameList", () => {
               result.push([originalPath as string, targetPath as string])
             ) as unknown as Promise<void>
         );
-      createBatchRenameList(renameListDistinct, revertList);
-      renameListDistinct.forEach((renameInfo, index) => {
-        const { original, rename, sourcePath } = renameInfo;
+      createBatchRenameList({ ...conversionList, filesToRestore });
+      conversionList.transforms.forEach((renameInfo, index) => {
+        const { original, rename } = renameInfo,
+          { sourcePath } = conversionList;
         const expected = [join(sourcePath, rename), join(sourcePath, original)];
         expect(result[index]).toEqual(expected);
       });
     });
     it("batchPromise list should not exceed filesToRevert's length", () => {
-      const revertList = renameListDistinct
+      const filesToRestore = conversionList.transforms
         .map((renameInfo) => renameInfo.rename)
         .slice(0, -1);
-      const expectedLength = revertList.length;
-      const batchPromise = createBatchRenameList(
-        renameListDistinct,
-        revertList
-      );
+      const expectedLength = filesToRestore.length;
+      const batchPromise = createBatchRenameList({
+        ...conversionList,
+        filesToRestore,
+      });
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchPromise list should not contain entries where original and renamed file names are identical", () => {
-      const revertList = renameListWithDuplicateOldAndNew.map(
+      const filesToRestore = duplicateOriginalAndRename.map(
         (renameInfo) => renameInfo.rename
       );
-      const expectedLength = renameListWithDuplicateOldAndNew.filter(
+      const expectedLength = duplicateOriginalAndRename.filter(
         (renameInfo) => renameInfo.original !== renameInfo.rename
       ).length;
-      const batchPromise = createBatchRenameList(
-        renameListDistinct,
-        revertList
-      );
+      const batchPromise = createBatchRenameList({
+        ...conversionList,
+        filesToRestore,
+      });
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchPromise list should not include files whose names are not found in renameList", () => {
-      const revertList = renameListDistinct.map(
+      const filesToRestore = conversionList.transforms.map(
         (renameInfo) => renameInfo.rename
       );
-      const truncatedRenameList = renameListDistinct.slice(0, -1);
+      const truncatedRenameList = conversionList.transforms.slice(0, -1);
       const expectedLength = truncatedRenameList.length;
-      const batchPromise = createBatchRenameList(
-        truncatedRenameList,
-        revertList
-      );
+      const batchPromise = createBatchRenameList({
+        ...conversionList,
+        transforms: truncatedRenameList,
+        filesToRestore,
+      });
       expect(batchPromise.length).toBe(expectedLength);
     });
   });
@@ -537,10 +658,10 @@ describe("settledPromisesEval", () => {
   );
   afterEach(() => spyOnConsole.mockRestore());
   const args = {
-      transformedNames: renameListDistinct,
+      transformedNames: distinct,
       operationType: "convert" as const,
     },
-    settledLength = renameListDistinct.length,
+    settledLength = distinct.length,
     rejected = {
       status: "rejected",
       reason: "someReason",
@@ -572,12 +693,9 @@ describe("settledPromisesEval", () => {
       rejected,
     ];
     const result = settledPromisesEval({ ...args, promiseResults });
-    expect(result.length).toBe(renameListDistinct.length - 2);
+    expect(result.length).toBe(distinct.length - 2);
 
-    const rejectedNames = [
-      renameListDistinct[0].original,
-      renameListDistinct[2].original,
-    ];
+    const rejectedNames = [distinct[0].original, distinct[2].original];
     const areRejectedPresent = result.some(({ original }) =>
       rejectedNames.includes(original)
     );
@@ -596,8 +714,8 @@ describe("settledPromisesEval", () => {
 
       const expectedFailReport = failReport(1, operationType);
       const expectedFailItem = failItem(
-        renameListDistinct[2].original,
-        renameListDistinct[2].rename,
+        distinct[2].original,
+        distinct[2].rename,
         operationType
       );
 

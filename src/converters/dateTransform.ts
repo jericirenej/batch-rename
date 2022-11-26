@@ -3,6 +3,7 @@ import { stat } from "fs/promises";
 import { join } from "path";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import type {
+  BaseRenameItem,
   DateTransform,
   DateTransformCorrespondenceTable,
   FileListWithDates,
@@ -59,7 +60,7 @@ export const dateTransform: DateTransform = ({
   separator,
   truncate,
   format,
-  noExtensionPreserve
+  noExtensionPreserve,
 }) => {
   const statProp = dateTransformCorrespondenceTable[dateRename!];
   const originalFileList = splitFileList as FileListWithStatsArray;
@@ -72,7 +73,7 @@ export const dateTransform: DateTransform = ({
   );
 
   const transformedNames = fileListWithDates.map((file) => {
-    const { baseName, ext, formattedDate, sourcePath } = file;
+    const { baseName, ext, formattedDate } = file;
     const { year, month, day, hours, minutes, seconds } = formattedDate;
     const sep = separator && separator.length ? separator : DEFAULT_SEPARATOR;
     let datePrefix = [year, month, day].join(sep);
@@ -92,11 +93,11 @@ export const dateTransform: DateTransform = ({
       noExtensionPreserve,
     });
 
-    return {
+    const renameItem: BaseRenameItem = {
       rename,
       original: `${baseName}${ext}`,
-      sourcePath,
     };
+    return renameItem;
   });
 
   return transformedNames;

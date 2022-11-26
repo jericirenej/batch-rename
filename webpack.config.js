@@ -1,4 +1,5 @@
 import { dirname, resolve } from "path";
+import process from "process";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
