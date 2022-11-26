@@ -107,7 +107,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
       operationType: "restore",
     });
 
-    await trimRollbackFile({ sourcePath:targetDir, targetLevel, transforms });
+    await trimRollbackFile({ sourcePath:targetDir, targetLevel });
   }
 };
 
