@@ -20,7 +20,9 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   AreNewNamesDistinct,
+  AreTransformsDistinct,
   BaseRenameItem,
+  BaseRenameList,
   CheckPath,
   ComposeRenameString,
   CreateBatchRenameList,
@@ -50,6 +52,19 @@ const { failReport, failItem } = STATUS.settledPromisesEval;
 export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
 export const jsonReplicate = <T>(arg: T): T =>
   jsonParseReplicate(JSON.stringify(arg)) as T;
+
+export const parseRestoreArg = (arg: unknown): number => {
+  try {
+    if (typeof arg === "boolean") {
+      return 0;
+    } else {
+      const num = Number(arg);
+      return Number.isNaN(num) ? 0 : Math.abs(Math.floor(num));
+    }
+  } catch {
+    return 0;
+  }
+};
 
 export const extractCurrentReferences = (
   rollbackTransforms: RenameItemsArray[],
@@ -192,6 +207,14 @@ export const areNewNamesDistinct: AreNewNamesDistinct = (renameList) => {
   return duplicates <= 0;
 };
 
+export const areTransformsDistinct: AreTransformsDistinct = (renameList) => {
+  const duplicates = numberOfDuplicatedNames({
+    renameList,
+    checkType: "transforms",
+  });
+  return duplicates <= 0;
+};
+
 /** Check for duplicated fileNames which would lead to errors. Takes in an
  * @param args.renameList - Supply rename list of appropriate type.
     @param {"results"|"transforms"} args.checkType - If *'results'* are specified,functions checks if there are duplicated among the target transformed names. 
@@ -215,6 +238,11 @@ export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
   }
   return -1;
 };
+
+export const filterOutDuplicatedTransforms = (
+  renameList: BaseRenameList
+): BaseRenameList =>
+  renameList.filter(({ original, rename }) => original !== rename);
 
 export const checkPath: CheckPath = async (
   path,

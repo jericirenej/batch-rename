@@ -11,16 +11,20 @@ import type {
   BaseRenameItem,
   DryRunTransform,
   ExtractBaseAndExtReturn,
-  FileListWithStatsArray, GenerateRenameList,
-  GenerateRenameListArgs, RenameListArgs
+  FileListWithStatsArray,
+  GenerateRenameList,
+  GenerateRenameListArgs,
+  RenameListArgs
 } from "../types";
 import { createRollback } from "../utils/createRollback.js";
 import {
   areNewNamesDistinct,
+  areTransformsDistinct,
   askQuestion,
   createBatchRenameList,
   determineDir,
   extractBaseAndExt,
+  filterOutDuplicatedTransforms,
   listFiles,
   numberOfDuplicatedNames,
   settledPromisesEval
@@ -33,7 +37,7 @@ import { keepTransform } from "./keepTransform.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
-const { duplicateRenames, noTransformFunctionAvailable } = ERRORS.transforms;
+const { duplicateRenames, noTransformFunctionAvailable, duplicateSourceAndOrigin, noFilesToTransform} = ERRORS.transforms;
 const {
   exitWithoutTransform,
   questionPerformTransform,
@@ -45,7 +49,7 @@ const {
 
 export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   typeof VALID_TRANSFORM_TYPES[number],
-  (args: GenerateRenameListArgs)=> BaseRenameItem[]
+  (args: GenerateRenameListArgs) => BaseRenameItem[]
 > = {
   addText: (args: GenerateRenameListArgs) => addTextTransform(args),
   dateRename: (args: GenerateRenameListArgs) => dateTransform(args),
@@ -78,7 +82,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     splitFileList: fileList,
     transformPath: targetDir,
   };
-  const transformedNames = generateRenameList(transformArgs);
+  let transformedNames = generateRenameList(transformArgs);
   if (args.dryRun) {
     const dryRun = await dryRunTransform({
       transformPath: targetDir,
@@ -89,10 +93,21 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
       return;
     }
   }
-  const newNamesDistinct = areNewNamesDistinct(transformedNames);
-  if (!newNamesDistinct) throw new Error(duplicateRenames);
+  const noDistinctTransforms = areTransformsDistinct(transformedNames);
+
+  // Precaution in case any of the converters returns 
+  // identical names and renames
+  if(!noDistinctTransforms) {
+    transformedNames = filterOutDuplicatedTransforms(transformedNames);
+  }
+
   
-  const transforms ={transforms: transformedNames, sourcePath: targetDir}
+  if(!transformedNames.length) throw new Error(noFilesToTransform)
+  const newNamesDistinct = areNewNamesDistinct(transformedNames);
+  if (!noDistinctTransforms) throw new Error(duplicateSourceAndOrigin);
+  if (!newNamesDistinct ) throw new Error(duplicateRenames);
+
+  const transforms = { transforms: transformedNames, sourcePath: targetDir };
 
   const batchRename = createBatchRenameList(transforms);
   console.log(`Renaming ${batchRename.length} files...`);
@@ -103,8 +118,10 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     operationType: "convert",
   });
 
-
-  const createdRollback = await createRollback({transforms: updatedRenameList, sourcePath: targetDir})
+  const createdRollback = await createRollback({
+    transforms: updatedRenameList,
+    sourcePath: targetDir,
+  });
   console.log("Rename completed!");
   process.stdout.write("Writing rollback file...");
   await writeFile(

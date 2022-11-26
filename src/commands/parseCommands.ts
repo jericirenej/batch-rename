@@ -17,7 +17,7 @@ import type {
   UtilityActionsCheck,
   UtilityFunctionsArgs
 } from "../types";
-import { checkPath, deleteRollbackFile } from "../utils/utils.js";
+import { checkPath, deleteRollbackFile, parseRestoreArg } from "../utils/utils.js";
 import program from "./generateCommands.js";
 
 const { noTransformationPicked, onlyOneUtilAction } = ERRORS.transforms;
@@ -34,12 +34,7 @@ export const parseOptions = async (
       restArgs
     );
 
-    let rollbackLevel: number;
-    try {
-      rollbackLevel = Number(restore);
-    } catch {
-      rollbackLevel = 0;
-    }
+    const rollbackLevel = parseRestoreArg(restore);
 
     // Run util actions first.
     const utilityActions = utilityActionsCheck(options);

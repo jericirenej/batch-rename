@@ -223,6 +223,7 @@ export type ListFiles = (
 ) => Promise<Dirent[]>;
 
 export type AreNewNamesDistinct = (renameList: BaseRenameList) => boolean;
+export type AreTransformsDistinct = AreNewNamesDistinct;
 
 export type NumberOfDuplicatedNamesArgs = {
   renameList: BaseRenameList;

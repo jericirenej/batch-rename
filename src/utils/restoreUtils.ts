@@ -45,12 +45,11 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
   const maximumRestoreLevel = transformList.length;
   if (rollbackLevel === 0 || rollbackLevel === undefined)
     return maximumRestoreLevel;
-  let targetRestoreLevel = rollbackLevel;
-  if (targetRestoreLevel > maximumRestoreLevel) {
+  if (rollbackLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
-    targetRestoreLevel = maximumRestoreLevel;
+    return maximumRestoreLevel
   }
-  return targetRestoreLevel;
+  return rollbackLevel;
 };
 
 /**Convert legacy rollback file which supported only single rollbacks to the new

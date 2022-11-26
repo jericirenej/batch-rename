@@ -14,7 +14,22 @@ import type {
   RenameItemsArray,
   ValidTypes
 } from "../types.js";
+import * as utils from "../utils/utils.js";
 import {
+  createDirentArray,
+  currentRenameList,
+  examplePath,
+  exampleStats,
+  expectedSplit,
+  mockFileList,
+  mockRollbackToolSet,
+  renameListDistinct,
+  renameListWithDuplicateOldAndNew,
+  renameWithNewNameRepeat,
+  truthyArgument
+} from "./mocks.js";
+
+const {
   areNewNamesDistinct,
   checkPath,
   composeRenameString,
@@ -23,21 +38,10 @@ import {
   extractCurrentReferences,
   listFiles,
   numberOfDuplicatedNames,
+  parseRestoreArg,
   settledPromisesEval,
-  truncateFile
-} from "../utils/utils.js";
-import {
-  createDirentArray,
-  currentRenameList,
-  examplePath,
-  exampleStats,
-  expectedSplit,
-  mockFileList, mockRollbackToolSet, renameListDistinct,
-  renameListWithDuplicateOldAndNew,
-  renameWithNewNameRepeat,
-  truthyArgument
-} from "./mocks.js";
-
+  truncateFile,
+} = utils;
 const {
   noChildFiles,
   noChildDirs,
@@ -64,25 +68,54 @@ const mockedLstat = jest.mocked(lstat);
 const mockedReadDir = jest.mocked(readdir);
 const mockedUnlink = jest.mocked(unlink);
 
-describe("extractCurrentReferences", ()=> {
-  const {mockItems:{mockItem1, mockItem2, mockItem3}} = mockRollbackToolSet;
-  const transforms:RenameItemsArray[] = [
-    [mockItem1(2), mockItem2(1)],
-    [mockItem1(1), mockItem3(1)]
-  ]
-  const missingNames = ["missing1", "missing2"];
-  const namesWithHistory = [mockItem1(2),  mockItem1(1), mockItem3(1)];
-  const suppliedNames = [...namesWithHistory.map(({rename})=> rename), ...missingNames];
+describe("parseRestoreArg", () => {
+  it("Should return an integer for stringified number values", () => {
+    for (const [arg, expected] of [
+      ["1", 1],
+      ["2", 2],
+      ["-1", 1],
+      ["2.15", 2],
+    ]) {
+      expect(parseRestoreArg(arg)).toBe(expected);
+    }
+  });
+  it("True and false should be converted to 0", () => {
+    [true, false].forEach((arg) => expect(parseRestoreArg(arg)).toBe(0));
+  });
+  it("Undefined, null, etc. should convert to 0", () => {
+    [null, NaN, undefined].forEach((arg) =>
+      expect(parseRestoreArg(arg)).toBe(0)
+    );
+  });
+});
 
-  it("Should allocate referenceIds to passed names", ()=> {
-    const {noIds, withIds} = extractCurrentReferences(transforms, suppliedNames);
-    const expectedWithIds = namesWithHistory.reduce((acc, current)=> {
+describe("extractCurrentReferences", () => {
+  const {
+    mockItems: { mockItem1, mockItem2, mockItem3 },
+  } = mockRollbackToolSet;
+  const transforms: RenameItemsArray[] = [
+    [mockItem1(2), mockItem2(1)],
+    [mockItem1(1), mockItem3(1)],
+  ];
+  const missingNames = ["missing1", "missing2"];
+  const namesWithHistory = [mockItem1(2), mockItem1(1), mockItem3(1)];
+  const suppliedNames = [
+    ...namesWithHistory.map(({ rename }) => rename),
+    ...missingNames,
+  ];
+
+  it("Should allocate referenceIds to passed names", () => {
+    const { noIds, withIds } = extractCurrentReferences(
+      transforms,
+      suppliedNames
+    );
+    const expectedWithIds = namesWithHistory.reduce((acc, current) => {
       acc[current.rename] = current.referenceId;
       return acc;
-    }, {} as Record<string,string>)
+    }, {} as Record<string, string>);
     expect(noIds).toEqual(missingNames);
     expect(withIds).toEqual(expectedWithIds);
-  })
+  });
 });
 
 /* describe("cleanUpRollbackFile", () => {
