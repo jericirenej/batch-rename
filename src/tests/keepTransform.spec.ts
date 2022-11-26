@@ -1,6 +1,11 @@
 import { keepTransform } from "../converters/keepTransform.js";
-import type { BaseRenameList, KeepTransformArgs } from "../types.js";
-import { mockKeepList as splitFileList } from "./mocks.js";
+import type {
+  BaseRenameList,
+  ExtractBaseAndExtReturn,
+  KeepTransformArgs
+} from "../types.js";
+import { jsonReplicate } from "../utils/utils.js";
+import { examplePath, mockKeepList as splitFileList } from "./mocks.js";
 
 describe("keepTransform", () => {
   const keep = `Part(\\d{3})`;
@@ -49,5 +54,22 @@ describe("keepTransform", () => {
     for (const { args, expected } of testCases) {
       expect(keepTransform(args)).toEqual(expected);
     }
+  });
+  it("Will only return non-identical transforms", () => {
+    const splitListWithIdenticalTransform: ExtractBaseAndExtReturn = [
+      ...jsonReplicate(splitFileList),
+      {
+        baseName: "Part005",
+        ext: "ext",
+        sourcePath: examplePath,
+        type: "file",
+      },
+    ];
+    const args: KeepTransformArgs = {
+      splitFileList: splitListWithIdenticalTransform,
+      keep,
+    };
+    const result = keepTransform(args);
+    expect(result.length).toBe(splitFileList.length);
   });
 });
