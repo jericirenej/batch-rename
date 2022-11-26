@@ -62,46 +62,7 @@ export const expectedSplit = [
   ["12345-and-chars", ".ext"],
 ];
 
-const firstRename = "rename1";
 const sourcePath = examplePath;
-
-export const initialNames = ["original1", "original2", "original3"];
-
-export const renameWithNewNameRepeat: LegacyRenameList = [
-  { original: initialNames[0], rename: firstRename, sourcePath },
-  { original: initialNames[1], rename: "rename2", sourcePath },
-  { original: initialNames[2], rename: firstRename, sourcePath },
-];
-
-export const renameListDistinct = JSON.parse(
-  JSON.stringify(renameWithNewNameRepeat)
-);
-
-renameListDistinct[2].rename = "rename3";
-export const renameListWithDuplicateOldAndNew = JSON.parse(
-  JSON.stringify(renameListDistinct)
-) as LegacyRenameList;
-renameListWithDuplicateOldAndNew[0] = {
-  original: renameListDistinct[0].original,
-  rename: renameListDistinct[0].original,
-  sourcePath,
-};
-const transformToCurrent = (list: LegacyRenameList): RenameItemsArray =>
-  list.map(({ original, rename }, index) => ({
-    original,
-    rename,
-    referenceId: `000${index + 1}`,
-  }));
-
-export const [
-  currentRenameList,
-  currentRenameWithDuplicatedOldAndNew,
-  currentRenameWithNewNameRepeat,
-] = [
-  renameListDistinct,
-  renameListWithDuplicateOldAndNew,
-  renameWithNewNameRepeat,
-].map((list) => transformToCurrent(list));
 
 export const truthyArgument = "argument";
 const madeUpTime = 1318289051000.1;
@@ -218,23 +179,6 @@ export const textFormatRenameList = extractBaseAndExt(
   examplePath
 );
 
-/* export const checkFilesExistingMock = [
-  "firstFile",
-  "secondFile",
-  "thirdFile",
-  "fourthFile",
-];
-const referenceId = "referenceId";
-export const checkFilesTransforms: RenameItemsArray[] = [
-  [
-    { rename: "thirdFile", original: "thirdFileOriginal", referenceId },
-    { rename: "secondFile", original: "secondFileOriginal", referenceId },
-  ],
-  [{ rename: "firstFile", original: "firstFileOriginal", referenceId }],
-  [{ rename: "firstFile", original: "someOtherFileOriginal", referenceId }],
-  [{ rename: "secondFile", original: "secondFileOriginal", referenceId }],
-];
- */
 // MOCK ROLLBACK TOOLSET
 const mockItemFunction = (
   name: string,

@@ -7,20 +7,20 @@ import * as searchAndReplaceTransformFunctions from "../converters/searchAndRepl
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
-    AreNewNamesDistinct,
-    CreateBatchRenameList,
-    DryRunTransformArgs,
-    RenameListArgs,
-    TransformTypes
+  AreNewNamesDistinct,
+  CreateBatchRenameList,
+  DryRunTransformArgs,
+  RenameListArgs,
+  TransformTypes
 } from "../types.js";
 import * as rollbackUtils from "../utils/createRollback.js";
 import * as utils from "../utils/utils.js";
 import {
-    examplePath,
-    exampleStats,
-    generateMockSplitFileList,
-    mockFileList,
-    mockRenameListToolSet
+  examplePath,
+  exampleStats,
+  generateMockSplitFileList,
+  mockFileList,
+  mockRenameListToolSet
 } from "./mocks.js";
 
 const { renameLists: mockRenameLists } = mockRenameListToolSet;
@@ -107,6 +107,7 @@ describe("convertFiles", () => {
   const spyOnAreNewNamesDistinct = jest
     .spyOn(utils, "areNewNamesDistinct")
     .mockReturnValue(true);
+  const spyOnAreTransformsDistinct = jest.spyOn(utils, "areNewNamesDistinct");
 
   const exampleArgs: RenameListArgs = {
     transformPattern: ["numericTransform"],
@@ -115,7 +116,7 @@ describe("convertFiles", () => {
     dryRun: false,
   };
   beforeEach(() => {
-    spyOnGenerateRenameList.mockImplementation();
+    spyOnGenerateRenameList.mockImplementation((arg) => mockDistinctList);
     [spyOnProcessWrite, spyOnConsole] = [
       createSpyOnProcessWrite(),
       createSpyOnLog(),
@@ -125,7 +126,10 @@ describe("convertFiles", () => {
     jest.clearAllMocks();
     [spyOnProcessWrite, spyOnConsole].forEach((spy) => spy.mockRestore());
   });
-  afterAll(() => spyOnAreNewNamesDistinct.mockRestore());
+  afterAll(() => {
+    spyOnAreNewNamesDistinct.mockRestore();
+    spyOnAreTransformsDistinct.mockRestore();
+  });
   it("Should dryRunTransform, if dryRun is true", async () => {
     spyOnDryRunTransform.mockImplementationOnce((args) =>
       Promise.resolve(true)
@@ -194,7 +198,6 @@ describe("convertFiles", () => {
     expect(lastCalled[0].splitFileList).toEqual(splitFileListWithStats);
   });
   it("Should call areNewNamesDistinct and createBatchRename with result from generateRenameList", async () => {
-    spyOnGenerateRenameList.mockReturnValueOnce(mockDistinctList);
     await convertFiles(exampleArgs);
     expect(spyOnAreNewNamesDistinct).toHaveBeenCalledWith<
       Parameters<AreNewNamesDistinct>
@@ -210,7 +213,6 @@ describe("convertFiles", () => {
     );
   });
   it("Should call writeFile and process stdout for rollbackFile write", async () => {
-    spyOnGenerateRenameList.mockReturnValueOnce(mockDistinctList);
     await convertFiles(exampleArgs);
     expect(mockedWriteFile).toHaveBeenCalledTimes(1);
     expect(spyOnProcessWrite).toHaveBeenCalledTimes(2);
@@ -229,7 +231,6 @@ describe("convertFiles", () => {
     const mockBatchPromises = [...mockDistinctList].map(() =>
       Promise.resolve()
     );
-    spyOnGenerateRenameList.mockImplementationOnce(() => mockDistinctList);
     mockBatchPromises[0] = Promise.reject();
     spyOnCreateBatchRename.mockReturnValueOnce(mockBatchPromises);
     const promiseResults = await Promise.allSettled(mockBatchPromises);

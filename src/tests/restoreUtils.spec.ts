@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { ERRORS, STATUS } from "../messages/index.js";
 import { RenameItem, RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
-import { currentRenameList, mockRollbackToolSet } from "./mocks.js";
+import { mockRollbackToolSet } from "./mocks.js";
 
 const {
   checkExistingFiles,
@@ -55,7 +55,7 @@ describe("checkExistingFiles", () => {
 describe("determineRollbackLevel", () => {
   const rollbackLength = 10,
     transformList = new Array(rollbackLength).fill(
-      currentRenameList
+      mockTransforms[0]
     ) as RenameItemsArray[];
   let spyOnConsole: SpyInstance;
   beforeEach(
