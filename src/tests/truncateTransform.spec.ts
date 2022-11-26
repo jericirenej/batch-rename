@@ -2,7 +2,7 @@ import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as formatText from "../converters/formatTextTransform.js";
 import { truncateTransform } from "../converters/truncateTransform.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type { GenerateRenameListArgs, LegacyRenameList } from "../types.js";
+import type { BaseRenameList, GenerateRenameListArgs } from "../types.js";
 import * as utils from "../utils/utils.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
@@ -71,12 +71,11 @@ describe("truncateTransform", () => {
     });
   });
   it("Should return proper response", () => {
-    const expected: LegacyRenameList = splitFileList.map((fileInfo) => {
-      const { baseName, ext, sourcePath } = fileInfo;
+    const expected: BaseRenameList = splitFileList.map((fileInfo) => {
+      const { baseName, ext } = fileInfo;
       return {
         rename: mockComposeResponse,
         original: `${baseName}${ext}`,
-        sourcePath,
       };
     });
     expect(truncateTransform(defaultArgs)).toEqual(expected);

@@ -93,7 +93,7 @@ describe("searchAndReplace", () => {
     expect(Array.isArray(response)).toBe(true);
     response.forEach((entry) => {
       const keys = Object.keys(entry) as (keyof typeof entry)[];
-      const expected:(keyof BaseRenameItem)[] = ["original", "rename"]
+      const expected: (keyof BaseRenameItem)[] = ["original", "rename"];
       expect(keys).toEqual(expected);
       keys.forEach((key) => expect(typeof entry[key]).toBe("string"));
     });
@@ -145,7 +145,10 @@ describe("searchAndReplace", () => {
     extensionPreserve.forEach((renamedFile, index) => {
       const { rename } = renamedFile;
       const extIndex = rename.search(EXT_REGEX);
-      const [baseName, ext] = [rename.slice(0,extIndex), rename.slice(extIndex)];
+      const [baseName, ext] = [
+        rename.slice(0, extIndex),
+        rename.slice(extIndex),
+      ];
       expect(ext).toBe(".ext");
       expect(baseName).toBe(`interior${index + 1}`);
     });
@@ -154,15 +157,19 @@ describe("searchAndReplace", () => {
       expect(rename).toBe(`interior${index + 1}.int`);
     });
   });
-  it("Should return original name, if returned filter is empty", () => {
+  it("Should return empty list if filter is empty, even if other transforms are specified", () => {
     spyOnGenerateArguments.mockReturnValueOnce({
       filter: null,
       replace: "something",
     });
-    const response = searchAndReplace(exampleArgs);
-    response.forEach((entry) => expect(entry.rename).toBe(entry.original));
+    const response = searchAndReplace({
+      ...exampleArgs,
+      truncate: "3",
+      format: "capitalize",
+    });
+    expect(response.length).toBe(0);
   });
-  it("Should return original name, if filter doesn't match", () => {
+  it("Should not return entry, if filter doesn't match", () => {
     const customMocksList = generateMockSplitFileList(2);
     customMocksList[0].baseName = "match";
     customMocksList[1].baseName = "other";
@@ -172,8 +179,8 @@ describe("searchAndReplace", () => {
       searchAndReplace: ["match", "replace"],
     };
     const response = searchAndReplace(newArgs);
+    expect(response.length).toBe(1);
     expect(response[0].rename).toContain("replace");
-    expect(response[1].rename).toBe(response[1].original);
   });
   it("Should not call optionalTruncate, if truncate argument is falsy", () => {
     searchAndReplace(exampleArgs);

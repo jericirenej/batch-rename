@@ -16,7 +16,7 @@ export const keepTransform: KeepTransform = ({
   const regexBase = `^.*(?=${keep})|(?<=${keep}).*$`;
   const matcher = new RegExp(regexBase, "gu");
   return splitFileList.map((fileInfo) => {
-    const { baseName: _baseName, ext, sourcePath } = fileInfo;
+    const { baseName: _baseName, ext } = fileInfo;
     const baseName = noExtensionPreserve ? `${_baseName}${ext}` : _baseName;
     const original = `${_baseName}${ext}`;
     const newName = composeRenameString({
