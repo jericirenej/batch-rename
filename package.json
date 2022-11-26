@@ -11,7 +11,9 @@
     "husky-prepare": "husky install",
     "clean": "rm -rf dist/*",
     "precompile": "npm run clean",
-    "compile": "tsc"
+    "compile": "tsc",
+    "ts-exec": "npx ts-node",
+    "ts-run": "npx ts-node src/index.ts"
   },
   "author": "Irenej Jerič",
   "license": "ISC",
