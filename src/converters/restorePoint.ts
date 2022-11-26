@@ -6,11 +6,9 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   DryRunRestore,
-  LegacyRenameList,
   RenameItemsArray,
   RestoreBaseFunction,
-  RestoreOriginalFileNames,
-  RollbackFile
+  RestoreOriginalFileNames
 } from "../types";
 import {
   checkExistingFiles,
@@ -49,10 +47,8 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
     throw new Error(noRollbackFile);
   }
   const readRollback = await readFile(targetPath, "utf8");
-  const originalRollbackData = JSON.parse(readRollback) as
-    | LegacyRenameList
-    | RollbackFile;
-
+  const originalRollbackData = JSON.parse(readRollback);
+  
   const rollbackData = checkRestoreFile(originalRollbackData);
 
   const { filesToRestore, missingFiles } = checkExistingFiles({
