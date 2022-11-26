@@ -4,13 +4,7 @@ import { nanoid } from "nanoid";
 import { ERRORS, STATUS } from "../messages/index.js";
 import { RenameItem, RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
-import {
-  checkFilesExistingMock,
-  checkFilesTransforms,
-  currentRenameList,
-  mockRollbackToolSet,
-  renameListDistinct
-} from "./mocks.js";
+import { currentRenameList, mockRollbackToolSet } from "./mocks.js";
 
 const {
   checkExistingFiles,
@@ -24,21 +18,37 @@ const {
 
 const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
+const { mockLegacyRollback, mockRollbackFile, mockTransforms, mockItems } =
+  mockRollbackToolSet;
 
 jest.mock("nanoid");
 const mockedNanoId = jest.mocked(nanoid);
 
 describe("checkExistingFiles", () => {
   it("Should return proper list of filesToRestore and missingFiles", () => {
-    const expected: { filesToRestore: string[]; missingFiles: string[] } = {
-      filesToRestore: ["thirdFile", "secondFile", "firstFile"],
-      missingFiles: ["fourthFile"],
-    };
+    const { mockItem1, mockItem2, mockItem3, mockItem4 } = mockItems;
+    const mockTransform: RenameItemsArray[] = [
+      [mockItem1(2), mockItem2(1)],
+      [mockItem1(1), mockItem3(1), mockItem4(1)],
+    ];
+    const missingFiles = [mockItem4(1).rename, mockItem1(1).rename];
+    const existingFiles = [
+      ...new Set(mockTransform.flat().map(({ rename }) => rename)),
+    ].filter((fileName) => !missingFiles.includes(fileName));
+
+    // Add an unrelated file
+    const existingWithFresh = [...existingFiles, "fresh"];
+
+    const expectedMissing = missingFiles;
     const result = checkExistingFiles({
-      existingFiles: checkFilesExistingMock,
-      transforms: checkFilesTransforms,
+      existingFiles: existingWithFresh,
+      transforms: mockTransform,
     });
-    expect(result).toEqual(expected);
+    expect(result.filesToRestore).toEqual(existingFiles);
+    expect(result.missingFiles.length).toBe(expectedMissing.length);
+    result.missingFiles.forEach((fileName) =>
+      expectedMissing.includes(fileName)
+    );
   });
 });
 
@@ -110,33 +120,26 @@ describe("isLegacyRestore", () => {
     expect(isLegacyRestore(mockRollbackToolSet.mockRollbackFile)).toBe(false);
   });
   it("Should return true for a legacy restore list", () => {
-    expect(isLegacyRestore(renameListDistinct)).toBe(true);
+    expect(isLegacyRestore(mockLegacyRollback)).toBe(true);
   });
 });
 
 describe("legacyRestoreMapper", () => {
   it("Should transform legacy rollback files", () => {
-    renameListDistinct.forEach((entry, index) =>
-      mockedNanoId.mockReturnValueOnce(`nanoCode-${index}`)
+    mockTransforms[0].forEach(({ referenceId }) =>
+      mockedNanoId.mockReturnValueOnce(referenceId)
     );
-    const mappedResult = legacyRestoreMapper(renameListDistinct);
-    const mappedItems: RenameItemsArray[] = [
-      renameListDistinct.map(({ original, rename }, index) => ({
-        original,
-        rename,
-        referenceId: `nanoCode-${index}`,
-      })),
-    ];
+    const mappedResult = legacyRestoreMapper(mockLegacyRollback);
     const expected: RollbackFile = {
-      sourcePath: renameListDistinct[0].sourcePath,
-      transforms: mappedItems,
+      ...mockRollbackFile,
+      transforms: [mockTransforms[0]],
     };
     expect(mappedResult).toEqual(expected);
   });
 });
 
 describe("isCurrentRestore", () => {
-  const {sourcePath, mockRollbackFile, mockTransforms} = mockRollbackToolSet
+  const { sourcePath, mockRollbackFile, mockTransforms } = mockRollbackToolSet;
   it("Should return false for falsy values, arrays and primitives", () => {
     for (const testCase of [
       undefined,
@@ -151,7 +154,7 @@ describe("isCurrentRestore", () => {
     }
   });
   it("Should return false for legacy rollback file", () =>
-    expect(isCurrentRestore(renameListDistinct)).toBe(false));
+    expect(isCurrentRestore(mockLegacyRollback)).toBe(false));
   it("Should return true for new rename list type", () =>
     expect(isCurrentRestore(mockRollbackFile)).toBe(true));
   it("Should return false for improper top level property names", () => {
@@ -182,11 +185,17 @@ describe("isCurrentRestore", () => {
     for (const testCase of [improperKey, improperValue])
       expect(isCurrentRestore(testCase)).toBe(false);
   });
-  it("Should return true for rollbacks with additional properties", ()=> {
-    const transformsWithExtra = mockTransforms.map((arr) => arr.map(entry => ({...entry, otherProp:"otherProp"})));
-    const mockWithExtra = {sourcePath, additionalProp: "additionalProp", transforms: transformsWithExtra};
-    expect(isCurrentRestore(mockWithExtra)).toBe(true)
-  })
+  it("Should return true for rollbacks with additional properties", () => {
+    const transformsWithExtra = mockTransforms.map((arr) =>
+      arr.map((entry) => ({ ...entry, otherProp: "otherProp" }))
+    );
+    const mockWithExtra = {
+      sourcePath,
+      additionalProp: "additionalProp",
+      transforms: transformsWithExtra,
+    };
+    expect(isCurrentRestore(mockWithExtra)).toBe(true);
+  });
 });
 
 describe("checkRestoreFile", () => {
