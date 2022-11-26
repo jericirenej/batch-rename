@@ -71,7 +71,7 @@ const programOptions: ProgramCLIOptions[] = [
     long: "restore",
     type: "[number]",
     description:
-      "Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used",
+      "Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used.",
   },
   {
     short: "",
