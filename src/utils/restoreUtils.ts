@@ -41,8 +41,9 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
   rollbackLevel,
 }) => {
   const maximumRestoreLevel = transformList.length;
-  if (rollbackLevel === 0) return maximumRestoreLevel;
-  let targetRestoreLevel = rollbackLevel ? maximumRestoreLevel : rollbackLevel;
+  if (rollbackLevel === 0 || rollbackLevel === undefined)
+    return maximumRestoreLevel;
+  let targetRestoreLevel = rollbackLevel;
   if (targetRestoreLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
     targetRestoreLevel = maximumRestoreLevel;
@@ -101,7 +102,8 @@ export const isCurrentRestore = (
   const keys = Object.keys(rollbackFile);
   const topLevelKeys: (keyof RollbackFile)[] = ["sourcePath", "transforms"];
   const areKeysPresent =
-    keys.length === topLevelKeys.length &&
+    // Allow for extra properties
+    // keys.length === topLevelKeys.length &&
     topLevelKeys.every((key) => key in rollbackFile);
   if (!areKeysPresent) return false;
 
@@ -116,7 +118,7 @@ export const isCurrentRestore = (
     "referenceId",
     "rename",
   ];
-  const isEachTransformProper = (topLevelObject.transforms as any[]).every(
+  const isEachTransformProper = (topLevelObject.transforms as unknown[]).every(
     (transform) => {
       if (!Array.isArray(transform)) return false;
       for (const fileTransform of transform) {
@@ -164,10 +166,10 @@ export const restoreByLevels: RestoreByLevels = ({
     ...new Set(targetSlice.map(({ referenceId }) => referenceId)),
   ];
   const mappedTransform = new Map<
-  string,
-  { rename: string; original: string }
+    string,
+    { rename: string; original: string }
   >();
-  
+
   uniqueReferences.forEach((ref) => {
     const rename = targetSlice.find(
       ({ referenceId }) => referenceId === ref

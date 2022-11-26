@@ -136,7 +136,7 @@ describe("legacyRestoreMapper", () => {
 });
 
 describe("isCurrentRestore", () => {
-  const {sourcePath, mockRollbackFile} = mockRollbackToolSet
+  const {sourcePath, mockRollbackFile, mockTransforms} = mockRollbackToolSet
   it("Should return false for falsy values, arrays and primitives", () => {
     for (const testCase of [
       undefined,
@@ -154,7 +154,7 @@ describe("isCurrentRestore", () => {
     expect(isCurrentRestore(renameListDistinct)).toBe(false));
   it("Should return true for new rename list type", () =>
     expect(isCurrentRestore(mockRollbackFile)).toBe(true));
-  it("Should return false for improper top level keys", () => {
+  it("Should return false for improper top level property names", () => {
     const improperKeys = {
       firstProp: sourcePath,
       someTransformProp: [...mockRollbackFile.transforms],
@@ -173,7 +173,7 @@ describe("isCurrentRestore", () => {
       })
     );
     const improperValue = renameCopy.transforms[0].map(
-      ({ original, referenceId, rename }) => ({
+      ({ original, rename }) => ({
         original,
         rename,
         referenceId: 55,
@@ -182,6 +182,11 @@ describe("isCurrentRestore", () => {
     for (const testCase of [improperKey, improperValue])
       expect(isCurrentRestore(testCase)).toBe(false);
   });
+  it("Should return true for rollbacks with additional properties", ()=> {
+    const transformsWithExtra = mockTransforms.map((arr) => arr.map(entry => ({...entry, otherProp:"otherProp"})));
+    const mockWithExtra = {sourcePath, additionalProp: "additionalProp", transforms: transformsWithExtra};
+    expect(isCurrentRestore(mockWithExtra)).toBe(true)
+  })
 });
 
 describe("checkRestoreFile", () => {

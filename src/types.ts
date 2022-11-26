@@ -301,7 +301,7 @@ export type DetermineRollbackLevel = ({
   rollbackLevel,
 }: {
   transformList: RenameItemsArray[];
-  rollbackLevel: number;
+  rollbackLevel?: number;
 }) => number;
 
 export interface FilesWithMissingRestores {
