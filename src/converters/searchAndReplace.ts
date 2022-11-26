@@ -15,7 +15,8 @@ export const searchAndReplace: SearchAndReplace = ({
   format,
 }) => {
   const generatedArgs = generateSearchAndReplaceArgs(searchAndReplace!);
-  const targetList = splitFileList.map((fileInfo) => {
+  const targetList: BaseRenameItem[] = [];
+  splitFileList.forEach((fileInfo) => {
     const { filter, replace } = generatedArgs;
     const { baseName, sourcePath, ext, type } = fileInfo;
     const original = `${baseName}${ext}`;
@@ -36,8 +37,10 @@ export const searchAndReplace: SearchAndReplace = ({
         rename = optionalTruncate(truncate, rename, sourcePath, type);
       }
     }
-    const renameItem:BaseRenameItem = {original, rename};
-    return renameItem;
+    if (original !== rename) {
+      const renameItem: BaseRenameItem = { original, rename };
+      targetList.push(renameItem);
+    }
   });
   return targetList;
 };
