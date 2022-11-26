@@ -1,9 +1,9 @@
 import { Dirent, Stats } from "fs";
+import type { LegacyRenameList } from "../legacyTypes.js";
 import type {
   BaseRenameItem,
   ExtractBaseAndExtReturn,
   ExtractBaseAndExtTemplate,
-  LegacyRenameList,
   RenameItem,
   RenameItemsArray,
   RollbackFile

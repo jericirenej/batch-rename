@@ -1,6 +1,7 @@
+import { EXT_REGEX } from "../constants.js";
 import * as formatText from "../converters/formatTextTransform.js";
 import * as regexTransform from "../converters/searchAndReplace.js";
-import { GenerateRenameListArgs } from "../types.js";
+import { BaseRenameItem, GenerateRenameListArgs } from "../types.js";
 import * as utils from "../utils/utils.js";
 import {
   generateMockSplitFileList,
@@ -92,7 +93,8 @@ describe("searchAndReplace", () => {
     expect(Array.isArray(response)).toBe(true);
     response.forEach((entry) => {
       const keys = Object.keys(entry) as (keyof typeof entry)[];
-      expect(keys).toEqual(["original", "rename", "sourcePath"]);
+      const expected:(keyof BaseRenameItem)[] = ["original", "rename"]
+      expect(keys).toEqual(expected);
       keys.forEach((key) => expect(typeof entry[key]).toBe("string"));
     });
   });
@@ -141,10 +143,9 @@ describe("searchAndReplace", () => {
       searchAndReplace(noExtension),
     ];
     extensionPreserve.forEach((renamedFile, index) => {
-      const { rename, sourcePath } = renamedFile;
-      const dirent = [{ name: rename, ...mockDirentEntryAsFile }];
-      const extract = extractBaseAndExt(dirent, sourcePath);
-      const { baseName, ext } = extract[0];
+      const { rename } = renamedFile;
+      const extIndex = rename.search(EXT_REGEX);
+      const [baseName, ext] = [rename.slice(0,extIndex), rename.slice(extIndex)];
       expect(ext).toBe(".ext");
       expect(baseName).toBe(`interior${index + 1}`);
     });
