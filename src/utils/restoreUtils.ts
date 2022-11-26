@@ -1,9 +1,9 @@
 import { nanoid } from "nanoid";
+import type { LegacyRenameList } from "../legacyTypes.js";
 import { ERRORS, STATUS } from "../messages/index.js";
 import type {
   CheckExistingFiles,
   DetermineRollbackLevel,
-  LegacyRenameList,
   RenameItem,
   RenameItemsArray,
   RestoreByLevels,

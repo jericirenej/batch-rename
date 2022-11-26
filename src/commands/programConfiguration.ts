@@ -1,7 +1,7 @@
 import { PROGRAM_VERSION, VALID_DATE_TRANSFORM_TYPES } from "../constants.js";
-import type { ProgramOptions } from "../types.js";
+import type { ProgramCLIOptions } from "../types.js";
 
-const programOptions: ProgramOptions[] = [
+const programOptions: ProgramCLIOptions[] = [
   {
     short: "n",
     long: "numericTransform",
