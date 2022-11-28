@@ -301,9 +301,11 @@ export interface CheckExistingFiles {
   ({
     existingFiles,
     transforms,
+    rollbackLevel
   }: {
     existingFiles: string[];
     transforms: RenameItemsArray[];
+    rollbackLevel: number;
   }): { filesToRestore: string[]; missingFiles: string[] };
 }
 

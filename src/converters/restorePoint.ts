@@ -12,7 +12,7 @@ import type {
 } from "../types";
 import {
   checkExistingFiles,
-  checkRestoreFile, restoreByLevels
+  checkRestoreFile, determineRollbackLevel, restoreByLevels
 } from "../utils/restoreUtils.js";
 import {
   askQuestion, createBatchRenameList,
@@ -50,10 +50,12 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
   const originalRollbackData = JSON.parse(readRollback);
   
   const rollbackData = checkRestoreFile(originalRollbackData);
+  const targetRollback = determineRollbackLevel({transformList: rollbackData.transforms, rollbackLevel})
 
   const { filesToRestore, missingFiles } = checkExistingFiles({
     existingFiles,
     transforms: rollbackData.transforms,
+    rollbackLevel: targetRollback
   });
   const restoreList = restoreByLevels({ rollbackFile: rollbackData, rollbackLevel });
 

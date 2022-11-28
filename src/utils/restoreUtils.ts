@@ -20,17 +20,38 @@ const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
 export const checkExistingFiles: CheckExistingFiles = ({
   existingFiles,
   transforms,
+  rollbackLevel
 }) => {
   const filesToRestore: string[] = [],
-    missingFiles: string[] = [],
-    fileNames = [...new Set(existingFiles)],
-    uniqueRenames = [...new Set(transforms.flat().map(({ rename }) => rename))];
+    fileNames = new Set(existingFiles);
 
-  // Check that all rename files can be mapped to existing
-  for (const rename of uniqueRenames) {
-    fileNames.includes(rename)
-      ? filesToRestore.push(rename)
-      : missingFiles.push(rename);
+  const flattenedTransforms = transforms.slice(0,rollbackLevel).flat();
+  const hashMap: Map<string, string[]> = flattenedTransforms.reduce(
+    (map, { referenceId, rename }) => {
+      const target = map.get(referenceId);
+      target ? map.set(referenceId, [...target, rename]) : map.set(referenceId, [rename]);
+      return map;
+    },
+    new Map<string,string[]>()
+  );
+
+  let missingFiles: string[] = [];
+
+  // Check that all rename files can be mapped to existing. Go from oldest to newest.
+  for (let i = flattenedTransforms.length - 1; i >= 0; i--) {
+    if (!fileNames.size || !hashMap.size) break;
+    const target = flattenedTransforms[i];
+    if (fileNames.has(target.rename)) {
+      filesToRestore.push(target.rename);
+      fileNames.delete(target.rename);
+      hashMap.delete(target.referenceId);
+    }
+  }
+
+  
+  // If any files are missing, return the rename at the target level
+  if (hashMap.size) {
+    missingFiles = [...hashMap.entries()].map(([key, val]) => val).flat();
   }
 
   return { filesToRestore, missingFiles };
@@ -47,7 +68,7 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
     return maximumRestoreLevel;
   if (rollbackLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
-    return maximumRestoreLevel
+    return maximumRestoreLevel;
   }
   return rollbackLevel;
 };

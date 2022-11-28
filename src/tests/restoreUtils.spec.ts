@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { ERRORS, STATUS } from "../messages/index.js";
 import { RenameItem, RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
+import { jsonReplicate } from "../utils/utils.js";
 import { mockRollbackToolSet } from "./mocks.js";
 
 const {
@@ -25,30 +26,67 @@ jest.mock("nanoid");
 const mockedNanoId = jest.mocked(nanoid);
 
 describe("checkExistingFiles", () => {
-  it("Should return proper list of filesToRestore and missingFiles", () => {
-    const { mockItem1, mockItem2, mockItem3, mockItem4 } = mockItems;
-    const mockTransform: RenameItemsArray[] = [
-      [mockItem1(2), mockItem2(1)],
-      [mockItem1(1), mockItem3(1), mockItem4(1)],
-    ];
-    const missingFiles = [mockItem4(1).rename, mockItem1(1).rename];
-    const existingFiles = [
-      ...new Set(mockTransform.flat().map(({ rename }) => rename)),
-    ].filter((fileName) => !missingFiles.includes(fileName));
+  const { mockItem1, mockItem2, mockItem3, mockItem4 } = mockItems;
+  const mockTransform: RenameItemsArray[] = [
+    [mockItem1(2), mockItem2(1)],
+    [mockItem1(1), mockItem3(1), mockItem4(1)],
+  ];
+  const allPossibleFiles = [
+    mockItem1(2),
+    mockItem2(1),
+    mockItem3(1),
+    mockItem4(1),
+  ].map(({ rename }) => rename);
 
-    // Add an unrelated file
-    const existingWithFresh = [...existingFiles, "fresh"];
-
-    const expectedMissing = missingFiles;
-    const result = checkExistingFiles({
-      existingFiles: existingWithFresh,
-      transforms: mockTransform,
-    });
-    expect(result.filesToRestore).toEqual(existingFiles);
-    expect(result.missingFiles.length).toBe(expectedMissing.length);
-    result.missingFiles.forEach((fileName) =>
-      expectedMissing.includes(fileName)
+  it("Should return all matched existing files at a given level and warn if files are missing", () => {
+    const missingAtSecondLevel = mockItem4(1).rename;
+    const missingAtFirstLevel = mockItem2(1).rename;
+    const allMissing = [missingAtSecondLevel, missingAtFirstLevel];
+    const existingWithoutMissed = allPossibleFiles.filter(
+      (name) => !allMissing.includes(name)
     );
+    const testCases = [
+      {
+        rollbackLevel: 1,
+        expected: {
+          restore: [mockItem1(2).rename],
+          missing: [missingAtFirstLevel],
+        },
+      },
+      {
+        rollbackLevel: 2,
+        expected: { restore: existingWithoutMissed, missing: allMissing },
+      },
+    ];
+    for (const {
+      rollbackLevel,
+      expected: { restore, missing },
+    } of testCases) {
+      const { filesToRestore, missingFiles } = checkExistingFiles({
+        rollbackLevel,
+        transforms: mockTransform,
+        existingFiles: existingWithoutMissed,
+      });
+      expect(jsonReplicate(filesToRestore).sort()).toEqual(
+        jsonReplicate(restore).sort()
+      );
+
+      expect(jsonReplicate(missingFiles).sort()).toEqual(
+        jsonReplicate(missing).sort()
+      );
+    }
+  });
+  it("Should ignore existing files that are not included inside transform file", () => {
+    const allPossibleWithExcess = [...allPossibleFiles, "excess"];
+    const { filesToRestore, missingFiles } = checkExistingFiles({
+      transforms: mockTransform,
+      rollbackLevel: 2,
+      existingFiles: allPossibleWithExcess,
+    });
+    expect(jsonReplicate(filesToRestore).sort()).toEqual(
+      jsonReplicate(allPossibleFiles).sort()
+    );
+    expect(missingFiles.length).toBe(0);
   });
 });
 

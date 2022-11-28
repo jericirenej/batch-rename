@@ -9,7 +9,8 @@ import { restoreByLevels } from "../utils/restoreUtils.js";
 import * as utils from "../utils/utils.js";
 import {
   examplePath as transformPath,
-  mockDirentEntryAsFile, mockRenameListToolSet
+  mockDirentEntryAsFile,
+  mockRenameListToolSet
 } from "./mocks.js";
 jest.mock("fs");
 jest.mock("fs/promises", () => {
@@ -23,10 +24,15 @@ const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
 const { restoreBaseFunction, restoreOriginalFileNames, dryRunRestore } =
   restorePoint;
 
-const {renameLists:{distinct}, mockRollback, originalNames} = mockRenameListToolSet
+const { jsonReplicate } = utils;
+const {
+  renameLists: { distinct },
+  mockRollback,
+  originalNames,
+} = mockRenameListToolSet;
 
 jest.mock("../messages/statusMessages.js");
-jest.mock("nanoid")
+jest.mock("nanoid");
 const mockedNanoId = jest.mocked(nanoid);
 const statusMocked = jest.mocked(STATUS);
 
@@ -52,7 +58,6 @@ const mockedReadFile = jest.mocked(readFile);
 const mockedRename = jest.mocked(rename);
 
 const baseArg = { transformPath };
-
 
 const mockConversionList: RestoreBaseReturn = {
   existingFiles: mockFileList.map((file) => file.name),
@@ -87,9 +92,9 @@ describe("restoreBaseFunction", () => {
     mockedNanoId.mockReturnValue(mockReference);
     const rollbackList = await restoreBaseFunction(transformPath);
     expect(rollbackList.rollbackData).toEqual(mockRollback);
-    expect(rollbackList.existingFiles).toEqual(mockRenamedList);
+    expect(jsonReplicate(rollbackList.existingFiles).sort()).toEqual(jsonReplicate(mockRenamedList).sort());
     expect(rollbackList.missingFiles.length).toBe(0);
-    expect(rollbackList.filesToRestore).toEqual(mockRenamedList);
+    expect(jsonReplicate(rollbackList.filesToRestore).sort()).toEqual(jsonReplicate(mockRenamedList).sort());
   });
   it("Should log missing fileNames in restoreFile", async () => {
     spyOnListFiles.mockResolvedValueOnce(mockFileList.slice(0, -1));
@@ -97,7 +102,9 @@ describe("restoreBaseFunction", () => {
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
     const rollbackList = await restoreBaseFunction(transformPath);
     expect(rollbackList.missingFiles).toEqual(mockRenamedList.slice(-1));
-    expect(rollbackList.filesToRestore).toEqual(mockRenamedList.slice(0, -1));
+    expect(jsonReplicate(rollbackList.filesToRestore).sort()).toEqual(
+      jsonReplicate(mockRenamedList.slice(0, -1)).sort()
+    );
   });
 });
 
