@@ -190,8 +190,9 @@ export const listFiles: ListFiles = async (
       return dirEntry.isDirectory();
     });
   if (excludeFilter) {
-    const regex = new RegExp(excludeFilter);
-    files = files.filter((fileName) => !regex.test(fileName.name));
+    // Global flag should not be used, as inconsistent results will occur
+    const regex = new RegExp(excludeFilter, "u");
+    files = files.filter(({ name }) => !regex.test(name));
   }
   return files;
 };
