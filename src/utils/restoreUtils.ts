@@ -1,5 +1,4 @@
 import { nanoid } from "nanoid";
-import type { LegacyRenameList } from "../legacyTypes.js";
 import { ERRORS, STATUS } from "../messages/index.js";
 import type {
   CheckExistingFiles,
@@ -10,6 +9,13 @@ import type {
   RollbackFile
 } from "../types";
 import { jsonReplicate } from "./utils.js";
+
+import type { BaseRenameItem } from "../types.js";
+
+export interface LegacyRenameItem extends BaseRenameItem {
+  sourcePath: string;
+}
+export type LegacyRenameList = LegacyRenameItem[];
 
 const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax, rollbackLevelsLessThanTarget } =
@@ -26,7 +32,7 @@ export const checkExistingFiles: CheckExistingFiles = ({
     fileNames = new Set(existingFiles);
 
   const flattenedTransforms = transforms.slice(0,rollbackLevel).flat();
-  const hashMap: Map<string, string[]> = flattenedTransforms.reduce(
+  const hashMap = flattenedTransforms.reduce(
     (map, { referenceId, rename }) => {
       const target = map.get(referenceId);
       target ? map.set(referenceId, [...target, rename]) : map.set(referenceId, [rename]);

@@ -1,5 +1,4 @@
 import { Dirent, Stats } from "fs";
-import type { LegacyRenameList } from "../legacyTypes.js";
 import type {
   BaseRenameItem,
   ExtractBaseAndExtReturn,
@@ -8,6 +7,7 @@ import type {
   RenameItemsArray,
   RollbackFile
 } from "../types.js";
+import type { LegacyRenameList } from "../utils/restoreUtils.js";
 import { extractBaseAndExt } from "../utils/utils.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
