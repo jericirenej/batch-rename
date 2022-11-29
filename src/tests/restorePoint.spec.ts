@@ -24,7 +24,7 @@ const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
 const { restoreBaseFunction, restoreOriginalFileNames, dryRunRestore } =
   restorePoint;
 
-const { jsonReplicate } = utils;
+const { sortedJsonReplicate } = utils;
 const {
   renameLists: { distinct },
   mockRollback,
@@ -90,20 +90,27 @@ describe("restoreBaseFunction", () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
     mockedNanoId.mockReturnValue(mockReference);
-    const rollbackList = await restoreBaseFunction(transformPath);
-    expect(rollbackList.rollbackData).toEqual(mockRollback);
-    expect(jsonReplicate(rollbackList.existingFiles).sort()).toEqual(jsonReplicate(mockRenamedList).sort());
-    expect(rollbackList.missingFiles.length).toBe(0);
-    expect(jsonReplicate(rollbackList.filesToRestore).sort()).toEqual(jsonReplicate(mockRenamedList).sort());
+    const { filesToRestore, rollbackData, existingFiles, missingFiles } =
+      await restoreBaseFunction(transformPath);
+    expect(rollbackData).toEqual(mockRollback);
+    expect(sortedJsonReplicate(existingFiles)).toEqual(
+      sortedJsonReplicate(mockRenamedList)
+    );
+    expect(missingFiles.length).toBe(0);
+    expect(sortedJsonReplicate(filesToRestore)).toEqual(
+      sortedJsonReplicate(mockRenamedList)
+    );
   });
   it("Should log missing fileNames in restoreFile", async () => {
     spyOnListFiles.mockResolvedValueOnce(mockFileList.slice(0, -1));
     mockedFs.existsSync.mockReturnValueOnce(true);
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
-    const rollbackList = await restoreBaseFunction(transformPath);
-    expect(rollbackList.missingFiles).toEqual(mockRenamedList.slice(-1));
-    expect(jsonReplicate(rollbackList.filesToRestore).sort()).toEqual(
-      jsonReplicate(mockRenamedList.slice(0, -1)).sort()
+    const { filesToRestore, missingFiles } = await restoreBaseFunction(
+      transformPath
+    );
+    expect(missingFiles).toEqual(mockRenamedList.slice(-1));
+    expect(sortedJsonReplicate(filesToRestore)).toEqual(
+      sortedJsonReplicate(mockRenamedList.slice(0, -1))
     );
   });
 });
