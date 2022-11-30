@@ -17,7 +17,12 @@ import type {
   UtilityActionsCheck,
   UtilityFunctionsArgs
 } from "../types";
-import { checkPath, deleteRollbackFile, parseRestoreArg } from "../utils/utils.js";
+import {
+  checkPath,
+  deleteRollbackFile,
+  parseBoolOption,
+  parseRestoreArg
+} from "../utils/utils.js";
 import program from "./generateCommands.js";
 
 const { noTransformationPicked, onlyOneUtilAction } = ERRORS.transforms;
@@ -27,7 +32,16 @@ export const parseOptions = async (
 ) => {
   try {
     if (!Object.keys(options).length) return program.help();
-    const { preserveOriginal, dryRun, target, restore, restArgs } = options;
+    const {
+      preserveOriginal: argPreserveOriginal,
+      dryRun: argDryRun,
+      target,
+      restore,
+      restArgs,
+    } = options;
+
+    // Default dryRun to true, unless specifically set to false
+    const dryRun = parseBoolOption(argDryRun, true);
 
     const transformPath = await setTransformationPath(
       target as string | undefined,
@@ -40,31 +54,29 @@ export const parseOptions = async (
     const utilityActions = utilityActionsCheck(options);
     if (utilityActions) {
       return await utilityActionsCorrespondenceTable[utilityActions]({
-        dryRun: dryRun as boolean | undefined,
+        dryRun,
         transformPath,
         rollbackLevel,
       });
     }
     const transformPattern = transformationCheck(options);
 
-    let transformedPreserve: boolean;
-    try {
-      transformedPreserve = JSON.parse(
-        (preserveOriginal as string).toLowerCase()
-      ) as boolean;
-    } catch {
-      transformedPreserve = true;
-    }
+    const preserveOriginal = parseBoolOption(argPreserveOriginal, true);
+    
 
     const args = objectFilter({
       targetObject: options,
       filters: EXCLUDED_CONVERT_OPTIONS,
       filterType: "exclude",
     });
-    args.preserveOriginal = transformedPreserve;
-    args.transformPattern = transformPattern;
-    args.transformPath = transformPath;
-    return await convertFiles(args as RenameListArgs);
+
+    return await convertFiles({
+      ...args,
+      preserveOriginal,
+      transformPattern,
+      transformPath,
+      dryRun,
+    } as RenameListArgs);
   } catch (err) {
     const error = err as Error;
     console.error(error.message);

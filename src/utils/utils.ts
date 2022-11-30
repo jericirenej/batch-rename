@@ -52,7 +52,18 @@ const { failReport, failItem } = STATUS.settledPromisesEval;
 export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
 export const jsonReplicate = <T>(arg: T): T =>
   jsonParseReplicate(JSON.stringify(arg)) as T;
-export const sortedJsonReplicate = <T extends unknown[]>(arg:T):T => jsonReplicate(arg).sort();
+export const sortedJsonReplicate = <T extends unknown[]>(arg: T): T =>
+  jsonReplicate(arg).sort();
+
+export const parseBoolOption = (arg?: unknown, defaultVal = false): boolean => {
+  try {
+    if (!arg) return defaultVal;
+    const parsed = JSON.parse(String(arg).toLowerCase());
+    return typeof parsed === "boolean" ? parsed : defaultVal;
+  } catch {
+    return defaultVal;
+  }
+};
 
 export const parseRestoreArg = (arg: unknown): number => {
   try {

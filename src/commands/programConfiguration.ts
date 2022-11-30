@@ -93,9 +93,9 @@ const programOptions: ProgramCLIOptions[] = [
   {
     short: "D",
     long: "dryRun",
-    type: "",
+    type: "<boolean>",
     description:
-      "Run transform operation without writing to disk. Run transform operation without writing to disk. Will log properties of expected output. Prompts user for transform execution, if no errors detected.",
+      "Log expected output and write only after confirmation. Defaults to true.",
     defaultValue: "",
   },
   {

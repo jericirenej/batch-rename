@@ -43,6 +43,7 @@ const {
   extractCurrentReferences,
   listFiles,
   numberOfDuplicatedNames,
+  parseBoolOption,
   parseRestoreArg,
   settledPromisesEval,
   truncateFile,
@@ -80,6 +81,23 @@ const mockedFs = jest.mocked(fs),
   mockedUnlink = jest.mocked(unlink),
   mockedReadFile = jest.mocked(readFile),
   mockedWriteFile = jest.mocked(writeFile);
+
+describe("parseBoolOption", () => {
+  it("Should return default value, if arg is falsy or would throw error", () => {
+    [undefined, null, 12345, "truthy", "falsy"].forEach((option) => {
+      [false, true].forEach((defaultArg) => {
+        expect(parseBoolOption(option, defaultArg)).toBe(defaultArg);
+      });
+    });
+  });
+  it("Should pass the parsed string boolean", () => {
+    ["true", "false"].forEach((option) => {
+      [false, true].forEach((defaultArg) => {
+        expect(parseBoolOption(option, defaultArg)).toBe(JSON.parse(option));
+      });
+    });
+  });
+});
 
 describe("parseRestoreArg", () => {
   it("Should return an integer for stringified number values", () => {
