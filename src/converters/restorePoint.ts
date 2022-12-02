@@ -103,7 +103,7 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     console.log(`Will revert ${batchRename.length} files...`);
     const promiseResults = await Promise.allSettled(batchRename);
 
-    settledPromisesEval({
+   const {successful, failed}= settledPromisesEval({
       promiseResults,
       transformedNames: updatedRenameList,
       operationType: "restore",

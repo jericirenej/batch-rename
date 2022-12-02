@@ -301,7 +301,7 @@ export interface CheckExistingFiles {
   ({
     existingFiles,
     transforms,
-    rollbackLevel
+    rollbackLevel,
   }: {
     existingFiles: string[];
     transforms: RenameItemsArray[];
@@ -317,4 +317,14 @@ export interface CreateRollbackFile {
     transforms: BaseRenameList;
     sourcePath: string;
   }): Promise<RollbackFile>;
+}
+
+export interface PromiseRejectedWriteResult extends PromiseRejectedResult {
+  reason: {
+    errno: number;
+    code: string;
+    syscall: string;
+    path: string;
+    dest: string;
+  };
 }

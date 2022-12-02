@@ -7,7 +7,7 @@ import {
   unlink,
   writeFile
 } from "fs/promises";
-import { join, resolve } from "path";
+import { join, parse, resolve } from "path";
 import readline from "readline";
 import {
   DEFAULT_SEPARATOR,
@@ -30,6 +30,8 @@ import type {
   ExtractBaseAndExt,
   ListFiles,
   NumberOfDuplicatedNames,
+  PromiseRejectedWriteResult,
+  RenameItem,
   RenameItemsArray,
   RollbackFile,
   TrimRollbackFile,
@@ -391,34 +393,45 @@ export const createBatchRenameList: CreateBatchRenameList = ({
 
 /**Remove entries from the list for which the renaming operation
  * resulted in a rejected promise. */
-export const settledPromisesEval = ({
+export const settledPromisesEval = <
+  T extends G[],
+  G extends BaseRenameItem | RenameItem
+>({
   transformedNames,
   promiseResults,
   operationType,
 }: {
-  transformedNames: BaseRenameItem[];
-  promiseResults: PromiseSettledResult<void>[];
+  transformedNames: T;
+  promiseResults: (PromiseFulfilledResult<void> | PromiseRejectedWriteResult)[];
   operationType: "convert" | "restore";
-}): BaseRenameItem[] => {
+}): { successful: T; failed: T } => {
+  const failed = [] as unknown as T;
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
   ).length;
 
-  if (promisesRejected === 0) return transformedNames;
+  if (promisesRejected === 0) return { successful: transformedNames, failed };
   if (promisesRejected === transformedNames.length)
     throw new Error(allRenameFailed);
 
   console.log(failReport(promisesRejected, operationType));
-  const truncatedList: BaseRenameItem[] = [];
-  promiseResults.forEach((settledResult, index) => {
+
+  const transformMap = transformedNames.reduce(
+    (map, curr) => map.set(curr.rename, { ...curr }),
+    new Map() as Map<string, G>
+  );
+
+  promiseResults.forEach((settledResult) => {
     if (settledResult.status === "rejected") {
-      const { original, rename } = transformedNames[index];
+      const { path, dest } = settledResult.reason;
+      const rename = parse(path).base,
+        original = parse(dest).base;
       console.log(failItem(original, rename, operationType));
-      return;
+      failed.push(transformMap.get(rename)!);
+      transformMap.delete(rename);
     }
-    return truncatedList.push(transformedNames[index]);
   });
-  return truncatedList;
+  return { successful: [...transformMap.values()] as T, failed };
 };
 
 /** Will truncate baseName to the length of the supplied truncate argument

@@ -112,14 +112,14 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const batchRename = createBatchRenameList(transforms);
   console.log(`Renaming ${batchRename.length} files...`);
   const promiseResults = await Promise.allSettled(batchRename);
-  const updatedRenameList = settledPromisesEval({
+  const updatedBaseRenameList = settledPromisesEval({
     promiseResults,
     transformedNames: transforms.transforms,
     operationType: "convert",
-  });
+  }).successful;
 
   const createdRollback = await createRollback({
-    transforms: updatedRenameList,
+    transforms: updatedBaseRenameList,
     sourcePath: targetDir,
   });
   console.log("Rename completed!");
