@@ -1,8 +1,10 @@
 import { Dirent, Stats } from "fs";
+import { join } from "path";
 import type {
   BaseRenameItem,
   ExtractBaseAndExtReturn,
   ExtractBaseAndExtTemplate,
+  PromiseRejectedWriteResult,
   RenameItem,
   RenameItemsArray,
   RollbackFile
@@ -259,3 +261,16 @@ export const mockRenameListToolSet: RenameListToolSet = {
   renameLists,
   mockRollback: { sourcePath, transforms: [singleLevelTransform] },
 };
+
+
+export const generateRejected = ({
+  original,
+  rename,
+}: RenameItem | BaseRenameItem): PromiseRejectedWriteResult =>
+  ({
+    status: "rejected",
+    reason: {
+      path: join(sourcePath, rename),
+      dest: join(sourcePath, original),
+    },
+  } as PromiseRejectedWriteResult);

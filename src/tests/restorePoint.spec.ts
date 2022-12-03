@@ -9,6 +9,7 @@ import { restoreByLevels } from "../utils/restoreUtils.js";
 import * as utils from "../utils/utils.js";
 import {
   examplePath as transformPath,
+  generateRejected,
   mockDirentEntryAsFile,
   mockRenameListToolSet
 } from "./mocks.js";
@@ -198,15 +199,15 @@ describe("restoreOriginalFileNames", () => {
         .map((fileInfo) => fileInfo.name),
     });
     // Make second promise reject, to test for proper truncating of renamed list.
-    spyOnCreateBatchRenameList.mockReturnValueOnce([
+    const batchResults = [
       Promise.resolve(),
-      Promise.reject(),
-    ]);
-    // Create the appropriate allSettled data.
-    const promiseResults = [
-      { status: "fulfilled", value: undefined },
-      { status: "rejected", reason: undefined },
+      Promise.reject(
+        generateRejected(mockConversionList.restoreList.transforms[1]).reason
+      ),
     ];
+    spyOnCreateBatchRenameList.mockReturnValueOnce(batchResults);
+    // Create the appropriate allSettled data.
+    const promiseResults = await Promise.allSettled(batchResults);
     const expectedArgs = {
       promiseResults,
       operationType: "restore",

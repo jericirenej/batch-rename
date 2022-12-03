@@ -17,8 +17,7 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate,
-  RenameItemsArray,
+  ExtractBaseAndExtTemplate, RenameItemsArray,
   ValidTypes
 } from "../types.js";
 import * as utils from "../utils/utils.js";
@@ -27,6 +26,7 @@ import {
   examplePath,
   exampleStats,
   expectedSplit,
+  generateRejected,
   mockFileList,
   mockRenameListToolSet,
   mockRollbackToolSet,
@@ -46,6 +46,7 @@ const {
   parseBoolOption,
   parseRestoreArg,
   settledPromisesEval,
+  sortedJsonReplicate,
   truncateFile,
   trimRollbackFile,
 } = utils;
@@ -680,10 +681,6 @@ describe("settledPromisesEval", () => {
       operationType: "convert" as const,
     },
     settledLength = distinct.length,
-    rejected = {
-      status: "rejected",
-      reason: "someReason",
-    } as const,
     fulfilled = {
       status: "fulfilled",
       value: void 0,
@@ -692,13 +689,19 @@ describe("settledPromisesEval", () => {
     const promiseResults = new Array(settledLength).fill(
       fulfilled
     ) as PromiseSettledResult<void>[];
-    const result = settledPromisesEval({ ...args, promiseResults });
-    expect(result).toEqual(args.transformedNames);
+    const { failed, successful } = settledPromisesEval({
+      ...args,
+      promiseResults,
+    });
+    expect(successful).toEqual(args.transformedNames);
+    expect(failed.length).toBe(0);
   });
   it("Should throw error, if all promises are rejected", () => {
-    const promiseResults = new Array(settledLength).fill(
-      rejected
-    ) as PromiseSettledResult<void>[];
+    const promiseResults = new Array(settledLength)
+      .fill(0)
+      .map((entry, index) =>
+        generateRejected(distinct[index])
+      ) as PromiseSettledResult<void>[];
 
     expect(() => settledPromisesEval({ ...args, promiseResults })).toThrowError(
       ERRORS.utils.allRenameFailed
@@ -706,25 +709,25 @@ describe("settledPromisesEval", () => {
   });
   it("Should remove entries that resulted in rejected promises", () => {
     const promiseResults: PromiseSettledResult<void>[] = [
-      rejected,
+      generateRejected(distinct[0]),
       fulfilled,
-      rejected,
+      generateRejected(distinct[2]),
     ];
-    const result = settledPromisesEval({ ...args, promiseResults });
-    expect(result.length).toBe(distinct.length - 2);
-
-    const rejectedNames = [distinct[0].original, distinct[2].original];
-    const areRejectedPresent = result.some(({ original }) =>
-      rejectedNames.includes(original)
+    const { successful, failed } = settledPromisesEval({
+      ...args,
+      promiseResults,
+    });
+    expect(successful.length).toBe(distinct.length - 2);
+    expect(successful).toEqual([distinct[1]]);
+    expect(sortedJsonReplicate(failed)).toEqual(
+      sortedJsonReplicate([distinct[0], distinct[2]])
     );
-
-    expect(areRejectedPresent).toBe(false);
   });
   it("Should produce appropriate failReport and failItem messages", () => {
     const promiseResults: PromiseSettledResult<void>[] = [
       fulfilled,
       fulfilled,
-      rejected,
+      generateRejected(distinct[2]),
     ];
     for (const operationType of ["convert", "restore"] as const) {
       const { failReport, failItem } = STATUS.settledPromisesEval;
