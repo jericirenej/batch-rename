@@ -4,10 +4,16 @@
 <br>
 
 ## New features
-- Multi level rollback is now implemented. This means that you can perform multiple transformation on existing / newly added files, and then restore back to previous file names by levels. Just add the number of rollbacks you wish to perform next to the `restore` flag. Or omit the argument to roll back to the beginning!
+- **Multi level rollback** is now implemented. Each rollback file now stores a history of all the transforms performed. This means you can perform multiple transformation on existing / newly added files, then restore back to previous file names by discrete levels. 
+  - Just add the number of rollbacks you wish to perform next to the `restore` flag. Or omit the argument to roll back to the beginning!
   - Implementing the rollback feature meant a complete rewrite of the rollback logic. However, previous (legacy) rollback files are still supported and will be converted to the current format automatically.
-- All operations now run in dryRun by default so that changes can be previewed and executed via explicit confirmation.
-- Various bug fixes. Test improvements.
+  - **Handling of failed restores**: If a restore operation fails on write (for example, because the file is locked by the OS), the failed restore files will be re-added to the rollback file as the most recent transformation so that the changes are not discarded. 
+- **Convert and restore operations run in dryRun by default** so that changes can be previewed and executed via explicit confirmation. 
+  - The `cleanRollbackFile` is an exception currently: it will run immediately, without confirm prompt.
+- Various bug fixes. Test improvements, mock files consolidation.
+
+- Despite best efforts and improved tests for the new features, some **buggy behavior can occur**.
+
 
 ## How to run
 Clone the repo, then run `npm install`.
