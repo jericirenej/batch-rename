@@ -234,7 +234,7 @@ describe("convertFiles", () => {
       Promise.resolve()
     );
     mockBatchPromises[0] = Promise.reject(
-      generateRejected(mockDistinctList[0]).reason
+      generateRejected(mockDistinctList[0], "convert").reason
     );
     spyOnCreateBatchRename.mockReturnValueOnce(mockBatchPromises);
     const promiseResults = await Promise.allSettled(mockBatchPromises);

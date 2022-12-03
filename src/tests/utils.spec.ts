@@ -701,7 +701,7 @@ describe("settledPromisesEval", () => {
     const promiseResults = new Array(settledLength)
       .fill(0)
       .map((entry, index) =>
-        generateRejected(distinct[index])
+        generateRejected(distinct[index], args.operationType)
       ) as PromiseSettledResult<void>[];
 
     expect(() => settledPromisesEval({ ...args, promiseResults })).toThrowError(
@@ -710,9 +710,9 @@ describe("settledPromisesEval", () => {
   });
   it("Should remove entries that resulted in rejected promises", () => {
     const promiseResults: PromiseSettledResult<void>[] = [
-      generateRejected(distinct[0]),
+      generateRejected(distinct[0], args.operationType),
       fulfilled,
-      generateRejected(distinct[2]),
+      generateRejected(distinct[2], args.operationType),
     ];
     const { successful, failed } = settledPromisesEval({
       ...args,
@@ -728,7 +728,7 @@ describe("settledPromisesEval", () => {
     const promiseResults: PromiseSettledResult<void>[] = [
       fulfilled,
       fulfilled,
-      generateRejected(distinct[2]),
+      generateRejected(distinct[2], args.operationType),
     ];
     for (const operationType of ["convert", "restore"] as const) {
       const { failReport, failItem } = STATUS.settledPromisesEval;

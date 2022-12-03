@@ -265,12 +265,12 @@ export const mockRenameListToolSet: RenameListToolSet = {
 
 export const generateRejected = ({
   original,
-  rename,
-}: RenameItem | BaseRenameItem): PromiseRejectedWriteResult =>
+  rename,  
+}: RenameItem | BaseRenameItem, operationType: "convert"|"restore" = "restore"): PromiseRejectedWriteResult =>
   ({
     status: "rejected",
     reason: {
-      path: join(sourcePath, rename),
-      dest: join(sourcePath, original),
+      path: join(sourcePath, operationType === "restore" ? rename : original),
+      dest: join(sourcePath, operationType === "restore" ? original : rename),
     },
   } as PromiseRejectedWriteResult);
