@@ -19,6 +19,7 @@ import {
   examplePath,
   exampleStats,
   generateMockSplitFileList,
+  generateRejected,
   mockFileList,
   mockRenameListToolSet
 } from "./mocks.js";
@@ -32,6 +33,7 @@ const splitFileListWithStats = splitFileList.map((fileList) => ({
   stats: exampleStats,
 }));
 const { convertFiles, dryRunTransform, generateRenameList } = converter;
+const { settledPromisesEval } = utils;
 
 // SPIES AND MOCKS SETUP
 jest.mock("fs/promises", () => {
@@ -231,7 +233,9 @@ describe("convertFiles", () => {
     const mockBatchPromises = [...mockDistinctList].map(() =>
       Promise.resolve()
     );
-    mockBatchPromises[0] = Promise.reject();
+    mockBatchPromises[0] = Promise.reject(
+      generateRejected(mockDistinctList[0], "convert").reason
+    );
     spyOnCreateBatchRename.mockReturnValueOnce(mockBatchPromises);
     const promiseResults = await Promise.allSettled(mockBatchPromises);
     const spyOnSettledPromisesEval = jest.spyOn(utils, "settledPromisesEval");
@@ -244,9 +248,11 @@ describe("convertFiles", () => {
       transformedNames: mockDistinctList,
       operationType: "convert",
     });
-    expect(spyOnSettledPromisesEval).toHaveReturnedWith(
-      mockDistinctList.slice(1)
-    );
+    const expected: ReturnType<typeof settledPromisesEval> = {
+      successful: mockDistinctList.slice(1),
+      failed: [mockDistinctList[0]],
+    };
+    expect(spyOnSettledPromisesEval).toHaveReturnedWith(expected);
   });
   it("Should call console.log twice", async () => {
     await convertFiles(exampleArgs);

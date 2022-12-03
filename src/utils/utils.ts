@@ -7,7 +7,7 @@ import {
   unlink,
   writeFile
 } from "fs/promises";
-import { join, resolve } from "path";
+import { join, parse, resolve } from "path";
 import readline from "readline";
 import {
   DEFAULT_SEPARATOR,
@@ -30,6 +30,8 @@ import type {
   ExtractBaseAndExt,
   ListFiles,
   NumberOfDuplicatedNames,
+  PromiseRejectedWriteResult,
+  RenameItem,
   RenameItemsArray,
   RollbackFile,
   TrimRollbackFile,
@@ -116,6 +118,7 @@ export const extractCurrentReferences = (
 export const trimRollbackFile: TrimRollbackFile = async ({
   sourcePath,
   targetLevel,
+  failed,
 }) => {
   const targetDir = determineDir(sourcePath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
@@ -126,23 +129,59 @@ export const trimRollbackFile: TrimRollbackFile = async ({
   const rollbackFile = JSON.parse(await readFile(targetPath, "utf-8"));
 
   const verifiedRollback = checkRestoreFile(rollbackFile);
-  const rollbackTransforms = verifiedRollback.transforms.slice(targetLevel);
+  const remainingTransforms = verifiedRollback.transforms.slice(targetLevel);
 
-  if (!rollbackTransforms.length) {
+  const shouldDelete = [remainingTransforms, failed].every(
+    (arr) => !arr.length
+  );
+
+  if (shouldDelete) {
     process.stdout.write("Deleting rollback file...");
     await unlink(targetPath);
-  } else {
-    process.stdout.write("Updating rollback file...");
-    const newRollbackFile: RollbackFile = {
-      sourcePath,
-      transforms: rollbackTransforms,
-    };
-    await writeFile(
-      resolve(targetDir, ROLLBACK_FILE_NAME),
-      JSON.stringify(newRollbackFile, undefined, 2),
-      "utf-8"
+    process.stdout.write("DONE!");
+    return;
+  }
+
+  let mappedFailed: RenameItemsArray = [];
+  if (failed.length) {
+    const mappedEntry = new Map() as Map<string, RenameItem>;
+
+    remainingTransforms[0]?.reduce(
+      (map, curr) => map.set(curr.referenceId, curr),
+      mappedEntry
+    );
+
+    !mappedEntry.size ? mappedFailed = [...failed] :
+      failed.forEach(({ rename, original, referenceId }) => {
+        const ref = mappedEntry.get(referenceId);
+        if (!ref) return mappedFailed.push({ rename, original, referenceId });
+
+        const isDistinct = original !== ref.rename;
+          mappedFailed.push({
+            rename,
+            original: isDistinct ? ref.rename : original,
+            referenceId,
+          });
+      });
+    
+    console.log(
+      "Failed restore items will be appended to most recent rollback entry."
     );
   }
+
+  const newRollbackFile: RollbackFile = {
+    sourcePath,
+    transforms: [[...mappedFailed], ...remainingTransforms].filter(
+      (entry) => entry.length
+    ),
+  };
+
+  process.stdout.write("Updating rollback file...");
+  await writeFile(
+    resolve(targetDir, ROLLBACK_FILE_NAME),
+    JSON.stringify(newRollbackFile, undefined, 2),
+    "utf-8"
+  );
 
   process.stdout.write("DONE!");
 };
@@ -391,34 +430,46 @@ export const createBatchRenameList: CreateBatchRenameList = ({
 
 /**Remove entries from the list for which the renaming operation
  * resulted in a rejected promise. */
-export const settledPromisesEval = ({
+export const settledPromisesEval = <
+  T extends G[],
+  G extends BaseRenameItem | RenameItem
+>({
   transformedNames,
   promiseResults,
   operationType,
 }: {
-  transformedNames: BaseRenameItem[];
-  promiseResults: PromiseSettledResult<void>[];
+  transformedNames: T;
+  promiseResults: (PromiseFulfilledResult<void> | PromiseRejectedWriteResult)[];
   operationType: "convert" | "restore";
-}): BaseRenameItem[] => {
+}): { successful: T; failed: T } => {
+  const failed = [] as unknown as T;
   const promisesRejected = promiseResults.filter(
     (settledResult) => settledResult.status === "rejected"
   ).length;
 
-  if (promisesRejected === 0) return transformedNames;
+  if (promisesRejected === 0) return { successful: transformedNames, failed };
   if (promisesRejected === transformedNames.length)
     throw new Error(allRenameFailed);
 
   console.log(failReport(promisesRejected, operationType));
-  const truncatedList: BaseRenameItem[] = [];
-  promiseResults.forEach((settledResult, index) => {
+
+  const transformMap = transformedNames.reduce(
+    (map, curr) => map.set(curr.rename, { ...curr }),
+    new Map() as Map<string, G>
+  );
+
+  promiseResults.forEach((settledResult) => {
     if (settledResult.status === "rejected") {
-      const { original, rename } = transformedNames[index];
-      console.log(failItem(original, rename, operationType));
-      return;
+      const { path, dest } = settledResult.reason;
+      const origin = parse(path).base,
+        destination = parse(dest).base;
+      console.log(failItem(origin, destination, operationType));
+      const targetProp = operationType === "convert" ? destination : origin;
+      failed.push(transformMap.get(targetProp)!);
+      transformMap.delete(targetProp);
     }
-    return truncatedList.push(transformedNames[index]);
   });
-  return truncatedList;
+  return { successful: [...transformMap.values()] as T, failed };
 };
 
 /** Will truncate baseName to the length of the supplied truncate argument

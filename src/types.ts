@@ -210,7 +210,7 @@ export type RestoreOriginalFileNames = (
 ) => Promise<void>;
 
 export type TrimRollbackFile = (
-  args: Omit<ConversionList, "transforms">
+  args: Omit<ConversionList, "transforms"> & {failed: RenameItemsArray}
 ) => Promise<void>;
 
 export type ListFiles = (
@@ -301,7 +301,7 @@ export interface CheckExistingFiles {
   ({
     existingFiles,
     transforms,
-    rollbackLevel
+    rollbackLevel,
   }: {
     existingFiles: string[];
     transforms: RenameItemsArray[];
@@ -317,4 +317,14 @@ export interface CreateRollbackFile {
     transforms: BaseRenameList;
     sourcePath: string;
   }): Promise<RollbackFile>;
+}
+
+export interface PromiseRejectedWriteResult extends PromiseRejectedResult {
+  reason: {
+    errno: number;
+    code: string;
+    syscall: string;
+    path: string;
+    dest: string;
+  };
 }
