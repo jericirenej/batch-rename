@@ -3,6 +3,18 @@
 
 <br>
 
+## New features
+- **Multi level rollback** is now implemented. Each rollback file now stores a history of all the transforms performed. This means you can perform multiple transformation on existing / newly added files, then restore back to previous file names by discrete levels. 
+  - Just add the number of rollbacks you wish to perform next to the `restore` flag. Or omit the argument to roll back to the beginning!
+  - Implementing the rollback feature meant a complete rewrite of the rollback logic. However, previous (legacy) rollback files are still supported and will be converted to the current format automatically.
+  - **Handling of failed restores**: If a restore operation fails on write (for example, because the file is locked by the OS), the failed restore files will be re-added to the rollback file as the most recent transformation so that the changes are not discarded. 
+- **Convert and restore operations run in dryRun by default** so that changes can be previewed and executed via explicit confirmation. 
+  - The `cleanRollbackFile` is an exception currently: it will run immediately, without confirm prompt.
+- Various bug fixes. Test improvements, mock files consolidation.
+
+- Despite best efforts and improved tests for the new features, some **buggy behavior can occur**.
+
+
 ## How to run
 Clone the repo, then run `npm install`.
 Afterwards, the script can be used in one of the following ways:
@@ -19,11 +31,11 @@ Rename files using a search and replace algorithm. Target folder set explicitly.
 
 Preview rename files by keeping only part of the name (the 'id-' tag with variable number of digits).
 
-`node batchRename.mjs -Dk "id-\d{1,}" --target [folder]`
+`node batchRename.mjs -k "id-\d{1,}" --target [folder]`
 
 Preview numeric transform with exclude option and a custom baseIndex. Folder path set implicitly.
 
-`node batchRename.mjs -Dn --exclude "excludedName" -b 100 "folder"`
+`node batchRename.mjs -n --exclude "excludedName" -b 100 "folder"`
 
 Append creation date to files AND folders in the current folder and specify a custom separator.
 
@@ -31,7 +43,7 @@ Append creation date to files AND folders in the current folder and specify a cu
 
 Preview the odd numbering transform with custom text append in a target folder.
 
-`node batchRename.mjs -n odd -f [targetFolder] -a CUSTOM_TEXT --textPosition append -D`
+`node batchRename.mjs -n odd -f [targetFolder] -a CUSTOM_TEXT --textPosition append`
 
 Rollback | restore to original file names in target folder.
 
@@ -51,7 +63,7 @@ To run the script successfully, you will have to provide one of the valid transf
 
 When performing the rename operation, the script will write a restore file (`.rollback.json`) to the target folder. Without this file, restore operations are not possible. 
 
-Before performing the rename, it is **strongly encouraged to perform a dry run first.** Dry run will present you with the rename preview information and warnings, as well as prompt you if the rename should be run or not.
+Dry run is enabled by default. This means that you will see planned changes and these will be executed only after explicitly confirming them. It is **strongly encouraged not to disable the dry run mode.** 
 
 The script will not perform a rename if it would lead to name collisions (i.e. several files sharing the same name).
 
@@ -67,8 +79,8 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-a, --addText`|`<string>`|Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.|
 |`--target`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
 |`--targetType`|`['files'\|'dirs'\|'all']`|Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.|
-|`-r, --restore`||Restore transformed files to original names, if restore file is available.|
-|`-D, --dryRun`||Run transform operation without writing to disk. Will log properties of expected output. Prompts user for transform execution, if no errors detected.|
+|`-r, --restore`|`[number]`|Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used.|
+|`-D, --dryRun`|`<boolean>`|Log expected output and write only after confirmation. Defaults to true.|
 |`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
 |`--exclude`|`<string\|regex>`|Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions|
 |`-p, --preserveOriginal`|`[boolean]`| Preserve original file name. Not relevant for the `searchAndReplace` transform type. Defaults to `true`.|
@@ -89,6 +101,6 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 
 Performing renaming operations on files is not without risks. Things can go wrong, errors can happen, rollbacks might not succeed, data might be lost. So remember: 
 * Perform renaming operations only on files that you are prepared to lose or have backed up. 
-* Before performing the rename, always do a dry-run.
+* Default dry runs are enabled for a reason.
 * This script doesn't give you any guarantees or warranties about anything. 
 </div>

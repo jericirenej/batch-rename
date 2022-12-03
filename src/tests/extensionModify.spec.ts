@@ -1,12 +1,11 @@
 import { EXT_REGEX } from "../constants.js";
 import { extensionModifyTransform } from "../converters/extensionModify.js";
 import type {
-  GenerateRenameListArgs,
-  RenameList
+  BaseRenameList, GenerateRenameListArgs
 } from "../types.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
-const returnExtension = (renameList: RenameList): string[] => {
+const returnExtension = (renameList: BaseRenameList): string[] => {
   return renameList.map((fileTransform) => {
     const { rename } = fileTransform;
     const extPosition = rename.search(EXT_REGEX);

@@ -1,9 +1,7 @@
 import { PROGRAM_VERSION, VALID_DATE_TRANSFORM_TYPES } from "../constants.js";
-import { restoreOriginalFileNames } from "../converters/restorePoint.js";
-import { cleanUpRollbackFile } from "../converters/utils.js";
-import type { ProgramOptions } from "../types.js";
+import type { ProgramCLIOptions } from "../types.js";
 
-const programOptions: ProgramOptions[] = [
+const programOptions: ProgramCLIOptions[] = [
   {
     short: "n",
     long: "numericTransform",
@@ -71,10 +69,9 @@ const programOptions: ProgramOptions[] = [
   {
     short: "r",
     long: "restore",
-    type: "",
+    type: "[number]",
     description:
-      "Restore transformed files to original names, if restore file is available.",
-    defaultValue: "",
+      "Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used.",
   },
   {
     short: "",
@@ -96,9 +93,9 @@ const programOptions: ProgramOptions[] = [
   {
     short: "D",
     long: "dryRun",
-    type: "",
+    type: "<boolean>",
     description:
-      "Run transform operation without writing to disk. Run transform operation without writing to disk. Will log properties of expected output. Prompts user for transform execution, if no errors detected.",
+      "Log expected output and write only after confirmation. Defaults to true.",
     defaultValue: "",
   },
   {
@@ -175,11 +172,6 @@ const programConfiguration = {
   programName,
   programDescription,
   programOptions,
-};
-
-export const utilityActionsCorrespondenceTable = {
-  restore: restoreOriginalFileNames,
-  cleanRollback: cleanUpRollbackFile,
 };
 
 export default programConfiguration;

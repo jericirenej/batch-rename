@@ -6,12 +6,12 @@ import {
   VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import * as converters from "../converters/converter.js";
-import * as utils from "../converters/utils.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   OptionKeysWithValues,
   OptionKeysWithValuesAndRestArgs
 } from "../types.js";
+import * as utils from "../utils/utils.js";
 import { examplePath } from "./mocks.js";
 
 const {
@@ -92,6 +92,22 @@ describe("parseOptions", () => {
     expect(preserveOriginal).toBe(true);
     spyOnToLowerCase.mockRestore();
   });
+  it("Should set dryRun to false only if explicitly stated", async () => {
+    const testCases = [
+      { val: undefined, expected: true },
+      { val: "true", expected: true },
+      { val: "false", expected: false },
+    ];
+    for (const { val, expected } of testCases) {
+      if (val === undefined) {
+        await parseOptions({ ...exampleArgs });
+      } else {
+        await parseOptions({ ...exampleArgs, dryRun: val });
+      }
+      const dryRunArg = spyOnConvertFiles.mock.calls.flat().at(-1)?.dryRun;
+      expect(dryRunArg).toBe(expected);
+    }
+  });
   it("Should properly evaluate a stringified preserveOriginal argument", async () => {
     spyOnConvertFiles.mockClear();
     [
@@ -113,9 +129,8 @@ describe("parseOptions", () => {
       { ...exampleArgs, noExtensionPreserve: true, detailedDate: true },
       { ...exampleArgs, format: "uppercase" },
     ];
-    const extraKeys = ["transformPattern", "transformPath"];
+    const extraKeys = ["transformPattern", "transformPath", "dryRun"];
     argList.forEach(async (args) => {
-      await parseOptions(exampleArgs);
       spyOnConvertFiles.mockClear();
       await parseOptions(args);
       const expectedKeys = extraKeys.concat(
@@ -124,7 +139,9 @@ describe("parseOptions", () => {
         )
       );
       const receivedKeys = Object.keys(spyOnConvertFiles.mock.calls.flat()[0]);
-      expect(receivedKeys.every(key => expectedKeys.includes(key))).toBe(true);
+      expect(receivedKeys.every((key) => expectedKeys.includes(key))).toBe(
+        true
+      );
     });
   });
 });

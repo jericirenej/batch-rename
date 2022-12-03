@@ -1,5 +1,5 @@
-import type { KeepTransform } from "../types";
-import { composeRenameString } from "./utils.js";
+import type { BaseRenameItem, BaseRenameList, KeepTransform } from "../types";
+import { composeRenameString } from "../utils/utils.js";
 
 export const keepTransform: KeepTransform = ({
   keep,
@@ -15,8 +15,9 @@ export const keepTransform: KeepTransform = ({
 }) => {
   const regexBase = `^.*(?=${keep})|(?<=${keep}).*$`;
   const matcher = new RegExp(regexBase, "gu");
-  return splitFileList.map((fileInfo) => {
-    const { baseName: _baseName, ext, sourcePath } = fileInfo;
+  const renameList:BaseRenameList = [];
+  splitFileList.forEach((fileInfo) => {
+    const { baseName: _baseName, ext } = fileInfo;
     const baseName = noExtensionPreserve ? `${_baseName}${ext}` : _baseName;
     const original = `${_baseName}${ext}`;
     const newName = composeRenameString({
@@ -28,10 +29,11 @@ export const keepTransform: KeepTransform = ({
       addText,
       format,
     });
-    return {
-      rename: `${newName}`,
-      original,
-      sourcePath,
-    };
+    const rename = `${newName}`;
+    if(rename !== original) {
+      const renameItem: BaseRenameItem = { rename: `${newName}`, original };
+      renameList.push(renameItem);
+    }
   });
+  return renameList;
 };

@@ -5,7 +5,7 @@ import {
   VALID_TRANSFORM_TYPES
 } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
-import { checkPath } from "../converters/utils.js";
+import { restoreOriginalFileNames } from "../converters/restorePoint.js";
 import { ERRORS } from "../messages/errMessages.js";
 import type {
   OptionKeysWithValues,
@@ -14,10 +14,16 @@ import type {
   SetTransformationPath,
   TransformTypes,
   UtilityActions,
-  UtilityActionsCheck
+  UtilityActionsCheck,
+  UtilityFunctionsArgs
 } from "../types";
+import {
+  checkPath,
+  deleteRollbackFile,
+  parseBoolOption,
+  parseRestoreArg
+} from "../utils/utils.js";
 import program from "./generateCommands.js";
-import { utilityActionsCorrespondenceTable } from "./programConfiguration.js";
 
 const { noTransformationPicked, onlyOneUtilAction } = ERRORS.transforms;
 
@@ -26,40 +32,51 @@ export const parseOptions = async (
 ) => {
   try {
     if (!Object.keys(options).length) return program.help();
-    const { preserveOriginal, dryRun, target, restArgs } = options;
+    const {
+      preserveOriginal: argPreserveOriginal,
+      dryRun: argDryRun,
+      target,
+      restore,
+      restArgs,
+    } = options;
+
+    // Default dryRun to true, unless specifically set to false
+    const dryRun = parseBoolOption(argDryRun, true);
 
     const transformPath = await setTransformationPath(
       target as string | undefined,
       restArgs
     );
+
+    const rollbackLevel = parseRestoreArg(restore);
+
     // Run util actions first.
     const utilityActions = utilityActionsCheck(options);
     if (utilityActions) {
       return await utilityActionsCorrespondenceTable[utilityActions]({
-        dryRun: dryRun as boolean | undefined,
+        dryRun,
         transformPath,
+        rollbackLevel,
       });
     }
     const transformPattern = transformationCheck(options);
 
-    let transformedPreserve: boolean;
-    try {
-      transformedPreserve = JSON.parse(
-        (preserveOriginal as string).toLowerCase()
-      ) as boolean;
-    } catch {
-      transformedPreserve = true;
-    }
+    const preserveOriginal = parseBoolOption(argPreserveOriginal, true);
+    
 
     const args = objectFilter({
       targetObject: options,
       filters: EXCLUDED_CONVERT_OPTIONS,
       filterType: "exclude",
     });
-    args.preserveOriginal = transformedPreserve;
-    args.transformPattern = transformPattern;
-    args.transformPath = transformPath;
-    return await convertFiles(args as RenameListArgs);
+
+    return await convertFiles({
+      ...args,
+      preserveOriginal,
+      transformPattern,
+      transformPath,
+      dryRun,
+    } as RenameListArgs);
   } catch (err) {
     const error = err as Error;
     console.error(error.message);
@@ -94,6 +111,12 @@ export const setTransformationPath: SetTransformationPath = async (
     return await checkPath(restArgs[0]);
   }
   return undefined;
+};
+
+export const utilityActionsCorrespondenceTable = {
+  restore: (args: UtilityFunctionsArgs) => restoreOriginalFileNames(args),
+  cleanRollback: ({ transformPath }: UtilityFunctionsArgs) =>
+    deleteRollbackFile(transformPath),
 };
 
 export const utilityActionsCheck: UtilityActionsCheck = (options) => {

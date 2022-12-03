@@ -1,10 +1,16 @@
 import { Dirent, Stats } from "fs";
-import { extractBaseAndExt } from "../converters/utils.js";
+import { join } from "path";
 import type {
+  BaseRenameItem,
   ExtractBaseAndExtReturn,
   ExtractBaseAndExtTemplate,
-  RenameList
+  PromiseRejectedWriteResult,
+  RenameItem,
+  RenameItemsArray,
+  RollbackFile
 } from "../types.js";
+import type { LegacyRenameList } from "../utils/restoreUtils.js";
+import { extractBaseAndExt } from "../utils/utils.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
   isFile() {
@@ -58,29 +64,7 @@ export const expectedSplit = [
   ["12345-and-chars", ".ext"],
 ];
 
-const firstRename = "rename1";
 const sourcePath = examplePath;
-export const originalNames = ["original1", "original2", "original3"];
-export const renameWithNewNameRepeat: RenameList = [
-  { original: originalNames[0], rename: firstRename, sourcePath },
-  { original: originalNames[1], rename: "rename2", sourcePath },
-  { original: originalNames[2], rename: firstRename, sourcePath },
-];
-
-const renameListDistinct = JSON.parse(
-  JSON.stringify(renameWithNewNameRepeat)
-) as RenameList;
-renameListDistinct[2].rename = "rename3";
-const renameListWithDuplicateOldAndNew = JSON.parse(
-  JSON.stringify(renameListDistinct)
-) as RenameList;
-renameListWithDuplicateOldAndNew[0] = {
-  original: renameListDistinct[0].original,
-  rename: renameListDistinct[0].original,
-  sourcePath,
-};
-
-export { renameListDistinct, renameListWithDuplicateOldAndNew };
 
 export const truthyArgument = "argument";
 const madeUpTime = 1318289051000.1;
@@ -130,7 +114,7 @@ export const createDirentArray = (
 ): Dirent[] => {
   let counter = 1;
   const combinedLength = numberOfDirs + numberOfFiles;
-  let arrLength = combinedLength > length ? combinedLength : length;
+  const arrLength = combinedLength > length ? combinedLength : length;
   const arr = new Array(arrLength).fill(0);
   return arr.map((entry, index) => {
     const isFileReturn = counter <= numberOfFiles;
@@ -196,3 +180,97 @@ export const textFormatRenameList = extractBaseAndExt(
   formatFileList,
   examplePath
 );
+
+// MOCK ROLLBACK TOOLSET
+const mockItemFunction = (
+  name: string,
+  referenceId: string,
+  transform: number
+): RenameItem => ({
+  original: `${name}_${transform}`,
+  referenceId,
+  rename: `${name}_${transform + 1}`,
+});
+const [mockItem1, mockItem2, mockItem3, mockItem4] = [
+  (transform: number) => mockItemFunction("1st", "1", transform),
+  (transform: number) => mockItemFunction("2nd", "2", transform),
+  (transform: number) => mockItemFunction("3rd", "3", transform),
+  (transform: number) => mockItemFunction("4th", "4", transform),
+];
+const mockTransforms: RenameItemsArray[] = [
+  [mockItem3(2), mockItem1(4), mockItem2(3)],
+  [mockItem1(3), mockItem3(1)],
+  [mockItem1(2), mockItem4(1), mockItem2(2)],
+  [mockItem1(1), mockItem2(1)],
+];
+const mockRollbackFile: RollbackFile = {
+  sourcePath: examplePath,
+  transforms: mockTransforms,
+};
+
+const removeReference = (...items: RenameItemsArray): BaseRenameItem[] =>
+  items.map(({ original, rename }) => ({ original, rename }));
+
+const mockLegacyRollback: LegacyRenameList = mockRollbackFile.transforms[0].map(
+  ({ original, rename }) => ({
+    original,
+    rename,
+    sourcePath: mockRollbackFile.sourcePath,
+  })
+);
+
+export const mockRollbackToolSet = {
+  sourcePath: examplePath,
+  removeReference,
+  mockItemFunction,
+  mockItems: { mockItem1, mockItem2, mockItem3, mockItem4 },
+  mockTransforms,
+  mockRollbackFile,
+  mockLegacyRollback
+};
+
+// RENAME LIST TOOLSET
+const originalNames = ["original1", "original2", "original3"];
+const singleLevelTransform = originalNames.map((name) =>
+  mockItemFunction(name, `${name}_ID`, 1)
+);
+const distinct = removeReference(...singleLevelTransform);
+const newNameRepeat = distinct.map((entry, index, arr) => {
+  if (index !== arr.length - 1) return { ...entry };
+  return { ...entry, rename: arr[index - 1].rename };
+});
+
+const duplicateOriginalAndRename = distinct.map((entry, index, arr) => {
+  if (index === 0) return { ...entry, rename: entry.original };
+  return { ...entry };
+});
+
+const renameLists = {
+  distinct,
+  newNameRepeat,
+  duplicateOriginalAndRename,
+} as const;
+interface RenameListToolSet {
+  originalNames: string[];
+  renameLists: typeof renameLists;
+  mockRollback: RollbackFile;
+}
+
+export const mockRenameListToolSet: RenameListToolSet = {
+  originalNames,
+  renameLists,
+  mockRollback: { sourcePath, transforms: [singleLevelTransform] },
+};
+
+
+export const generateRejected = ({
+  original,
+  rename,  
+}: RenameItem | BaseRenameItem, operationType: "convert"|"restore" = "restore"): PromiseRejectedWriteResult =>
+  ({
+    status: "rejected",
+    reason: {
+      path: join(sourcePath, operationType === "restore" ? rename : original),
+      dest: join(sourcePath, operationType === "restore" ? original : rename),
+    },
+  } as PromiseRejectedWriteResult);

@@ -3,7 +3,6 @@ import { stat } from "fs/promises";
 import { DEFAULT_SEPARATOR } from "../constants.js";
 import * as dateTransforms from "../converters/dateTransform.js";
 import * as formatText from "../converters/formatTextTransform.js";
-import * as utils from "../converters/utils.js";
 import type {
   ComposeRenameStringArgs,
   DateTransformCorrespondenceTable,
@@ -11,6 +10,7 @@ import type {
   FormattedDate,
   GenerateRenameListArgs
 } from "../types.js";
+import * as utils from "../utils/utils.js";
 import { exampleStats as stats, generateMockSplitFileList } from "./mocks.js";
 
 jest.mock("fs/promises", () => {
@@ -155,12 +155,6 @@ describe("dateTransform", () => {
       spyOnExtractDate.mockClear();
     });
   });
-  it("Should call composeRenameString appropriate number of times", () => {
-    dateTransform(baseArgs);
-    expect(spyOnComposeRenameString).toHaveBeenCalledTimes(
-      baseArgs.splitFileList.length
-    );
-  });
   it("Should call composeRenameString with appropriate arguments", () => {
     const argsToWatch = {
       textPosition: "append" as const,
@@ -240,7 +234,6 @@ describe("dateTransform", () => {
       const targetFile = splitFileList[index];
       const expectedOriginal = `${targetFile.baseName}${targetFile.ext}`;
       expect(transform.original).toBe(expectedOriginal);
-      expect(transform.sourcePath).toBe(targetFile.sourcePath);
       const datePart = [year, month, day].join(DEFAULT_SEPARATOR);
       expect(transform.rename.includes(datePart)).toBe(true);
     });

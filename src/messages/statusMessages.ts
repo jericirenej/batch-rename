@@ -28,6 +28,21 @@ export const STATUS = {
       "Would you like to execute the restore of original entry names (N/Y)?",
     exitWithoutRestore: "Exited application without performing restore.",
   },
+  restoreFileMapper: {
+    rollbackLevelOverMax:
+      "Specified rollback level is higher than the combined number of stored batch operations. Will map to initial entry.",
+    rollbackLevelsLessThanTarget: (
+      filesWithLessLevels: number,
+      allFiles: number
+    ) => {
+      const endMessage = "Will rollback to the earliest possible version."
+      if (filesWithLessLevels === allFiles) {
+        return `All files have less rollback levels than requested. ${endMessage}`;
+      }
+      return `${filesWithLessLevels} number of files have less rollback levels than requested. ${endMessage}`;
+    },
+    legacyConversion: "Legacy rollback file format found. Will be converted to current format."
+  },
   settledPromisesEval: {
     failReport: (
       promisesRejected: number,

@@ -1,5 +1,5 @@
-import { FormatTextTransform, ValidTextFormats } from "../types.js";
-import { composeRenameString } from "./utils.js";
+import { BaseRenameItem, FormatTextTransform, ValidTextFormats } from "../types.js";
+import { composeRenameString } from "../utils/utils.js";
 
 export const formatTextTransform: FormatTextTransform = ({
   splitFileList,
@@ -18,7 +18,8 @@ export const formatTextTransform: FormatTextTransform = ({
       noExtensionPreserve,
       preserveOriginal: false,
     });
-    return { original: `${baseName}${ext}`, rename, sourcePath };
+    const renameItem:BaseRenameItem = { original: `${baseName}${ext}`, rename }
+    return renameItem;
   });
 };
 

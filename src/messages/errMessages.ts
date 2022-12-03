@@ -8,6 +8,10 @@ export const ERRORS = {
     couldNotBeParsed: "Restore data could not be parsed for any of the files!",
     noValidData: "No valid data was returned from the restoreBaseFunction!",
   },
+  restoreFileMapper: {
+    incorrectRollbackFormat:
+      "The rollback file does not conform to the required format!",
+  },
   cleanRollback: {
     noRollbackFile: "No rollback file exists. Exiting.",
     rollbackOperationFail: "Cleaning up rollback file failed!",
@@ -34,5 +38,8 @@ export const ERRORS = {
     )}`,
     duplicateRenames:
       "Transformation would lead to duplication of file names! Operation aborted.",
+    duplicateSourceAndOrigin:
+      "Transformation would lead to identical original and rename values for at least some files!",
+      noFilesToTransform: "No files would be transformed!"
   },
 };

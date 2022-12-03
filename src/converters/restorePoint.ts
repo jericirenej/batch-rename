@@ -6,18 +6,24 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   DryRunRestore,
-  RenameList,
+  RenameItemsArray,
   RestoreBaseFunction,
-  RestoreOriginalFileNames,
+  RestoreOriginalFileNames
 } from "../types";
 import {
+  checkExistingFiles,
+  checkRestoreFile,
+  determineRollbackLevel,
+  restoreByLevels
+} from "../utils/restoreUtils.js";
+import {
   askQuestion,
-  cleanUpRollbackFile,
   createBatchRenameList,
   determineDir,
   listFiles,
   settledPromisesEval,
-} from "./utils.js";
+  trimRollbackFile
+} from "../utils/utils.js";
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
   ERRORS.restore;
@@ -29,7 +35,8 @@ const {
 } = STATUS.restore;
 
 export const restoreBaseFunction: RestoreBaseFunction = async (
-  transformPath
+  transformPath,
+  rollbackLevel
 ) => {
   const targetDir = determineDir(transformPath);
   const targetPath = join(targetDir, ROLLBACK_FILE_NAME);
@@ -44,27 +51,41 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
     throw new Error(noRollbackFile);
   }
   const readRollback = await readFile(targetPath, "utf8");
-  const rollbackData = JSON.parse(readRollback) as RenameList;
+  const originalRollbackData = JSON.parse(readRollback);
 
-  const missingFiles: string[] = [];
-  rollbackData.forEach((info) => {
-    const { rename } = info;
-    const targetFilePresent = existingFiles.includes(rename);
-    if (!targetFilePresent) missingFiles.push(rename);
+  const rollbackData = checkRestoreFile(originalRollbackData);
+  const targetRollback = determineRollbackLevel({
+    transformList: rollbackData.transforms,
+    rollbackLevel,
   });
-  const filesToRestore = existingFiles.filter(
-    (file) => !missingFiles.includes(file)
-  );
-  return { rollbackData, existingFiles, missingFiles, filesToRestore };
+
+  const { filesToRestore, missingFiles } = checkExistingFiles({
+    existingFiles,
+    transforms: rollbackData.transforms,
+    rollbackLevel: targetRollback,
+  });
+  const restoreList = restoreByLevels({
+    rollbackFile: rollbackData,
+    rollbackLevel,
+  });
+
+  return {
+    rollbackData,
+    restoreList,
+    existingFiles,
+    missingFiles,
+    filesToRestore,
+  };
 };
 
 /**Restore original filenames on the basis of the rollbackFile */
 export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   dryRun,
   transformPath,
+  rollbackLevel,
 }) => {
   const targetDir = determineDir(transformPath);
-  const restoreBaseData = await restoreBaseFunction(targetDir);
+  const restoreBaseData = await restoreBaseFunction(targetDir, rollbackLevel);
   if (!restoreBaseData) throw new Error(noValidData);
   if (!restoreBaseData.filesToRestore.length) {
     throw new Error(couldNotBeParsed);
@@ -73,41 +94,46 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
     const dryRun = await dryRunRestore(restoreBaseData);
     if (!dryRun) return;
   }
-  const { rollbackData, filesToRestore } = restoreBaseData;
+  const { filesToRestore, restoreList } = restoreBaseData;
+  const { targetLevel, transforms } = restoreList;
 
   let batchRename: Promise<void>[] = [],
-    updatedRenameList: RenameList = [];
+    updatedRenameList: RenameItemsArray = [];
   if (filesToRestore.length) {
-    batchRename = createBatchRenameList(rollbackData, filesToRestore);
+    batchRename = createBatchRenameList({
+      transforms,
+      sourcePath: targetDir,
+      filesToRestore,
+    });
   }
   if (!batchRename.length) {
     throw new Error(couldNotBeParsed);
   }
   if (batchRename.length) {
-    updatedRenameList = rollbackData.filter(({ rename }) =>
+    updatedRenameList = transforms.filter(({ rename }) =>
       filesToRestore.includes(rename)
     );
 
     console.log(`Will revert ${batchRename.length} files...`);
     const promiseResults = await Promise.allSettled(batchRename);
 
-    settledPromisesEval({
+    const { failed } = settledPromisesEval({
       promiseResults,
       transformedNames: updatedRenameList,
       operationType: "restore",
     });
 
-    await cleanUpRollbackFile({ transformPath });
+    await trimRollbackFile({ sourcePath: targetDir, targetLevel, failed });
   }
 };
 
 export const dryRunRestore: DryRunRestore = async ({
   filesToRestore,
   missingFiles,
-  rollbackData,
+  restoreList: { transforms },
 }) => {
   const missingLength = missingFiles.length;
-  const tableData = rollbackData.map(({ rename, original }) => ({
+  const tableData = transforms.map(({ rename, original }) => ({
     current: rename,
     restored: original,
   }));
