@@ -210,7 +210,7 @@ export type RestoreOriginalFileNames = (
 ) => Promise<void>;
 
 export type TrimRollbackFile = (
-  args: Omit<ConversionList, "transforms">
+  args: Omit<ConversionList, "transforms"> & {failed: RenameItemsArray}
 ) => Promise<void>;
 
 export type ListFiles = (

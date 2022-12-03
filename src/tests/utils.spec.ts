@@ -165,6 +165,7 @@ describe("trimRollbackFile", () => {
   const trimArgs = {
     sourcePath: examplePath,
     targetLevel: 0,
+    failed: [],
   };
   afterAll(() => suppressStdOut.mockRestore());
   afterEach(() => jest.resetAllMocks());
