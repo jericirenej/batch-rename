@@ -1,7 +1,6 @@
 import { jest } from "@jest/globals";
 import fs, { existsSync } from "fs";
 import { readFile, unlink, writeFile } from "fs/promises";
-import { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
 import { resolve } from "path";
 import process from "process";
@@ -10,18 +9,15 @@ import { ERRORS } from "../messages/errMessages.js";
 import { BaseRenameItem, RenameItemsArray, RollbackFile } from "../types.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
 import * as rollbackUtils from "../utils/rollbackUtils.js";
-import {
-  examplePath,
-  mockRenameListToolSet,
-  mockRollbackToolSet
-} from "./mocks.js";
+import { jsonParseReplicate } from "../utils/utils.js";
+import { examplePath, mockRollbackToolSet } from "./mocks.js";
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
   const originalModule = jest.requireActual("fs/promises");
   return {
     __esModule: true,
-    ...originalModule as object,
+    ...(originalModule as object),
     readFile: jest.fn(),
     unlink: jest.fn(),
     writeFile: jest.fn(),
@@ -46,7 +42,14 @@ const {
 } = rollbackUtils;
 
 const { noRollbackFile } = ERRORS.cleanRollback;
-const { mockRollback } = mockRenameListToolSet;
+
+const existsAndReadMock = (
+  exists = true,
+  mocked: RollbackFile = mockRollbackToolSet.mockRollbackFile
+): void => {
+  mockedExistsSync.mockReturnValueOnce(exists);
+  if (exists) mockedReadFile.mockResolvedValueOnce(JSON.stringify(mocked));
+};
 
 describe("readRollbackFile", () => {
   const { mockRollbackFile, sourcePath } = mockRollbackToolSet;
@@ -57,14 +60,12 @@ describe("readRollbackFile", () => {
   });
   it("Should call spyOnCheckRestoreFile", async () => {
     expect(spyOnCheckRestoreFile).not.toHaveBeenCalled();
-    mockedExistsSync.mockReturnValueOnce(true);
-    mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollbackFile));
+    existsAndReadMock();
     await readRollbackFile(sourcePath);
     expect(spyOnCheckRestoreFile).toHaveBeenCalledTimes(1);
   });
   it("Should return rollbackFile if it exists", async () => {
-    mockedExistsSync.mockReturnValueOnce(true);
-    mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollbackFile));
+    existsAndReadMock();
     expect(await readRollbackFile(sourcePath)).toEqual(mockRollbackFile);
   });
 });
@@ -177,22 +178,25 @@ describe("deleteRollbackFile", () => {
 });
 
 describe("trimRollbackFile", () => {
-  let suppressStdOut: SpyInstance<(message: string | Uint8Array) => boolean>;
-  beforeEach(
-    () =>
-      (suppressStdOut = jest
-        .spyOn(process.stdout, "write")
-        .mockImplementation((message) => true))
-  );
-  afterEach(() => suppressStdOut.mockRestore());
+  const { mockRollbackFile, sourcePath, mockTransforms } = mockRollbackToolSet;
+  const suppressStdOut = jest
+    .spyOn(process.stdout, "write")
+    .mockImplementation((message) => true);
+  const suppressConsole = jest
+    .spyOn(console, "log")
+    .mockImplementation((message) => {});
+
+  beforeEach(() => jest.clearAllMocks());
+  afterAll(() => {
+    suppressStdOut.mockRestore();
+    suppressConsole.mockRestore();
+  });
 
   const trimArgs = {
-    sourcePath: examplePath,
+    sourcePath,
     targetLevel: 0,
     failed: [],
   };
-  afterAll(() => suppressStdOut.mockRestore());
-  afterEach(() => jest.clearAllMocks());
   it("Should throw error if rollback file does not exist", async () => {
     mockedFs.existsSync.mockReturnValueOnce(false);
     await expect(() => trimRollbackFile(trimArgs)).rejects.toThrowError(
@@ -201,9 +205,8 @@ describe("trimRollbackFile", () => {
   });
   it("Should call unlink with target path, if target level is high enough to rollback all changes", async () => {
     for (const modLength of [0, 1]) {
-      mockedFs.existsSync.mockReturnValueOnce(true);
-      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
-      const targetLevel = mockRollback.transforms.length + modLength;
+      existsAndReadMock();
+      const targetLevel = mockTransforms.length + modLength;
       mockedUnlink.mockImplementationOnce(() => Promise.resolve());
       await trimRollbackFile({ ...trimArgs, targetLevel });
       expect(mockedUnlink).toHaveBeenCalledTimes(1);
@@ -215,14 +218,13 @@ describe("trimRollbackFile", () => {
   });
   it("Should call writeFile with trimmed rollback file", async () => {
     for (const modLength of [-1, -2]) {
-      mockedFs.existsSync.mockReturnValueOnce(true);
-      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
-      const targetLevel = mockRollback.transforms.length + modLength;
+      existsAndReadMock();
+      const targetLevel = mockTransforms.length + modLength;
       mockedWriteFile.mockImplementationOnce((args) => Promise.resolve());
       await trimRollbackFile({ ...trimArgs, targetLevel });
       const expectedRollback = {
-        ...mockRollback,
-        transforms: mockRollback.transforms.slice(targetLevel),
+        ...mockRollbackFile,
+        transforms: mockTransforms.slice(targetLevel),
       };
       expect(mockedWriteFile).toHaveBeenCalledTimes(1);
       expect(mockedWriteFile).toHaveBeenLastCalledWith(
@@ -231,6 +233,70 @@ describe("trimRollbackFile", () => {
         "utf-8"
       );
       mockedWriteFile.mockClear();
+    }
+  });
+  it("Should not delete if any restores have failed", async () => {
+    existsAndReadMock();
+    const targetLevel = mockTransforms.length;
+    const failed: RenameItemsArray = [mockTransforms[0][0]];
+    await trimRollbackFile({ sourcePath, targetLevel, failed });
+    expect(mockedUnlink).not.toHaveBeenCalled();
+  });
+  it("Should prepend failed restore items to rollback file", async () => {
+    const failed: RenameItemsArray = [mockTransforms[0][0]];
+    // Test for cases where transforms remain after trim and for complete restore.
+    for (const modLength of [-1, 0]) {
+      existsAndReadMock();
+      mockedWriteFile.mockImplementationOnce((args) => Promise.resolve());
+      const targetLevel = mockTransforms.length + modLength;
+      await trimRollbackFile({ failed, sourcePath, targetLevel });
+      const expectedLength = mockTransforms.length - targetLevel + 1;
+
+      const lastRollbackWriteCall = jsonParseReplicate<RollbackFile>(
+        mockedWriteFile.mock.lastCall![1] as string
+      );
+      expect(lastRollbackWriteCall.transforms.length).toBe(expectedLength);
+      expect(lastRollbackWriteCall.transforms[0]).toEqual(failed);
+    }
+  });
+  it("Should modify failed items original name to equal rename of an existing entry with same referenceId in next restore", async () => {
+    const {
+      mockItems: { mockItem1, mockItem2 },
+    } = mockRollbackToolSet;
+    const newTransforms: RenameItemsArray[] = [
+      [mockItem1(3), mockItem2(2)],
+      [mockItem1(2)],
+      [mockItem1(1), mockItem2(1)],
+    ];
+    const newRollback: RollbackFile = {
+      ...mockRollbackFile,
+      transforms: newTransforms,
+    };
+    const testCases = [
+      {
+        failed: [mockItem1(3)],
+        targetLevel: 2,
+        expected: { ...mockItem1(3), original: mockItem1(1).rename },
+      },
+      {
+        failed: [mockItem2(2)],
+        targetLevel: 1,
+        expected: mockItem2(2),
+      },
+      {
+        failed: [mockItem2(2)],
+        targetLevel: 2,
+        expected: { ...mockItem2(2), original: mockItem2(1).rename },
+      },
+    ];
+
+    for (const { failed, targetLevel, expected } of testCases) {
+      existsAndReadMock(true, newRollback);
+      await trimRollbackFile({ sourcePath, targetLevel, failed });
+      const lastRollbackWriteCall = jsonParseReplicate<RollbackFile>(
+        mockedWriteFile.mock.lastCall![1] as string
+      );
+      expect(lastRollbackWriteCall.transforms[0][0]).toEqual(expected);
     }
   });
 });
