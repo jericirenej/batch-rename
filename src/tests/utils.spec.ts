@@ -3,10 +3,7 @@ import fs, { Dirent } from "fs";
 import {
   lstat,
   readdir,
-  readFile,
-  rename,
-  unlink,
-  writeFile
+  rename
 } from "fs/promises";
 import { SpyInstance } from "jest-mock";
 import path, { join, resolve } from "path";
@@ -48,7 +45,6 @@ const {
   settledPromisesEval,
   sortedJsonReplicate,
   truncateFile,
-  trimRollbackFile,
 } = utils;
 const {
   noChildFiles,
@@ -57,9 +53,8 @@ const {
   pathDoesNotExist,
   pathIsNotDir,
 } = ERRORS.utils;
-const { noRollbackFile } = ERRORS.cleanRollback;
 
-const { mockRollback, originalNames, renameLists } = mockRenameListToolSet;
+const { renameLists } = mockRenameListToolSet;
 const { distinct, duplicateOriginalAndRename, newNameRepeat } = renameLists;
 
 jest.mock("fs");
@@ -69,20 +64,14 @@ jest.mock("fs/promises", () => {
     ...(originalModule as object),
     rename: jest.fn(),
     readdir: jest.fn(),
-    lstat: jest.fn(),
-    unlink: jest.fn(),
-    readFile: jest.fn(),
-    writeFile: jest.fn(),
+    lstat: jest.fn()
   };
 });
 const mockedFs = jest.mocked(fs),
   mockedRename = jest.mocked(rename),
   mockedLstat = jest.mocked(lstat),
-  mockedReadDir = jest.mocked(readdir),
-  mockedUnlink = jest.mocked(unlink),
-  mockedReadFile = jest.mocked(readFile),
-  mockedWriteFile = jest.mocked(writeFile);
-
+  mockedReadDir = jest.mocked(readdir);
+ 
 describe("parseBoolOption", () => {
   it("Should return default value, if arg is falsy or would throw error", () => {
     [undefined, null, 12345, "truthy", "falsy"].forEach((option) => {
@@ -119,6 +108,9 @@ describe("parseRestoreArg", () => {
       expect(parseRestoreArg(arg)).toBe(0)
     );
   });
+  it("Exception should return 0", ()=>{
+    expect(parseRestoreArg(Symbol())).toBe(0);
+  })
 });
 
 describe("extractCurrentReferences", () => {
@@ -150,85 +142,6 @@ describe("extractCurrentReferences", () => {
   });
 });
 
-describe("trimRollbackFile", () => {
-  let suppressStdOut: SpyInstance<(message: string | Uint8Array) => boolean>;
-  beforeEach(
-    () =>
-      (suppressStdOut = jest
-        .spyOn(process.stdout, "write")
-        .mockImplementation((message) => {
-          return true;
-        }))
-  );
-  afterEach(() => suppressStdOut.mockRestore());
-
-  const trimArgs = {
-    sourcePath: examplePath,
-    targetLevel: 0,
-    failed: [],
-  };
-  afterAll(() => suppressStdOut.mockRestore());
-  afterEach(() => jest.resetAllMocks());
-  it("Should throw error if rollback file does not exist", async () => {
-    mockedFs.existsSync.mockReturnValueOnce(false);
-    await expect(() => trimRollbackFile(trimArgs)).rejects.toThrowError(
-      noRollbackFile
-    );
-  });
-  it("Should call unlink with target path, if target level is high enough to rollback all changes", async () => {
-    for (const modLength of [0, 1]) {
-      mockedFs.existsSync.mockReturnValueOnce(true);
-      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
-      const targetLevel = mockRollback.transforms.length + modLength;
-      mockedUnlink.mockImplementationOnce(() => Promise.resolve());
-      await trimRollbackFile({ ...trimArgs, targetLevel });
-      expect(mockedUnlink).toHaveBeenCalledTimes(1);
-      expect(mockedUnlink).toHaveBeenLastCalledWith(
-        resolve(examplePath, ROLLBACK_FILE_NAME)
-      );
-      mockedUnlink.mockClear();
-    }
-  });
-  it("Should call writeFile with trimmed rollback file", async () => {
-    for (const modLength of [-1, -2]) {
-      mockedFs.existsSync.mockReturnValueOnce(true);
-      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
-      const targetLevel = mockRollback.transforms.length + modLength;
-      mockedWriteFile.mockImplementationOnce((args) => Promise.resolve());
-      await trimRollbackFile({ ...trimArgs, targetLevel });
-      const expectedRollback = {
-        ...mockRollback,
-        transforms: mockRollback.transforms.slice(targetLevel),
-      };
-      expect(mockedWriteFile).toHaveBeenCalledTimes(1);
-      expect(mockedWriteFile).toHaveBeenLastCalledWith(
-        resolve(examplePath, ROLLBACK_FILE_NAME),
-        JSON.stringify(expectedRollback, undefined, 2),
-        "utf-8"
-      );
-      mockedWriteFile.mockClear();
-    }
-  });
-});
-
-describe("deleteRollbackFile", () => {
-  it("Should throw error if rollback file does not exist", async () => {
-    mockedFs.existsSync.mockReturnValueOnce(false);
-    await expect(() => utils.deleteRollbackFile()).rejects.toThrowError(
-      noRollbackFile
-    );
-  });
-  it("Should call unlink with target path, if rollback exists", async () => {
-    mockedFs.existsSync.mockReturnValueOnce(true);
-    mockedUnlink.mockImplementationOnce(() => Promise.resolve());
-    await utils.deleteRollbackFile(examplePath);
-    expect(mockedUnlink).toHaveBeenCalledTimes(1);
-    expect(mockedUnlink).toHaveBeenLastCalledWith(
-      resolve(examplePath, ROLLBACK_FILE_NAME)
-    );
-    mockedUnlink.mockClear();
-  });
-});
 
 describe("extractBaseAndExt", () => {
   it("Should separate the baseName and extension of differently formatted files", () => {

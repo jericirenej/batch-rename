@@ -13,7 +13,7 @@ import type {
   RenameListArgs,
   TransformTypes
 } from "../types.js";
-import * as rollbackUtils from "../utils/createRollback.js";
+import * as rollbackUtils from "../utils/rollbackUtils.js";
 import * as utils from "../utils/utils.js";
 import {
   examplePath,

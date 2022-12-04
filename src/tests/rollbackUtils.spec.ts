@@ -1,29 +1,52 @@
-import { existsSync } from "fs";
-import { readFile } from "fs/promises";
+import { jest } from "@jest/globals";
+import fs, { existsSync } from "fs";
+import { readFile, unlink, writeFile } from "fs/promises";
+import { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
+import { resolve } from "path";
+import process from "process";
+import { ROLLBACK_FILE_NAME } from "../constants.js";
+import { ERRORS } from "../messages/errMessages.js";
 import { BaseRenameItem, RenameItemsArray, RollbackFile } from "../types.js";
-import * as rollbackUtils from "../utils/createRollback.js";
 import * as restoreUtils from "../utils/restoreUtils.js";
-import { mockRollbackToolSet } from "./mocks.js";
+import * as rollbackUtils from "../utils/rollbackUtils.js";
+import {
+  examplePath,
+  mockRenameListToolSet,
+  mockRollbackToolSet
+} from "./mocks.js";
 
 jest.mock("fs");
 jest.mock("fs/promises", () => {
   const originalModule = jest.requireActual("fs/promises");
   return {
     __esModule: true,
-    ...originalModule,
+    ...originalModule as object,
     readFile: jest.fn(),
+    unlink: jest.fn(),
+    writeFile: jest.fn(),
   };
 });
+const mockedExistsSync = jest.mocked(existsSync),
+  mockedReadFile = jest.mocked(readFile),
+  mockedUnlink = jest.mocked(unlink),
+  mockedWriteFile = jest.mocked(writeFile),
+  mockedFs = jest.mocked(fs);
 
 jest.mock("nanoid");
 const mockedNano = jest.mocked(nanoid);
 
-const mockedExistsSync = jest.mocked(existsSync);
-const mockedReadFile = jest.mocked(readFile);
 const spyOnCheckRestoreFile = jest.spyOn(restoreUtils, "checkRestoreFile");
 
-const { readRollbackFile, createRollback } = rollbackUtils;
+const {
+  readRollbackFile,
+  createRollback,
+  deleteRollbackFile,
+  trimRollbackFile,
+} = rollbackUtils;
+
+const { noRollbackFile } = ERRORS.cleanRollback;
+const { mockRollback } = mockRenameListToolSet;
 
 describe("readRollbackFile", () => {
   const { mockRollbackFile, sourcePath } = mockRollbackToolSet;
@@ -32,13 +55,13 @@ describe("readRollbackFile", () => {
     mockedExistsSync.mockReturnValueOnce(false);
     expect(await readRollbackFile(sourcePath)).toBeNull();
   });
-  it("Should call spyOnCheckRestoreFile", async()=> {
+  it("Should call spyOnCheckRestoreFile", async () => {
     expect(spyOnCheckRestoreFile).not.toHaveBeenCalled();
     mockedExistsSync.mockReturnValueOnce(true);
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollbackFile));
     await readRollbackFile(sourcePath);
-    expect(spyOnCheckRestoreFile).toHaveBeenCalledTimes(1)
-  })
+    expect(spyOnCheckRestoreFile).toHaveBeenCalledTimes(1);
+  });
   it("Should return rollbackFile if it exists", async () => {
     mockedExistsSync.mockReturnValueOnce(true);
     mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollbackFile));
@@ -131,5 +154,83 @@ describe("createRollbackFile", () => {
       );
       expect(target).toEqual(transform);
     });
+  });
+});
+
+describe("deleteRollbackFile", () => {
+  it("Should throw error if rollback file does not exist", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(false);
+    await expect(() => deleteRollbackFile()).rejects.toThrowError(
+      noRollbackFile
+    );
+  });
+  it("Should call unlink with target path, if rollback exists", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(true);
+    mockedUnlink.mockImplementationOnce(() => Promise.resolve());
+    await deleteRollbackFile(examplePath);
+    expect(mockedUnlink).toHaveBeenCalledTimes(1);
+    expect(mockedUnlink).toHaveBeenLastCalledWith(
+      resolve(examplePath, ROLLBACK_FILE_NAME)
+    );
+    mockedUnlink.mockClear();
+  });
+});
+
+describe("trimRollbackFile", () => {
+  let suppressStdOut: SpyInstance<(message: string | Uint8Array) => boolean>;
+  beforeEach(
+    () =>
+      (suppressStdOut = jest
+        .spyOn(process.stdout, "write")
+        .mockImplementation((message) => true))
+  );
+  afterEach(() => suppressStdOut.mockRestore());
+
+  const trimArgs = {
+    sourcePath: examplePath,
+    targetLevel: 0,
+    failed: [],
+  };
+  afterAll(() => suppressStdOut.mockRestore());
+  afterEach(() => jest.clearAllMocks());
+  it("Should throw error if rollback file does not exist", async () => {
+    mockedFs.existsSync.mockReturnValueOnce(false);
+    await expect(() => trimRollbackFile(trimArgs)).rejects.toThrowError(
+      noRollbackFile
+    );
+  });
+  it("Should call unlink with target path, if target level is high enough to rollback all changes", async () => {
+    for (const modLength of [0, 1]) {
+      mockedFs.existsSync.mockReturnValueOnce(true);
+      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
+      const targetLevel = mockRollback.transforms.length + modLength;
+      mockedUnlink.mockImplementationOnce(() => Promise.resolve());
+      await trimRollbackFile({ ...trimArgs, targetLevel });
+      expect(mockedUnlink).toHaveBeenCalledTimes(1);
+      expect(mockedUnlink).toHaveBeenLastCalledWith(
+        resolve(examplePath, ROLLBACK_FILE_NAME)
+      );
+      mockedUnlink.mockClear();
+    }
+  });
+  it("Should call writeFile with trimmed rollback file", async () => {
+    for (const modLength of [-1, -2]) {
+      mockedFs.existsSync.mockReturnValueOnce(true);
+      mockedReadFile.mockResolvedValueOnce(JSON.stringify(mockRollback));
+      const targetLevel = mockRollback.transforms.length + modLength;
+      mockedWriteFile.mockImplementationOnce((args) => Promise.resolve());
+      await trimRollbackFile({ ...trimArgs, targetLevel });
+      const expectedRollback = {
+        ...mockRollback,
+        transforms: mockRollback.transforms.slice(targetLevel),
+      };
+      expect(mockedWriteFile).toHaveBeenCalledTimes(1);
+      expect(mockedWriteFile).toHaveBeenLastCalledWith(
+        resolve(examplePath, ROLLBACK_FILE_NAME),
+        JSON.stringify(expectedRollback, undefined, 2),
+        "utf-8"
+      );
+      mockedWriteFile.mockClear();
+    }
   });
 });

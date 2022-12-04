@@ -17,9 +17,9 @@ import type {
   UtilityActionsCheck,
   UtilityFunctionsArgs
 } from "../types";
+import { deleteRollbackFile } from "../utils/rollbackUtils.js";
 import {
   checkPath,
-  deleteRollbackFile,
   parseBoolOption,
   parseRestoreArg
 } from "../utils/utils.js";

@@ -16,7 +16,7 @@ import type {
   GenerateRenameListArgs,
   RenameListArgs
 } from "../types";
-import { createRollback } from "../utils/createRollback.js";
+import { createRollback } from "../utils/rollbackUtils.js";
 import {
   areNewNamesDistinct,
   areTransformsDistinct,
