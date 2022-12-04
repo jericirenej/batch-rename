@@ -16,6 +16,6 @@ export default {
   maxWorkers: 1,
   // eslint-disable-next-line no-useless-escape
   coveragePathIgnorePatterns: ["tests/", "programConfiguration", "index.ts", "/\.\w+/"],
-  collectCoverageFrom: ["**/*.ts"],
+  collectCoverageFrom: ["src/**/*.ts"],
   transformIgnorePatterns: [`/node_modules/(?!${esModules})`],
 };
