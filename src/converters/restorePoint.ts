@@ -16,13 +16,13 @@ import {
   determineRollbackLevel,
   restoreByLevels
 } from "../utils/restoreUtils.js";
+import { trimRollbackFile } from "../utils/rollbackUtils.js";
 import {
   askQuestion,
   createBatchRenameList,
   determineDir,
   listFiles,
-  settledPromisesEval,
-  trimRollbackFile
+  settledPromisesEval
 } from "../utils/utils.js";
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =

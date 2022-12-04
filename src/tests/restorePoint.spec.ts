@@ -6,6 +6,7 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type { RestoreBaseReturn } from "../types.js";
 import { restoreByLevels } from "../utils/restoreUtils.js";
+import * as rollbackUtils from "../utils/rollbackUtils.js";
 import * as utils from "../utils/utils.js";
 import {
   examplePath as transformPath,
@@ -29,7 +30,6 @@ const { sortedJsonReplicate } = utils;
 const {
   renameLists: { distinct },
   mockRollback,
-  originalNames,
 } = mockRenameListToolSet;
 
 jest.mock("../messages/statusMessages.js");
@@ -43,7 +43,7 @@ const consoleSetSpy = (): jest.SpyInstance => {
 };
 
 const spyOnListFiles = jest.spyOn(utils, "listFiles"),
-  spyOnTrimRollbackFile = jest.spyOn(utils, "trimRollbackFile"),
+  spyOnTrimRollbackFile = jest.spyOn(rollbackUtils, "trimRollbackFile"),
   spyOnCreateBatchRenameList = jest.spyOn(utils, "createBatchRenameList"),
   spyOnDryRunRestore = jest.spyOn(restorePoint, "dryRunRestore"),
   spyOnRestoreBase = jest.spyOn(restorePoint, "restoreBaseFunction"),
