@@ -9,12 +9,11 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   BaseRenameItem,
-  DryRunTransform,
-  ExtractBaseAndExtReturn,
-  FileListWithStatsArray,
+  DryRunTransform, FileListWithStatsArray,
   GenerateRenameList,
   GenerateRenameListArgs,
-  RenameListArgs
+  RenameListArgs,
+  SplitFileList
 } from "../types";
 import { createRollback } from "../utils/rollbackUtils.js";
 import {
@@ -76,7 +75,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     listWithStats = await provideFileStats(splitFileList);
   }
 
-  const fileList: ExtractBaseAndExtReturn | FileListWithStatsArray =
+  const fileList: SplitFileList =
     listWithStats ? listWithStats : splitFileList;
 
   const transformArgs: GenerateRenameListArgs = {
