@@ -1,10 +1,6 @@
 import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
-import {
-  lstat,
-  readdir,
-  rename
-} from "fs/promises";
+import { lstat, readdir, rename } from "fs/promises";
 import { SpyInstance } from "jest-mock";
 import path, { join, resolve } from "path";
 import process from "process";
@@ -13,8 +9,11 @@ import * as formatTransform from "../converters/formatTextTransform.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
+  BaseRenameList,
   ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate, RenameItemsArray,
+  ExtractBaseAndExtTemplate,
+  RenameItemsArray,
+  SplitFileList,
   ValidTypes
 } from "../types.js";
 import * as utils from "../utils/utils.js";
@@ -45,6 +44,7 @@ const {
   settledPromisesEval,
   sortedJsonReplicate,
   truncateFile,
+  willOverWriteExisting,
 } = utils;
 const {
   noChildFiles,
@@ -64,14 +64,14 @@ jest.mock("fs/promises", () => {
     ...(originalModule as object),
     rename: jest.fn(),
     readdir: jest.fn(),
-    lstat: jest.fn()
+    lstat: jest.fn(),
   };
 });
 const mockedFs = jest.mocked(fs),
   mockedRename = jest.mocked(rename),
   mockedLstat = jest.mocked(lstat),
   mockedReadDir = jest.mocked(readdir);
- 
+
 describe("parseBoolOption", () => {
   it("Should return default value, if arg is falsy or would throw error", () => {
     [undefined, null, 12345, "truthy", "falsy"].forEach((option) => {
@@ -108,9 +108,9 @@ describe("parseRestoreArg", () => {
       expect(parseRestoreArg(arg)).toBe(0)
     );
   });
-  it("Exception should return 0", ()=>{
+  it("Exception should return 0", () => {
     expect(parseRestoreArg(Symbol())).toBe(0);
-  })
+  });
 });
 
 describe("extractCurrentReferences", () => {
@@ -141,7 +141,6 @@ describe("extractCurrentReferences", () => {
     expect(withIds).toEqual(expectedWithIds);
   });
 });
-
 
 describe("extractBaseAndExt", () => {
   it("Should separate the baseName and extension of differently formatted files", () => {
@@ -284,6 +283,37 @@ describe("numberOfDuplicatedNames", () => {
         checkType: "inexistent" as any,
       })
     ).toBe(-1);
+  });
+});
+
+describe("willOverwriteExisting", () => {
+  const ext = ".ext",
+    originalNames = ["original1", "original2"],
+    renames = ["rename1", "rename2"];
+  const mockRenameList: BaseRenameList = originalNames.map((original, i) => ({
+    original: original + ext,
+    rename: renames[i] + ext,
+  }));
+  const mockSplitFile = originalNames.map((original) => ({
+    baseName: original,
+    ext,
+  })) as SplitFileList;
+  it("Should return false, if all existing files are renamed", () => {
+    expect(willOverWriteExisting(mockRenameList, mockSplitFile)).toBe(false);
+  });
+  it("Should return false, if no renames would overwrite existing files", () => {
+    const updatedSplitFile = [
+      ...mockSplitFile,
+      { baseName: "other", ext },
+    ] as SplitFileList;
+    expect(willOverWriteExisting(mockRenameList, updatedSplitFile)).toBe(false);
+  });
+  it("Should return true, if a rename would overwrite an existing file", () => {
+    const updatedSplitFile = [
+      ...mockSplitFile,
+      { baseName: "rename1", ext },
+    ] as SplitFileList;
+    expect(willOverWriteExisting(mockRenameList, updatedSplitFile)).toBe(true);
   });
 });
 

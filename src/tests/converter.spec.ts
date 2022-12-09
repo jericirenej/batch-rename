@@ -293,14 +293,16 @@ describe("generateRenameList", () => {
 
 describe("dryRunTransform", () => {
   const spyOnNumberOfDuplicatedNames = jest.spyOn(
-    utils,
-    "numberOfDuplicatedNames"
-  );
+      utils,
+      "numberOfDuplicatedNames"
+    ),
+    spyOnWillOverwrite = jest.spyOn(utils, "willOverWriteExisting");
   let spyOnConsole: jest.SpyInstance, spyOnTable: jest.SpyInstance;
   const exampleArgs: DryRunTransformArgs = {
     transformPath: examplePath,
     transformPattern: ["searchAndReplace"],
     transformedNames: mockDistinctList,
+    fileList: splitFileList,
   };
   beforeEach(() => {
     spyOnConsole = createSpyOnLog();
@@ -308,7 +310,9 @@ describe("dryRunTransform", () => {
   });
   afterEach(() => {
     [spyOnConsole, spyOnTable].forEach((spy) => spy.mockRestore());
-    spyOnNumberOfDuplicatedNames.mockReset();
+    [spyOnNumberOfDuplicatedNames, spyOnWillOverwrite].forEach((spy) =>
+      spy.mockClear()
+    );
   });
   it("Should return false, if no names would be changed by transform", async () => {
     const identicalTransform = [mockDistinctList[0]];
@@ -326,6 +330,11 @@ describe("dryRunTransform", () => {
     );
     expect(await dryRunTransform(exampleArgs)).toBe(false);
   });
+  it("Should return false, if willOverwriteExisting returns true", async () => {
+    
+      spyOnWillOverwrite.mockReturnValueOnce(true);
+      expect(await dryRunTransform(exampleArgs)).toBe(false);
+      });
   it("Should return false, if askQuestion answer is not included in valid types", async () => {
     ["no", "NO", "nope", "something", "!!"].forEach(async (answer) => {
       spyOnAskQuestion.mockResolvedValueOnce(answer);

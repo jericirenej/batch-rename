@@ -9,12 +9,11 @@ import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
   BaseRenameItem,
-  DryRunTransform,
-  ExtractBaseAndExtReturn,
-  FileListWithStatsArray,
+  DryRunTransform, FileListWithStatsArray,
   GenerateRenameList,
   GenerateRenameListArgs,
-  RenameListArgs
+  RenameListArgs,
+  SplitFileList
 } from "../types";
 import { createRollback } from "../utils/rollbackUtils.js";
 import {
@@ -27,7 +26,8 @@ import {
   filterOutDuplicatedTransforms,
   listFiles,
   numberOfDuplicatedNames,
-  settledPromisesEval
+  settledPromisesEval,
+  willOverWriteExisting
 } from "../utils/utils.js";
 import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
@@ -44,6 +44,7 @@ const {
   transformIntro,
   warningUnaffectedFiles,
   warningDuplication,
+  warningOverwrite,
   exitVoidTransform,
 } = STATUS.dryRun;
 
@@ -74,7 +75,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     listWithStats = await provideFileStats(splitFileList);
   }
 
-  const fileList: ExtractBaseAndExtReturn | FileListWithStatsArray =
+  const fileList: SplitFileList =
     listWithStats ? listWithStats : splitFileList;
 
   const transformArgs: GenerateRenameListArgs = {
@@ -88,6 +89,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
       transformPath: targetDir,
       transformedNames,
       transformPattern,
+      fileList
     });
     if (!dryRun) {
       return;
@@ -145,6 +147,7 @@ export const dryRunTransform: DryRunTransform = async ({
   transformPath,
   transformPattern,
   transformedNames,
+  fileList
 }) => {
   const changedNames = transformedNames.filter(
     (renameInfo) => renameInfo.original !== renameInfo.rename
@@ -163,6 +166,7 @@ export const dryRunTransform: DryRunTransform = async ({
   });
   const { transforms: unaffectedFiles, results: targetDuplication } =
     transformData;
+  const willOverwrite = willOverWriteExisting(transformedNames, fileList);
 
   console.log(transformIntro(transformPattern, transformPath));
   console.table(changedNames, ["original", "rename"]);
@@ -172,6 +176,11 @@ export const dryRunTransform: DryRunTransform = async ({
   }
   if (targetDuplication > 0) {
     console.log(warningDuplication(targetDuplication));
+    return false;
+  }
+
+  if(willOverwrite) {
+    console.log(warningOverwrite);
     return false;
   }
 

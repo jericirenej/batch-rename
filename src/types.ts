@@ -107,8 +107,9 @@ export type RenameListArgs = {
   targetType?: ValidTypes;
   keep?: string;
 };
+export type SplitFileList = ExtractBaseAndExtReturn | FileListWithStatsArray;
 export type GenerateRenameListArgs = RenameListArgs & {
-  splitFileList: ExtractBaseAndExtReturn | FileListWithStatsArray;
+  splitFileList: SplitFileList;
 };
 export type GenerateRenameList = (
   args: GenerateRenameListArgs
@@ -118,6 +119,7 @@ export type DryRunTransformArgs = {
   transformedNames: BaseRenameList;
   transformPattern: TransformTypes[];
   transformPath: string;
+  fileList: SplitFileList;
 };
 export type DryRunTransform = (args: DryRunTransformArgs) => Promise<boolean>;
 
@@ -210,7 +212,7 @@ export type RestoreOriginalFileNames = (
 ) => Promise<void>;
 
 export type TrimRollbackFile = (
-  args: Omit<ConversionList, "transforms"> & {failed: RenameItemsArray}
+  args: Omit<ConversionList, "transforms"> & { failed: RenameItemsArray }
 ) => Promise<void>;
 
 export type ListFiles = (
