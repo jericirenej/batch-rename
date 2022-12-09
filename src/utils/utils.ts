@@ -1,8 +1,5 @@
 import { existsSync } from "fs";
-import {
-  lstat,
-  readdir, rename
-} from "fs/promises";
+import { lstat, readdir, rename } from "fs/promises";
 import { join, parse, resolve } from "path";
 import readline from "readline";
 import {
@@ -28,7 +25,9 @@ import type {
   NumberOfDuplicatedNames,
   PromiseRejectedWriteResult,
   RenameItem,
-  RenameItemsArray, TruncateFileName
+  RenameItemsArray,
+  SplitFileList,
+  TruncateFileName
 } from "../types.js";
 
 const {
@@ -202,6 +201,25 @@ export const filterOutDuplicatedTransforms = (
   renameList: BaseRenameList
 ): BaseRenameList =>
   renameList.filter(({ original, rename }) => original !== rename);
+
+export const willOverWriteExisting = (
+  renameList: BaseRenameList,
+  fileList: SplitFileList
+): boolean => {
+  const originals: string[] = [],
+    renames: string[] = [];
+  renameList.forEach(({ original, rename }) => {
+    originals.push(original);
+    renames.push(rename);
+  });
+  const fileListWithoutTransforms = fileList
+    .map(({ baseName, ext }) => `${baseName}${ext}`)
+    .filter((existingName) => !originals.includes(existingName));
+  if (!fileListWithoutTransforms.length) return false;
+  return fileListWithoutTransforms.some(
+    (existingName) => renames.includes(existingName)
+  );
+};
 
 export const checkPath: CheckPath = async (
   path,

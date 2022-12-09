@@ -11,6 +11,7 @@ export const STATUS = {
     warningDuplication(numOfDuplicated: number) {
       return `WARNING: Running the transform on these files with the given parameters would result in ${numOfDuplicated} duplicated names and throw an error!`;
     },
+    warningOverwrite: "The planned conversion would overwrite files!",
     questionPerformTransform:
       "Would you like to execute the previewed transform (N/Y)?",
     exitVoidTransform:
