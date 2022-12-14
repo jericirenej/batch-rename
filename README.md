@@ -10,6 +10,7 @@
   - **Handling of failed restores**: If a restore operation fails on write (for example, because the file is locked by the OS), the failed restore files will be re-added to the rollback file as the most recent transformation so that the changes are not discarded. 
 - **Convert and restore operations run in dryRun by default** so that changes can be previewed and executed via explicit confirmation. 
   - The `cleanRollbackFile` is an exception currently: it will run immediately, without confirm prompt.
+- **Ability to skip writing rollback file** on transform operations: by using the `skipRollback` option.
 - Various bug fixes. Test improvements, mock files consolidation.
 
 - Despite best efforts and improved tests for the new features, some **buggy behavior can occur**.
