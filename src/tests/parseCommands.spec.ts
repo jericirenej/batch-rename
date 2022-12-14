@@ -108,6 +108,24 @@ describe("parseOptions", () => {
       expect(dryRunArg).toBe(expected);
     }
   });
+  it("Should set skipRollback to true only if explicitly stated", async () => {
+    const testCases = [
+      { val: undefined, expected: false },
+      { val: "false", expected: false },
+      { val: "true", expected: true },
+    ];
+    for (const { val, expected } of testCases) {
+      if (val === undefined) {
+        await parseOptions({ ...exampleArgs });
+      } else {
+        await parseOptions({ ...exampleArgs, skipRollback: val });
+      }
+      const skipRollbackArg = spyOnConvertFiles.mock.calls
+        .flat()
+        .at(-1)?.skipRollback;
+      expect(skipRollbackArg).toBe(expected);
+    }
+  });
   it("Should properly evaluate a stringified preserveOriginal argument", async () => {
     spyOnConvertFiles.mockClear();
     [
@@ -129,7 +147,12 @@ describe("parseOptions", () => {
       { ...exampleArgs, noExtensionPreserve: true, detailedDate: true },
       { ...exampleArgs, format: "uppercase" },
     ];
-    const extraKeys = ["transformPattern", "transformPath", "dryRun"];
+    const extraKeys = [
+      "transformPattern",
+      "transformPath",
+      "dryRun",
+      "skipRollback",
+    ];
     argList.forEach(async (args) => {
       spyOnConvertFiles.mockClear();
       await parseOptions(args);

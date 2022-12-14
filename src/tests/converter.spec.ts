@@ -116,6 +116,7 @@ describe("convertFiles", () => {
     transformPath: examplePath,
     exclude: "exclude",
     dryRun: false,
+    skipRollback: false,
   };
   beforeEach(() => {
     spyOnGenerateRenameList.mockImplementation((arg) => mockDistinctList);
@@ -214,11 +215,6 @@ describe("convertFiles", () => {
       ERRORS.transforms.duplicateRenames
     );
   });
-  it("Should call writeFile and process stdout for rollbackFile write", async () => {
-    await convertFiles(exampleArgs);
-    expect(mockedWriteFile).toHaveBeenCalledTimes(1);
-    expect(spyOnProcessWrite).toHaveBeenCalledTimes(2);
-  });
   it("Should await results from createBatchRenameList operation", async () => {
     const mockBatchPromises = [0, 1, 2, 3].map((num) => Promise.resolve());
     spyOnCreateBatchRename.mockReturnValueOnce(mockBatchPromises);
@@ -254,9 +250,17 @@ describe("convertFiles", () => {
     };
     expect(spyOnSettledPromisesEval).toHaveReturnedWith(expected);
   });
-  it("Should call console.log twice", async () => {
+  it("Should call writeFile and process stdout for rollbackFile write", async () => {
     await convertFiles(exampleArgs);
-    expect(spyOnConsole).toHaveBeenCalledTimes(2);
+    expect(mockedWriteFile).toHaveBeenCalledTimes(1);
+    expect(spyOnProcessWrite).toHaveBeenCalledTimes(2);
+  });
+  it("Should call createRollback only if skipRollback is true", async () => {
+    for (const skipRollback of [false, true]) {
+      spyOnCreateRollback.mockClear();
+      await convertFiles({ ...exampleArgs, skipRollback });
+      expect(spyOnCreateRollback).toHaveBeenCalledTimes(skipRollback ? 0 : 1);
+    }
   });
 });
 
@@ -331,10 +335,9 @@ describe("dryRunTransform", () => {
     expect(await dryRunTransform(exampleArgs)).toBe(false);
   });
   it("Should return false, if willOverwriteExisting returns true", async () => {
-    
-      spyOnWillOverwrite.mockReturnValueOnce(true);
-      expect(await dryRunTransform(exampleArgs)).toBe(false);
-      });
+    spyOnWillOverwrite.mockReturnValueOnce(true);
+    expect(await dryRunTransform(exampleArgs)).toBe(false);
+  });
   it("Should return false, if askQuestion answer is not included in valid types", async () => {
     ["no", "NO", "nope", "something", "!!"].forEach(async (answer) => {
       spyOnAskQuestion.mockResolvedValueOnce(answer);

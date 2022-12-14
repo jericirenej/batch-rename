@@ -156,8 +156,14 @@ const programOptions: ProgramCLIOptions[] = [
   },
   {
     short: "",
+    long: "skipRollback",
+    description: "Skip writing transform details to rollback file. Defaults to true, if omitted.",
+    type: "[boolean]",
+  },
+  {
+    short: "",
     long: "cleanRollback",
-    type: "",
+    type: "[boolean]",
     description: "Remove rollback file.",
     defaultValue: "",
   },
