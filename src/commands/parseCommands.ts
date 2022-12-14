@@ -35,6 +35,7 @@ export const parseOptions = async (
     const {
       preserveOriginal: argPreserveOriginal,
       dryRun: argDryRun,
+      skipRollback: argSkipRollback,
       target,
       restore,
       restArgs,
@@ -42,6 +43,9 @@ export const parseOptions = async (
 
     // Default dryRun to true, unless specifically set to false
     const dryRun = parseBoolOption(argDryRun, true);
+    
+    // Default skipRollback to false, unless specifically set to false
+    const skipRollback = parseBoolOption(argSkipRollback, false)
 
     const transformPath = await setTransformationPath(
       target as string | undefined,
@@ -72,6 +76,7 @@ export const parseOptions = async (
 
     return await convertFiles({
       ...args,
+      skipRollback,
       preserveOriginal,
       transformPattern,
       transformPath,

@@ -6,6 +6,9 @@ import {
   VALID_TRANSFORM_TYPES
 } from "./constants";
 
+type RequireOnly<T, G extends keyof T> = Partial<Omit<T, G>> &
+  Required<Pick<T, G>>;
+
 // PROGRAM PARSE AND CONFIG TYPES
 export type ValidTypes = "files" | "dirs" | "all";
 
@@ -30,7 +33,8 @@ export type OptionKeys =
   | "exclude"
   | "extensionModify"
   | "format"
-  | "targetType";
+  | "targetType"
+  | "skipRollback";
 
 export type OptionKeysWithValues = Record<OptionKeys, unknown>;
 
@@ -88,6 +92,8 @@ export type ExtractBaseAndExt = (
 
 export type RenameListArgs = {
   transformPattern: TransformTypes[];
+  skipRollback: boolean;
+  dryRun: boolean;
   addText?: string;
   textPosition?: "append" | "prepend";
   preserveOriginal?: boolean;
@@ -95,7 +101,6 @@ export type RenameListArgs = {
   extensionModify?: string;
   dateRename?: DateTransformOptions;
   detailedDate?: boolean;
-  dryRun?: boolean;
   searchAndReplace?: string[];
   transformPath?: string;
   numericTransform?: typeof VALID_NUMERIC_TRANSFORM_TYPES[number];
@@ -108,7 +113,10 @@ export type RenameListArgs = {
   keep?: string;
 };
 export type SplitFileList = ExtractBaseAndExtReturn | FileListWithStatsArray;
-export type GenerateRenameListArgs = RenameListArgs & {
+export type GenerateRenameListArgs = RequireOnly<
+  RenameListArgs,
+  "transformPattern"
+> & {
   splitFileList: SplitFileList;
 };
 export type GenerateRenameList = (

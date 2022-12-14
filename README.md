@@ -88,7 +88,8 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`--textPosition`|`[prepend \| append]`|Applies to `preserveOriginal` or `addText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`|
 |`--detailedDate`||Appends time information (`T hh:mm:ss`) to date transformations.|
 |`--separator`|`<character>`|Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen (`-`).|
-|`--cleanRollback`||Remove rollback file.|
+|`--skipRollback`|`[boolean]`|Skip writing transform details to rollback file. Defaults to true, if omitted.|
+|`--cleanRollback`|`[boolean]`|Remove rollback file.|
 |`-h, --help`||Show help.|
 |`-V, --version`||ShowScript version.|
 
