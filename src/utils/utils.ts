@@ -145,6 +145,14 @@ export const listFiles: ListFiles = async (
       if (targetType === "all") return dirEntry;
       if (targetType === "files") return dirEntry.isFile();
       return dirEntry.isDirectory();
+    })
+    // Sort the file list by names alphabetically and ascending.
+    .sort((a, b) => (a.name === b.name ? 0 : a.name < b.name ? -1 : 1))
+    // Directories should be listed first
+    .sort((a, b) => {
+      const aVal = a.isDirectory() ? -1 : 1,
+        bVal = b.isDirectory() ? -1 : 1;
+      return aVal === bVal ? 0 : aVal < bVal ? -1 : 1;
     });
   if (excludeFilter) {
     // Global flag should not be used, as inconsistent results will occur
@@ -216,8 +224,8 @@ export const willOverWriteExisting = (
     .map(({ baseName, ext }) => `${baseName}${ext}`)
     .filter((existingName) => !originals.includes(existingName));
   if (!fileListWithoutTransforms.length) return false;
-  return fileListWithoutTransforms.some(
-    (existingName) => renames.includes(existingName)
+  return fileListWithoutTransforms.some((existingName) =>
+    renames.includes(existingName)
   );
 };
 

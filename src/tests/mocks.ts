@@ -35,15 +35,14 @@ export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
     return false;
   },
 };
-export const mockFileList: Dirent[] = [
-  "someFile.with.extra.dots.ext",
+export const mockFileNames = ["someFile.with.extra.dots.ext",
   "shortFile.ext",
   "fileWithoutExt",
   ".startWithDot",
   ".startWithDot.ext",
   "UTF-čšžäöüéŁ.ext",
-  "12345-and-chars.ext",
-].map((fileName) => ({ name: fileName, ...mockDirentEntryAsFile }));
+  "12345-and-chars.ext"];
+export const mockFileList: Dirent[] = mockFileNames.map((fileName) => ({ name: fileName, ...mockDirentEntryAsFile }));
 
 const ext = ".ext";
 export const examplePath = "A:/path/to/file";
