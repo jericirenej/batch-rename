@@ -177,8 +177,60 @@ describe("extractBaseAndExt", () => {
 
 describe("listFiles", () => {
   afterEach(() => jest.resetAllMocks());
+  it("Should return list of alphabetically sorted file names", async () => {
+    const mockNames = ["zname", "aname", "bname", "123"];
+    const sorted = [...mockNames].sort();
+    const mockedDirent = createDirentArray(
+      mockNames.length,
+      mockNames.length
+    ).map((dirent, index) => {
+      dirent.name = mockNames[index];
+      return dirent;
+    });
+    mockedReadDir.mockResolvedValueOnce(mockedDirent);
+    const resultNames = (await listFiles(examplePath)).map(({ name }) => name);
+    expect(resultNames).toEqual(sorted);
+  });
+  it("Directories should be placed before files", async () => {
+    const mockFileNames = ["aFile", "bFile", "cFile"],
+      mockDirectoryNames = ["xDir", "yDir", "zDir"];
+    const mockedDirent = createDirentArray(
+      mockFileNames.length + mockDirectoryNames.length,
+      mockFileNames.length,
+      mockDirectoryNames.length
+    );
+    [...mockFileNames, ...mockDirectoryNames].forEach(
+      (entryName, index) => (mockedDirent[index].name = entryName)
+    );
+    mockedReadDir.mockResolvedValueOnce(mockedDirent);
+    const resultNames = (await listFiles(examplePath, undefined, "all")).map(
+      ({ name }) => name
+    );
+    const mockDirNamesIndexes = mockDirectoryNames.map((dirName) =>
+        resultNames.indexOf(dirName)
+      ),
+      mockFileNamesIndexes = mockFileNames.map((fileName) =>
+        resultNames.indexOf(fileName)
+      );
+
+    const noNegativeIndex = [
+      ...mockDirNamesIndexes,
+      ...mockFileNamesIndexes,
+    ].every((i) => i >= 0);
+    expect(noNegativeIndex).toBe(true);
+    
+    const maxDirIndex = Math.max(
+        ...mockDirectoryNames.map((dirName) => resultNames.indexOf(dirName))
+      ),
+      minFileIndex = Math.min(...mockFileNamesIndexes);
+
+    expect(maxDirIndex < minFileIndex).toBe(true);
+  });
   it("Should return list of Dirents by default", async () => {
     const listLength = mockFileList.length;
+    const sortedList = mockFileList.sort((a, b) =>
+      a.name === b.name ? 0 : a.name < b.name ? -1 : 1
+    );
     let exampleDirentArray = createDirentArray(listLength, listLength);
     exampleDirentArray = exampleDirentArray.map((dirent, index) => {
       dirent.name = mockFileList[index].name;
@@ -186,7 +238,7 @@ describe("listFiles", () => {
     });
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const data = await listFiles(examplePath);
-    expect(JSON.stringify(data)).toBe(JSON.stringify(mockFileList));
+    expect(JSON.stringify(data)).toBe(JSON.stringify(sortedList));
   });
   it("Should exclude rollback file from list", async () => {
     const listLength = mockFileList.length + 1;

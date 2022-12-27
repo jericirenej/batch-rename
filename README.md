@@ -11,6 +11,7 @@
 - **Convert and restore operations run in dryRun by default** so that changes can be previewed and executed via explicit confirmation. 
   - The `cleanRollbackFile` is an exception currently: it will run immediately, without confirm prompt.
 - **Ability to skip writing rollback file** on transform operations: by using the `skipRollback` option.
+- **Ensure alphabetical sorting of read files and directories**: Ascending alphabetical sorting. Directories placed before files.
 - Various bug fixes. Test improvements, mock files consolidation.
 
 - Despite best efforts and improved tests for the new features, some **buggy behavior can occur**.
