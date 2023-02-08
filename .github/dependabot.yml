@@ -4,3 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    ignore:
+      - dependency-name: "nanoid"
+        versions: ["4.x"]
