@@ -23,7 +23,7 @@ describe("truncateTransform", () => {
   beforeEach(() =>
     spyOnCompose.mockImplementation((args) => mockComposeResponse)
   );
-  afterEach(() => jest.resetAllMocks());
+  afterEach(() => jest.clearAllMocks());
   it("Should throw error if preserveOriginal is true", () => {
     expect(() =>
       truncateTransform({ ...defaultArgs, preserveOriginal: false })
