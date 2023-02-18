@@ -14,8 +14,6 @@
 - **Ensure alphabetical sorting of read files and directories**: Ascending alphabetical sorting. Directories placed before files.
 - Various bug fixes. Test improvements, mock files consolidation.
 
-- Despite best efforts and improved tests for the new features, some **buggy behavior can occur**.
-
 
 ## How to run
 Clone the repo, then run `npm install`.
@@ -33,11 +31,11 @@ Rename files using a search and replace algorithm. Target folder set explicitly.
 
 Preview rename files by keeping only part of the name (the 'id-' tag with variable number of digits).
 
-`node batchRename.mjs -k "id-\d{1,}" --target [folder]`
+`node batchRename.mjs -k 'id-\d{1,}' --target [folder]`
 
 Preview numeric transform with exclude option and a custom baseIndex. Folder path set implicitly.
 
-`node batchRename.mjs -n --exclude "excludedName" -b 100 "folder"`
+`node batchRename.mjs -n --exclude 'excludedName' -b 100 'folder'`
 
 Append creation date to files AND folders in the current folder and specify a custom separator.
 
@@ -57,13 +55,13 @@ Truncate files to 10 characters and change all characters to upper case
 
 Change extension of all files, except excluded.
 
-`node batchRename.mjs -e "png" --exclude "someFilePattern"`
+`node batchRename.mjs -e 'png' --exclude 'someFilePattern'`
 
 
 ## Usage guide
-To run the script successfully, you will have to provide one of the valid transform types (`numericTransform, searchAndReplace, dateTransform`), together with other optional arguments. Running script with no argument will show the help menu and exit.
+To run the script successfully, you will have to provide one of the valid transform types (`numericTransform, searchAndReplace, dateTransform, keep, truncate, format, addText`), together with other optional arguments, or a restore argument. Running script with no arguments will show the help menu and exit.
 
-When performing the rename operation, the script will write a restore file (`.rollback.json`) to the target folder. Without this file, restore operations are not possible. 
+When performing the rename operation, the script will write a restore file (`.rollback.json`) to the target folder (except if `--skipRollback` flag is set). Without this file, restore operations are not possible. 
 
 Dry run is enabled by default. This means that you will see planned changes and these will be executed only after explicitly confirming them. It is **strongly encouraged not to disable the dry run mode.** 
 
@@ -77,8 +75,8 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-k --keep`|`<regex\|string>`|Will remove everything, except the matched part of the name. Essentially the same as replacing positive look-behinds and look-aheads captures and with empty strings. Can be used together with addText, textPosition, format, noExtensionPreserve, and separator flags.|
 |`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or addText is supplied, it has no effect.|
 |`-f, --format`|`[uppercase \| lowercase \| capitalize]`|Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).|
-|`-e, --extensionModify`|`<string>`|Modify extension of target files. Can also be used together with the exclude option|
 |`-a, --addText`|`<string>`|Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.|
+|`-e, --extensionModify`|`<string>`|Modify extension of target files. Can also be used together with the exclude option|
 |`--target`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
 |`--targetType`|`['files'\|'dirs'\|'all']`|Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.|
 |`-r, --restore`|`[number]`|Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used.|
