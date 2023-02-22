@@ -12,6 +12,7 @@
   - The `cleanRollbackFile` is an exception currently: it will run immediately, without confirm prompt.
 - **Ability to skip writing rollback file** on transform operations: by using the `skipRollback` option.
 - **Ensure alphabetical sorting of read files and directories**: Ascending alphabetical sorting. Directories placed before files.
+- **Omit** transform added to complement the already existing `keep` transform.
 - Various bug fixes. Test improvements, mock files consolidation.
 
 
@@ -59,7 +60,7 @@ Change extension of all files, except excluded.
 
 
 ## Usage guide
-To run the script successfully, you will have to provide one of the valid transform types (`numericTransform, searchAndReplace, dateTransform, keep, truncate, format, addText`), together with other optional arguments, or a restore argument. Running script with no arguments will show the help menu and exit.
+To run the script successfully, you will have to provide one of the valid transform types (`numericTransform, searchAndReplace, dateTransform, keep, omit truncate, format, addText`), together with other optional arguments, or a restore argument. Running script with no arguments will show the help menu and exit.
 
 When performing the rename operation, the script will write a restore file (`.rollback.json`) to the target folder (except if `--skipRollback` flag is set). Without this file, restore operations are not possible. 
 
@@ -73,6 +74,7 @@ The script will not perform a rename if it would lead to name collisions (i.e. s
 |`-d --dateRename`|`<creationDate, lastAccessed, lastModifies>`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
 |`-s, --searchAndReplace`|`<string\|regex> <replacer>`|Takes a string or a regex filter argument and a replacer string. By default, the transform will preserve file extensions, unless a `--noPreserveExtension` option is supplied|
 |`-k --keep`|`<regex\|string>`|Will remove everything, except the matched part of the name. Essentially the same as replacing positive look-behinds and look-aheads captures and with empty strings. Can be used together with addText, textPosition, format, noExtensionPreserve, and separator flags.|
+|`-o --omit`|`<regex\|string>`|Will remove all matched parts of the name. Can be used together with addText, textPosition, format, noExtensionPreserve, and separator flags.|
 |`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or addText is supplied, it has no effect.|
 |`-f, --format`|`[uppercase \| lowercase \| capitalize]`|Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).|
 |`-a, --addText`|`<string>`|Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.|
