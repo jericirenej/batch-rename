@@ -2,6 +2,7 @@ import { writeFile } from "fs/promises";
 import * as addConverter from "../converters/addTextTransform.js";
 import * as converter from "../converters/converter.js";
 import * as dateTransformFunctions from "../converters/dateTransform.js";
+import * as keepOrOmitTransforms from "../converters/keepOrOmit.js";
 import * as numericTransformFunctions from "../converters/numericTransform.js";
 import * as searchAndReplaceTransformFunctions from "../converters/searchAndReplace.js";
 import * as truncateTransformFunctions from "../converters/truncateTransform.js";
@@ -92,7 +93,9 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
     .spyOn(rollbackUtils, "createRollback")
     .mockImplementation(({ transforms, sourcePath }) =>
       Promise.resolve(mockRenameListToolSet.mockRollback)
-    );
+    ),
+  spyOnKeepTransform = jest.spyOn(keepOrOmitTransforms, "keepTransform"),
+  spyOnOmitTransform = jest.spyOn(keepOrOmitTransforms, "omitTransform");
 
 [
   spyOnDateTransform,
@@ -273,6 +276,8 @@ describe("generateRenameList", () => {
       "numericTransform",
       "searchAndReplace",
       "addText",
+      "keep",
+      "omit",
     ] as const;
     transformTypes.forEach((transformType) =>
       generateRenameList({ transformPattern: [transformType], splitFileList })
@@ -283,6 +288,8 @@ describe("generateRenameList", () => {
       spyOnNumericTransform,
       spyOnTruncateTransform,
       spyOnAddTextTransform,
+      spyOnKeepTransform,
+      spyOnOmitTransform,
     ].forEach((transformType) =>
       expect(transformType).toHaveBeenCalledTimes(1)
     );

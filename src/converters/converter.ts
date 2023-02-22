@@ -63,11 +63,11 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   keep: (args: GenerateRenameListArgs) => keepTransform(args),
+  omit: (args: GenerateRenameListArgs) => omitTransform(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
   extensionModify: (args: GenerateRenameListArgs) =>
     extensionModifyTransform(args),
   format: (args: GenerateRenameListArgs) => formatTextTransform(args),
-  omit: (args: GenerateRenameListArgs) => omitTransform(args),
 };
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {

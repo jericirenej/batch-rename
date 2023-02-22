@@ -148,7 +148,7 @@ export type ExtensionModifyTransform = GeneralTransformOperation;
 export type FormatTextTransform = GeneralTransformOperation;
 
 export type KeepTransform = (args: KeepTransformArgs) => BaseRenameList;
-export type OmitTransform = (args: omitTransformArgs) => BaseRenameList;
+export type OmitTransform = (args: OmitTransformArgs) => BaseRenameList;
 
 // TRANSFORM RELATED TYPES AND UTILS
 export type DateTransformOptions = typeof VALID_DATE_TRANSFORM_TYPES[number];
