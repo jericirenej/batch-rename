@@ -34,7 +34,7 @@ import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
 import { extensionModifyTransform } from "./extensionModify.js";
 import { formatTextTransform } from "./formatTextTransform.js";
-import { keepTransform } from "./keepTransform.js";
+import { keepTransform, omitTransform } from "./keepOrOmit.js";
 import { numericTransform } from "./numericTransform.js";
 import { searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
@@ -63,6 +63,7 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   numericTransform: (args: GenerateRenameListArgs) => numericTransform(args),
   searchAndReplace: (args: GenerateRenameListArgs) => searchAndReplace(args),
   keep: (args: GenerateRenameListArgs) => keepTransform(args),
+  omit: (args: GenerateRenameListArgs) => omitTransform(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
   extensionModify: (args: GenerateRenameListArgs) =>
     extensionModifyTransform(args),
@@ -125,7 +126,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   }).successful;
 
   console.log("Rename completed!");
-  
+
   if (args.skipRollback) return;
   const createdRollback = await createRollback({
     transforms: updatedBaseRenameList,

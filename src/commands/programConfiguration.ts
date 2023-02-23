@@ -36,6 +36,13 @@ const programOptions: ProgramCLIOptions[] = [
       "Only keep the part of the name that matches the supplied pattern. Can be used together with the 'addText', 'format', and the 'separator' option.",
   },
   {
+    short: "o",
+    long: "omit",
+    type: "<regex>",
+    description:
+      "Omit parts of the name that matched the supplied pattern. Can be used together with the 'addText', 'format', and the 'separator' option.",
+  },
+  {
     short: "a",
     long: "addText",
     type: "<name>",

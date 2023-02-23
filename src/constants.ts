@@ -10,6 +10,7 @@ export const VALID_TRANSFORM_TYPES = [
   "addText",
   "extensionModify",
   "format",
+  "omit"
 ] as const;
 
 export const VALID_DATE_TRANSFORM_TYPES = [

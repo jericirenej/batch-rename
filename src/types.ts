@@ -34,7 +34,8 @@ export type OptionKeys =
   | "extensionModify"
   | "format"
   | "targetType"
-  | "skipRollback";
+  | "skipRollback"
+  | "omit";
 
 export type OptionKeysWithValues = Record<OptionKeys, unknown>;
 
@@ -111,6 +112,7 @@ export type RenameListArgs = {
   format?: ValidTextFormats;
   targetType?: ValidTypes;
   keep?: string;
+  omit?: string;
 };
 export type SplitFileList = ExtractBaseAndExtReturn | FileListWithStatsArray;
 export type GenerateRenameListArgs = RequireOnly<
@@ -146,6 +148,7 @@ export type ExtensionModifyTransform = GeneralTransformOperation;
 export type FormatTextTransform = GeneralTransformOperation;
 
 export type KeepTransform = (args: KeepTransformArgs) => BaseRenameList;
+export type OmitTransform = (args: OmitTransformArgs) => BaseRenameList;
 
 // TRANSFORM RELATED TYPES AND UTILS
 export type DateTransformOptions = typeof VALID_DATE_TRANSFORM_TYPES[number];
@@ -164,9 +167,8 @@ export type GenerateSearchAndReplaceArgs = (
   args: string[]
 ) => SearchAndReplaceArgs;
 
-export type KeepTransformArgs = Pick<
+export type KeepAndOmitBase = Pick<
   GenerateRenameListArgs,
-  | "keep"
   | "addText"
   | "separator"
   | "textPosition"
@@ -174,6 +176,10 @@ export type KeepTransformArgs = Pick<
   | "noExtensionPreserve"
   | "format"
 >;
+export type KeepTransformArgs = KeepAndOmitBase &
+  Pick<GenerateRenameListArgs, "keep">;
+export type OmitTransformArgs = KeepAndOmitBase &
+  Pick<GenerateRenameListArgs, "omit">;
 
 export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
