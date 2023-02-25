@@ -34,9 +34,8 @@ import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";
 import { extensionModifyTransform } from "./extensionModify.js";
 import { formatTextTransform } from "./formatTextTransform.js";
-import { keepTransform, omitTransform } from "./keepOrOmit.js";
 import { numericTransform } from "./numericTransform.js";
-import { searchAndReplace } from "./searchAndReplace.js";
+import { keepTransform, omitTransform, searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
 const {
   duplicateRenames,

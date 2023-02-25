@@ -141,15 +141,10 @@ interface GeneralTransformOperation {
 }
 export type NumericTransform = GeneralTransformOperation;
 export type DateTransform = GeneralTransformOperation;
-export type SearchAndReplace = GeneralTransformOperation;
 export type TruncateTransform = GeneralTransformOperation;
 export type AddTextTransform = GeneralTransformOperation;
 export type ExtensionModifyTransform = GeneralTransformOperation;
 export type FormatTextTransform = GeneralTransformOperation;
-
-export type KeepTransform = (args: KeepTransformArgs) => BaseRenameList;
-export type OmitTransform = (args: OmitTransformArgs) => BaseRenameList;
-
 // TRANSFORM RELATED TYPES AND UTILS
 export type DateTransformOptions = typeof VALID_DATE_TRANSFORM_TYPES[number];
 export type DateTransformTypes = {
@@ -162,24 +157,32 @@ export type DateTransformCorrespondenceTable = Record<
   keyof Stats
 >;
 
-export type SearchAndReplaceArgs = { filter: RegExp | null; replace: string };
-export type GenerateSearchAndReplaceArgs = (
-  args: string[]
-) => SearchAndReplaceArgs;
-
-export type KeepAndOmitBase = Pick<
+export type RegexBaseArgs = Pick<
   GenerateRenameListArgs,
   | "addText"
-  | "separator"
-  | "textPosition"
-  | "splitFileList"
-  | "noExtensionPreserve"
   | "format"
+  | "noExtensionPreserve"
+  | "separator"
+  | "splitFileList"
+  | "textPosition"
+  | "truncate"
 >;
-export type KeepTransformArgs = KeepAndOmitBase &
+
+export type SearchAndReplaceArgs = RegexBaseArgs &
+  Pick<GenerateRenameListArgs, "searchAndReplace">;
+export type SearchAndReplace = (args: SearchAndReplaceArgs) => BaseRenameList;
+export type GenerateSearchAndReplaceArgs = (args: string[]) => {
+  filter: RegExp | null;
+  replace: string;
+};
+
+export type KeepTransformArgs = RegexBaseArgs &
   Pick<GenerateRenameListArgs, "keep">;
-export type OmitTransformArgs = KeepAndOmitBase &
+export type OmitTransformArgs = RegexBaseArgs &
   Pick<GenerateRenameListArgs, "omit">;
+
+export type KeepTransform = (args: KeepTransformArgs) => BaseRenameList;
+export type OmitTransform = (args: OmitTransformArgs) => BaseRenameList;
 
 export type TruncateFileNameArgs = {
   preserveOriginal: boolean;
