@@ -1,6 +1,8 @@
 import type {
   BaseRenameItem,
   GenerateSearchAndReplaceArgs,
+  KeepTransform,
+  OmitTransform,
   SearchAndReplace
 } from "../types.js";
 import { composeRenameString } from "../utils/utils.js";
@@ -22,7 +24,7 @@ export const searchAndReplace: SearchAndReplace = ({
   if (!filter) return renameList;
   splitFileList.forEach((fileInfo) => {
     const { baseName: _baseName, ext } = fileInfo;
-    // Note that that lookaheads or references to the extension delimiter ('.') will not 
+    // Note that that lookaheads or references to the extension delimiter ('.') will not
     // work as expected, if noExtensionPreserve is false or undefined, since the extension will
     // be cut off from the baseName in order to be protected from transformation.
     const baseName = noExtensionPreserve ? `${_baseName}${ext}` : _baseName;
@@ -52,4 +54,17 @@ export const generateSearchAndReplaceArgs: GenerateSearchAndReplaceArgs = (
 ) => {
   if (args.length === 1) return { filter: null, replace: args[0] };
   return { filter: new RegExp(args[0], "gu"), replace: args[1] };
+};
+
+export const keepTransform: KeepTransform = ({ keep, ...args }) => {
+  if (!keep) return [];
+  const regexBase = `^.*(?=${keep})|(?<=${keep}).*$`;
+  /*Current limitation: format option will never format the extension, as
+   * the extension will usually be removed by the keep operation, if noExtensionPreserve is true. */
+  return searchAndReplace({ searchAndReplace: [regexBase, ""], ...args });
+};
+
+export const omitTransform: OmitTransform = ({ omit, ...args }) => {
+  if (!omit) return [];
+  return searchAndReplace({ searchAndReplace: [omit, ""], ...args });
 };
