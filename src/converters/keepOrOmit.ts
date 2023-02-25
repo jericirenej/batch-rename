@@ -1,9 +1,7 @@
 import type {
   BaseRenameItem,
-  BaseRenameList,
-  KeepAndOmitBase,
-  KeepTransform,
-  OmitTransform
+  BaseRenameList, KeepTransform,
+  OmitTransform, RegexBaseArgs
 } from "../types";
 import { composeRenameString } from "../utils/utils.js";
 
@@ -11,13 +9,15 @@ import { composeRenameString } from "../utils/utils.js";
  * with other arguments. */
 export const baseReplacer = ({
   matcher,
+  noExtensionPreserve,
+  splitFileList,
   addText,
   textPosition,
   separator,
   format,
-  splitFileList,
-  noExtensionPreserve,
-}: KeepAndOmitBase & { matcher: RegExp|string }): BaseRenameList => {
+  truncate
+
+}: RegexBaseArgs & { matcher: RegExp|string }): BaseRenameList => {
   const matchArg = matcher instanceof RegExp ? matcher : new RegExp(matcher, "gu");
   const renameList: BaseRenameList = [];
   splitFileList.forEach((fileInfo) => {
@@ -32,6 +32,7 @@ export const baseReplacer = ({
       textPosition,
       addText,
       format,
+      truncate
     });
     const rename = `${newName}`;
     if (rename !== original) {
