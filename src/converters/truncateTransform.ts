@@ -1,6 +1,7 @@
 import { ERRORS } from "../messages/errMessages.js";
 import type { BaseRenameItem, TruncateTransform } from "../types.js";
 import { composeRenameString } from "../utils/utils.js";
+
 const {truncateNoPreserveOriginal, truncateInvalidArgument } = ERRORS.transforms;
 
 export const truncateTransform: TruncateTransform = ({
@@ -17,7 +18,7 @@ export const truncateTransform: TruncateTransform = ({
 
   const limit = Number(truncate);
 
-  if (isNaN(limit)) throw new Error(truncateInvalidArgument);
+  if (Number.isNaN(limit)) throw new Error(truncateInvalidArgument);
 
   return splitFileList.map((fileInfo) => {
     const { baseName, ext, sourcePath } = fileInfo;
