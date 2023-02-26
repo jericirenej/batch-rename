@@ -26,7 +26,7 @@ export const ERRORS = {
     allRenameFailed: "All rename operations failed! No file has been changed.",
   },
   transforms: {
-    noTransformFunctionAvailable: `No transform function available for the chosen option!`,
+    noTransformFunctionAvailable: "No transform function available for the chosen option!",
     onlyOneUtilAction:
       "Only one type of utility action can be executed at the time!",
     truncateNoPreserveOriginal:
