@@ -6,8 +6,8 @@ export const formatTextTransform: FormatTextTransform = ({
   format,
   noExtensionPreserve,
   truncate,
-}) => {
-  return splitFileList.map((fileInfo) => {
+}) =>
+  splitFileList.map((fileInfo) => {
     const { baseName, ext, sourcePath } = fileInfo;
     const rename = composeRenameString({
       baseName,
@@ -18,20 +18,16 @@ export const formatTextTransform: FormatTextTransform = ({
       noExtensionPreserve,
       preserveOriginal: false,
     });
-    const renameItem:BaseRenameItem = { original: `${baseName}${ext}`, rename }
+    const renameItem: BaseRenameItem = { original: `${baseName}${ext}`, rename };
     return renameItem;
   });
-};
 
-const capitalizeString = (str: string): string => {
-  return str
+const capitalizeString = (str: string): string =>
+  str
     .split(" ")
-    .map(
-      (word) =>
-        `${word[0].toLocaleUpperCase()}${word.slice(1).toLocaleLowerCase()}`
-    )
+    .map((word) => `${word[0].toLocaleUpperCase()}${word.slice(1).toLocaleLowerCase()}`)
     .join(" ");
-};
+
 export const formatFile = (file: string, format: ValidTextFormats): string => {
   let rename = file;
   if (format === "uppercase") {
