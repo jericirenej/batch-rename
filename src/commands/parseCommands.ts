@@ -27,6 +27,57 @@ import program from "./generateCommands.js";
 
 const { noTransformationPicked, onlyOneUtilAction } = ERRORS.transforms;
 
+
+export const utilityActionsCorrespondenceTable = {
+  restore: (args: UtilityFunctionsArgs) => restoreOriginalFileNames(args),
+  cleanRollback: ({ transformPath }: UtilityFunctionsArgs) =>
+    deleteRollbackFile(transformPath),
+};
+
+export const setTransformationPath: SetTransformationPath = async (
+  folder,
+  restArgs
+) => {
+  if (folder) {
+    return await checkPath(folder);
+  }
+  if (Array.isArray(restArgs) && restArgs.length) {
+    return await checkPath(restArgs[0]);
+  }
+  return undefined;
+};
+
+
+export const transformationCheck = (
+  options: OptionKeysWithValues
+): TransformTypes[] => {
+  const keys = Object.keys(options) as unknown as Array<keyof typeof options>;
+  const transformationPicked = keys.filter(
+    (key) =>
+      VALID_TRANSFORM_TYPES.some((transformType) => transformType === key) &&
+      options[key]
+  );
+  const numOfTransformations = transformationPicked.length;
+  if (!numOfTransformations) {
+    throw new Error(noTransformationPicked);
+  }
+  return transformationPicked as TransformTypes[];
+};
+
+export const utilityActionsCheck: UtilityActionsCheck = (options) => {
+  const keys = Object.keys(options) as UtilityActions[];
+  const utilityActions = keys.filter((key) =>
+    UTILITY_ACTIONS.some((action) => action === key)
+  );
+  if (utilityActions.length > 1) {
+    throw new Error(`${onlyOneUtilAction}
+    Chosen: ${JSON.stringify(utilityActions)}.
+    Available: ${JSON.stringify(UTILITY_ACTIONS)}.
+    `);
+  }
+  return utilityActions[0];
+};
+
 export const parseOptions = async (
   options: OptionKeysWithValuesAndRestArgs
 ) => {
@@ -57,7 +108,7 @@ export const parseOptions = async (
     // Run util actions first.
     const utilityActions = utilityActionsCheck(options);
     if (utilityActions) {
-      return await utilityActionsCorrespondenceTable[utilityActions]({
+      await utilityActionsCorrespondenceTable[utilityActions]({
         dryRun,
         transformPath,
         rollbackLevel,
@@ -87,53 +138,4 @@ export const parseOptions = async (
     console.error(error.message);
     process.exit(1);
   }
-};
-
-export const transformationCheck = (
-  options: OptionKeysWithValues
-): TransformTypes[] => {
-  const keys = Object.keys(options) as unknown as Array<keyof typeof options>;
-  const transformationPicked = keys.filter(
-    (key) =>
-      VALID_TRANSFORM_TYPES.some((transformType) => transformType === key) &&
-      options[key]
-  );
-  const numOfTransformations = transformationPicked.length;
-  if (!numOfTransformations) {
-    throw new Error(noTransformationPicked);
-  }
-  return transformationPicked as TransformTypes[];
-};
-
-export const setTransformationPath: SetTransformationPath = async (
-  folder,
-  restArgs
-) => {
-  if (folder) {
-    return await checkPath(folder);
-  }
-  if (Array.isArray(restArgs) && restArgs.length) {
-    return await checkPath(restArgs[0]);
-  }
-  return undefined;
-};
-
-export const utilityActionsCorrespondenceTable = {
-  restore: (args: UtilityFunctionsArgs) => restoreOriginalFileNames(args),
-  cleanRollback: ({ transformPath }: UtilityFunctionsArgs) =>
-    deleteRollbackFile(transformPath),
-};
-
-export const utilityActionsCheck: UtilityActionsCheck = (options) => {
-  const keys = Object.keys(options) as UtilityActions[];
-  const utilityActions = keys.filter((key) =>
-    UTILITY_ACTIONS.some((action) => action === key)
-  );
-  if (utilityActions.length > 1) {
-    throw new Error(`${onlyOneUtilAction}
-    Chosen: ${JSON.stringify(utilityActions)}.
-    Available: ${JSON.stringify(UTILITY_ACTIONS)}.
-    `);
-  }
-  return utilityActions[0];
-};
+}
