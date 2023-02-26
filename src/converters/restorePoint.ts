@@ -78,7 +78,31 @@ export const restoreBaseFunction: RestoreBaseFunction = async (
   };
 };
 
-/**Restore original filenames on the basis of the rollbackFile */
+
+export const dryRunRestore: DryRunRestore = async ({
+  filesToRestore,
+  missingFiles,
+  restoreList: { transforms },
+}) => {
+  const missingLength = missingFiles.length;
+  const tableData = transforms.map(({ rename, original }) => ({
+    current: rename,
+    restored: original,
+  }));
+  console.log(restoreMessage(filesToRestore.length));
+  console.table(tableData, ["current", "restored"]);
+  if (missingLength) {
+    console.log(warningMissingFiles(missingLength));
+    console.log(missingFiles);
+  }
+  const response = await askQuestion(questionPerformRestore);
+  if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) return true;
+  console.log(exitWithoutRestore);
+  return false;
+};
+
+
+/** Restore original filenames on the basis of the rollbackFile */
 export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
   dryRun,
   transformPath,
@@ -125,26 +149,4 @@ export const restoreOriginalFileNames: RestoreOriginalFileNames = async ({
 
     await trimRollbackFile({ sourcePath: targetDir, targetLevel, failed });
   }
-};
-
-export const dryRunRestore: DryRunRestore = async ({
-  filesToRestore,
-  missingFiles,
-  restoreList: { transforms },
-}) => {
-  const missingLength = missingFiles.length;
-  const tableData = transforms.map(({ rename, original }) => ({
-    current: rename,
-    restored: original,
-  }));
-  console.log(restoreMessage(filesToRestore.length));
-  console.table(tableData, ["current", "restored"]);
-  if (missingLength) {
-    console.log(warningMissingFiles(missingLength));
-    console.log(missingFiles);
-  }
-  const response = await askQuestion(questionPerformRestore);
-  if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) return true;
-  console.log(exitWithoutRestore);
-  return false;
 };
