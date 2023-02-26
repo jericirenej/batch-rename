@@ -260,6 +260,7 @@ describe("convertFiles", () => {
   it("Should call createRollback only if skipRollback is true", async () => {
     for (const skipRollback of [false, true]) {
       spyOnCreateRollback.mockClear();
+      // eslint-disable-next-line no-await-in-loop
       await convertFiles({ ...exampleArgs, skipRollback });
       expect(spyOnCreateRollback).toHaveBeenCalledTimes(skipRollback ? 0 : 1);
     }

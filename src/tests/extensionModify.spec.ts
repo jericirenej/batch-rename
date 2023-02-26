@@ -1,17 +1,14 @@
 import { EXT_REGEX } from "../constants.js";
 import { extensionModifyTransform } from "../converters/extensionModify.js";
-import type {
-  BaseRenameList, GenerateRenameListArgs
-} from "../types.js";
+import type { BaseRenameList, GenerateRenameListArgs } from "../types.js";
 import { generateMockSplitFileList } from "./mocks.js";
 
-const returnExtension = (renameList: BaseRenameList): string[] => {
-  return renameList.map((fileTransform) => {
+const returnExtension = (renameList: BaseRenameList): string[] =>
+  renameList.map((fileTransform) => {
     const { rename } = fileTransform;
     const extPosition = rename.search(EXT_REGEX);
     return rename.slice(extPosition);
   });
-};
 
 describe("extensionModifyTransform", () => {
   const splitFileList = generateMockSplitFileList(3);
@@ -22,18 +19,13 @@ describe("extensionModifyTransform", () => {
     transformPattern: ["extensionModify"],
   };
   it("Should return file with new extension", () => {
-    const transformedExtensions = returnExtension(
-      extensionModifyTransform(args)
-    );
-    transformedExtensions.forEach((newExtension) =>
-      expect(newExtension).toBe(extensionModify)
-    );
+    const transformedExtensions = returnExtension(extensionModifyTransform(args));
+    transformedExtensions.forEach((newExtension) => expect(newExtension).toBe(extensionModify));
   });
-  it("Should add a dot character, if missing from extensionModify argument", ()=> {
-    const transformedExtensions = returnExtension(extensionModifyTransform({...args, extensionModify:"new"}));
-    transformedExtensions.forEach((newExtension) =>
-      expect(newExtension).toBe(extensionModify)
+  it("Should add a dot character, if missing from extensionModify argument", () => {
+    const transformedExtensions = returnExtension(
+      extensionModifyTransform({ ...args, extensionModify: "new" })
     );
-
-  })
+    transformedExtensions.forEach((newExtension) => expect(newExtension).toBe(extensionModify));
+  });
 });

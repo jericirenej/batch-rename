@@ -18,6 +18,8 @@ const spyOnCheckBaseIndex = jest.spyOn(numericConverter, "checkBaseIndex"),
   ),
   spyOnComposeRenameString = jest.spyOn(utils, "composeRenameString");
 
+  const splitFileList = generateMockSplitFileList(10);
+
 // Replicate methods from original function. Presupposes that
 // checkBaseIndex is working properly.
 const determineBase = (base: string | undefined): number => {
@@ -30,7 +32,6 @@ const determineBase = (base: string | undefined): number => {
 const exampleBaseIndices = [undefined, "1", "10", "120", "1000"];
 const mockComposeResponse = "renameArg";
 
-const splitFileList = generateMockSplitFileList(10);
 
 const defaultArgs: GenerateRenameListArgs = {
   splitFileList,
@@ -95,7 +96,7 @@ describe("numericTransform", () => {
   it("Should return proper object", () => {
     spyOnComposeRenameString.mockReturnValue(mockComposeResponse);
     const transformReturn = numericTransform(defaultArgs);
-    transformReturn.map((transformation, index) => {
+    transformReturn.forEach((transformation, index) => {
       const keys = Object.keys(transformation);
       const expected:(keyof BaseRenameItem)[] = ["rename", "original"];
       expect(keys).toEqual(expected);

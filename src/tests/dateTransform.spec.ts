@@ -21,12 +21,8 @@ jest.mock("fs/promises", () => {
     stat: jest.fn(),
   };
 });
-const {
-  dateTransform,
-  provideFileStats,
-  extractDate,
-  dateTransformCorrespondenceTable,
-} = dateTransforms;
+const { dateTransform, provideFileStats, extractDate, dateTransformCorrespondenceTable } =
+  dateTransforms;
 
 type GenerateStatsDatesArgs = {
   birthtimeMs: number;
@@ -34,21 +30,15 @@ type GenerateStatsDatesArgs = {
   mtimeMs: number;
   listToModify: FileListWithStatsArray;
 };
-type GenerateStatsDates = (
-  args: GenerateStatsDatesArgs
-) => FileListWithStatsArray;
+type GenerateStatsDates = (args: GenerateStatsDatesArgs) => FileListWithStatsArray;
 
-const generateStatDates: GenerateStatsDates = ({
-  birthtimeMs,
-  atimeMs,
-  mtimeMs,
-  listToModify,
-}) => {
-  return listToModify.map((fileInfo) => {
+const generateStatDates: GenerateStatsDates = ({ birthtimeMs, atimeMs, mtimeMs, listToModify }) =>
+  listToModify.map((fileInfo) => {
+    // eslint-disable-next-line no-param-reassign
     fileInfo.stats = { ...fileInfo.stats, birthtimeMs, atimeMs, mtimeMs };
     return fileInfo;
   });
-};
+
 const dateVariations = {
   birthtimeMs: 123,
   atimeMs: 456,
@@ -70,9 +60,10 @@ const spyOnAreNewNamesDistinct = jest.spyOn(utils, "areNewNamesDistinct");
 const spyOnComposeRenameString = jest.spyOn(utils, "composeRenameString");
 const spyOnExtractDate = jest.spyOn(dateTransforms, "extractDate");
 const splitFileList = generateMockSplitFileList(10);
-const splitFileListWithStats: FileListWithStatsArray = splitFileList.map(
-  (file) => ({ ...file, stats })
-);
+const splitFileListWithStats: FileListWithStatsArray = splitFileList.map((file) => ({
+  ...file,
+  stats,
+}));
 
 const baseArgs: GenerateRenameListArgs = {
   splitFileList: splitFileListWithStats,
@@ -85,13 +76,9 @@ const baseArgs: GenerateRenameListArgs = {
 describe("provideFileStats", () => {
   afterEach(() => jest.clearAllMocks());
   it("Should add stat info to listFiles output", async () => {
-    mockedStat.mockImplementation((filePath: PathLike) =>
-      Promise.resolve(stats)
-    );
+    mockedStat.mockImplementation((filePath: PathLike) => Promise.resolve(stats));
     const fileStats = await provideFileStats(splitFileList);
-    fileStats.forEach((fileStat) =>
-      expect(fileStat).toEqual({ ...fileStat, stats })
-    );
+    fileStats.forEach((fileStat) => expect(fileStat).toEqual({ ...fileStat, stats }));
   });
 });
 
@@ -109,12 +96,8 @@ describe("extractDate", () => {
     ];
     const extractedDateKeys = Object.keys(extractedDate);
     expect(expectedKeys.length).toBe(extractedDateKeys.length);
-    expect(expectedKeys.every((key) => extractedDateKeys.includes(key))).toBe(
-      true
-    );
-    expect(
-      Object.values(extractedDate).every((value) => typeof value === "string")
-    ).toBe(true);
+    expect(expectedKeys.every((key) => extractedDateKeys.includes(key))).toBe(true);
+    expect(Object.values(extractedDate).every((value) => typeof value === "string")).toBe(true);
   });
   it("Should return proper date values", () => {
     const extractedDate = extractDate(milliseconds);
@@ -143,11 +126,8 @@ describe("dateTransform", () => {
       { ...newArgs, dateRename: "lastModified" },
     ];
     argVariations.forEach((args) => {
-      const dateType =
-        args.dateRename as keyof DateTransformCorrespondenceTable;
-      const targetProp = dateTransformCorrespondenceTable[
-        dateType
-      ] as keyof typeof dateVariations;
+      const dateType = args.dateRename as keyof DateTransformCorrespondenceTable;
+      const targetProp = dateTransformCorrespondenceTable[dateType] as keyof typeof dateVariations;
       const expectedValue = dateVariations[targetProp];
 
       dateTransform(args);
@@ -180,12 +160,12 @@ describe("dateTransform", () => {
       );
     });
   });
-  it("Should call formatFile (via composeRenameString), if format is supplied", ()=> {
-    const argsWithFormat:GenerateRenameListArgs = {...baseArgs, format: "uppercase"};
+  it("Should call formatFile (via composeRenameString), if format is supplied", () => {
+    const argsWithFormat: GenerateRenameListArgs = { ...baseArgs, format: "uppercase" };
     const spyOnFormat = jest.spyOn(formatText, "formatFile");
-    [baseArgs, argsWithFormat].forEach(args => dateTransform(args));
+    [baseArgs, argsWithFormat].forEach((args) => dateTransform(args));
     expect(spyOnFormat).toHaveBeenCalledTimes(baseArgs.splitFileList.length);
-  })
+  });
   it("Should use separator in date formatting, unless it's of zero length", () => {
     spyOnExtractDate.mockReturnValue(extractDateExpected);
     const { year, month, day } = extractDateExpected;

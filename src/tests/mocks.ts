@@ -35,14 +35,19 @@ export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
     return false;
   },
 };
-export const mockFileNames = ["someFile.with.extra.dots.ext",
+export const mockFileNames = [
+  "someFile.with.extra.dots.ext",
   "shortFile.ext",
   "fileWithoutExt",
   ".startWithDot",
   ".startWithDot.ext",
   "UTF-čšžäöüéŁ.ext",
-  "12345-and-chars.ext"];
-export const mockFileList: Dirent[] = mockFileNames.map((fileName) => ({ name: fileName, ...mockDirentEntryAsFile }));
+  "12345-and-chars.ext",
+];
+export const mockFileList: Dirent[] = mockFileNames.map((fileName) => ({
+  name: fileName,
+  ...mockDirentEntryAsFile,
+}));
 
 const ext = ".ext";
 export const examplePath = "A:/path/to/file";
@@ -102,10 +107,9 @@ export const exampleStats: Stats = {
 
 export const exampleDirent: Dirent = { name: "0", ...exampleStatMethods };
 
-/**Create a direntArray with specified number of file and dir entries.
+/** Create a direntArray with specified number of file and dir entries.
  * If file and dir entries exceed the specified length of the array,
- * the array will be extended.
- */
+ * the array will be extended. */
 export const createDirentArray = (
   length: number,
   numberOfFiles = 0,
@@ -118,7 +122,7 @@ export const createDirentArray = (
   return arr.map((entry, index) => {
     const isFileReturn = counter <= numberOfFiles;
     const isDirReturn = numberOfDirs > 0 && counter > numberOfFiles;
-    counter++;
+    counter += 1;
     return {
       ...exampleStatMethods,
       isFile: () => isFileReturn,
@@ -135,15 +139,14 @@ export const mockSplitFile: ExtractBaseAndExtTemplate = {
   type: "file",
 };
 
-export const generateMockSplitFileList = (length: number) => {
-  return new Array(length).fill(0).map((entry, index) => {
+export const generateMockSplitFileList = (length: number) =>
+  new Array(length).fill(0).map((entry, index) => {
     const singleEntry = {
       ...mockSplitFile,
       baseName: `baseName${index + 1}`,
     };
     return singleEntry;
   });
-};
 
 export const textFormatMatrix = [
   {
@@ -175,17 +178,10 @@ const formatFileList = textFormatMatrix.map((example) => ({
   name: example.value,
   ...mockDirentEntryAsFile,
 }));
-export const textFormatRenameList = extractBaseAndExt(
-  formatFileList,
-  examplePath
-);
+export const textFormatRenameList = extractBaseAndExt(formatFileList, examplePath);
 
 // MOCK ROLLBACK TOOLSET
-const mockItemFunction = (
-  name: string,
-  referenceId: string,
-  transform: number
-): RenameItem => ({
+const mockItemFunction = (name: string, referenceId: string, transform: number): RenameItem => ({
   original: `${name}_${transform}`,
   referenceId,
   rename: `${name}_${transform + 1}`,
@@ -225,14 +221,12 @@ export const mockRollbackToolSet = {
   mockItems: { mockItem1, mockItem2, mockItem3, mockItem4 },
   mockTransforms,
   mockRollbackFile,
-  mockLegacyRollback
+  mockLegacyRollback,
 };
 
 // RENAME LIST TOOLSET
 const originalNames = ["original1", "original2", "original3"];
-const singleLevelTransform = originalNames.map((name) =>
-  mockItemFunction(name, `${name}_ID`, 1)
-);
+const singleLevelTransform = originalNames.map((name) => mockItemFunction(name, `${name}_ID`, 1));
 const distinct = removeReference(...singleLevelTransform);
 const newNameRepeat = distinct.map((entry, index, arr) => {
   if (index !== arr.length - 1) return { ...entry };
@@ -261,11 +255,10 @@ export const mockRenameListToolSet: RenameListToolSet = {
   mockRollback: { sourcePath, transforms: [singleLevelTransform] },
 };
 
-
-export const generateRejected = ({
-  original,
-  rename,  
-}: RenameItem | BaseRenameItem, operationType: "convert"|"restore" = "restore"): PromiseRejectedWriteResult =>
+export const generateRejected = (
+  { original, rename }: RenameItem | BaseRenameItem,
+  operationType: "convert" | "restore" = "restore"
+): PromiseRejectedWriteResult =>
   ({
     status: "rejected",
     reason: {
