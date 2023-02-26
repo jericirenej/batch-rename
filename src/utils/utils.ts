@@ -43,10 +43,8 @@ const { truncateInvalidArgument } = ERRORS.transforms;
 const { failReport, failItem } = STATUS.settledPromisesEval;
 
 export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
-export const jsonReplicate = <T>(arg: T): T =>
-  jsonParseReplicate(JSON.stringify(arg)) as T;
-export const sortedJsonReplicate = <T extends unknown[]>(arg: T): T =>
-  jsonReplicate(arg).sort();
+export const jsonReplicate = <T>(arg: T): T => jsonParseReplicate(JSON.stringify(arg)) as T;
+export const sortedJsonReplicate = <T extends unknown[]>(arg: T): T => jsonReplicate(arg).sort();
 
 export const parseBoolOption = (arg?: unknown, defaultVal = false): boolean => {
   try {
@@ -62,10 +60,9 @@ export const parseRestoreArg = (arg: unknown): number => {
   try {
     if (typeof arg === "boolean") {
       return 0;
-    } else {
-      const num = Number(arg);
-      return Number.isNaN(num) ? 0 : Math.abs(Math.floor(num));
     }
+    const num = Number(arg);
+    return Number.isNaN(num) ? 0 : Math.abs(Math.floor(num));
   } catch {
     return 0;
   }
@@ -85,10 +82,9 @@ export const extractCurrentReferences = (
     const namesToExclude: string[] = [];
     let eligible = rollback;
     if (alreadyCheckedRefs.length) {
-      eligible = eligible.filter(
-        ({ referenceId }) => !alreadyCheckedRefs.includes(referenceId)
-      );
+      eligible = eligible.filter(({ referenceId }) => !alreadyCheckedRefs.includes(referenceId));
     }
+    // eslint-disable-next-line no-continue
     if (!eligible.length) continue;
 
     namesLeftToCheck.forEach((name) => {
@@ -99,14 +95,12 @@ export const extractCurrentReferences = (
       }
     });
 
-    namesLeftToCheck = namesLeftToCheck.filter(
-      (name) => !namesToExclude.includes(name)
-    );
+    namesLeftToCheck = namesLeftToCheck.filter((name) => !namesToExclude.includes(name));
   }
   return { withIds: namesAndReferences, noIds: namesLeftToCheck };
 };
 
-/**Will separate the basename and file extension, in addition to providing
+/** Will separate the basename and file extension, in addition to providing
  * a sourcePath and type information. If no extension is found, it will return
  * the whole file name  under the base property and an empty ext string. */
 export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
@@ -127,6 +121,8 @@ export const extractBaseAndExt: ExtractBaseAndExt = (fileList, sourcePath) => {
     return { baseName: fileName, ext: "", sourcePath, type };
   });
 };
+
+export const determineDir: DetermineDir = (transformPath) => transformPath || process.cwd();
 
 /** Will return a Dirent list of entities.
  * Can exclude files based on matches supplied with **excludeFilter**.
@@ -162,6 +158,23 @@ export const listFiles: ListFiles = async (
   return files;
 };
 
+/** Check for duplicated fileNames which would lead to errors. Takes in an
+ * @param args.renameList - Supply rename list of appropriate type.
+    @param {"results"|"transforms"} args.checkType - If *'results'* are specified,functions checks if there are duplicated among the target transformed names. 
+    If *'transforms'* are specified, it checks whether there exist identical transformation (original === rename). */
+export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({ renameList, checkType }) => {
+  if (checkType === "results") {
+    const renames = renameList.map(({ rename }) => rename);
+    const newNamesUniqueLength = new Set(renames).size;
+    return renames.length - newNamesUniqueLength;
+  }
+  if (checkType === "transforms") {
+    const duplicatedTransforms = renameList.filter(({ original, rename }) => original === rename);
+    return duplicatedTransforms.length;
+  }
+  return -1;
+};
+
 /** Calls *numberOfDuplicatedNames* with the "results" checkType
  * and then evaluates if the result is less or equal than 0.
  */
@@ -181,33 +194,7 @@ export const areTransformsDistinct: AreTransformsDistinct = (renameList) => {
   return duplicates <= 0;
 };
 
-/** Check for duplicated fileNames which would lead to errors. Takes in an
- * @param args.renameList - Supply rename list of appropriate type.
-    @param {"results"|"transforms"} args.checkType - If *'results'* are specified,functions checks if there are duplicated among the target transformed names. 
-    If *'transforms'* are specified, it checks whether there exist identical transformation (original === rename).
- */
-
-export const numberOfDuplicatedNames: NumberOfDuplicatedNames = ({
-  renameList,
-  checkType,
-}) => {
-  if (checkType === "results") {
-    const renames = renameList.map(({ rename }) => rename);
-    const newNamesUniqueLength = new Set(renames).size;
-    return renames.length - newNamesUniqueLength;
-  }
-  if (checkType === "transforms") {
-    const duplicatedTransforms = renameList.filter(
-      ({ original, rename }) => original === rename
-    );
-    return duplicatedTransforms.length;
-  }
-  return -1;
-};
-
-export const filterOutDuplicatedTransforms = (
-  renameList: BaseRenameList
-): BaseRenameList =>
+export const filterOutDuplicatedTransforms = (renameList: BaseRenameList): BaseRenameList =>
   renameList.filter(({ original, rename }) => original !== rename);
 
 export const willOverWriteExisting = (
@@ -224,15 +211,10 @@ export const willOverWriteExisting = (
     .map(({ baseName, ext }) => `${baseName}${ext}`)
     .filter((existingName) => !originals.includes(existingName));
   if (!fileListWithoutTransforms.length) return false;
-  return fileListWithoutTransforms.some((existingName) =>
-    renames.includes(existingName)
-  );
+  return fileListWithoutTransforms.some((existingName) => renames.includes(existingName));
 };
 
-export const checkPath: CheckPath = async (
-  path,
-  targetType = DEFAULT_TARGET_TYPE
-) => {
+export const checkPath: CheckPath = async (path, targetType = DEFAULT_TARGET_TYPE) => {
   const fullPath = resolve(process.cwd(), path);
   if (!existsSync(fullPath)) {
     throw new Error(pathDoesNotExist);
@@ -248,16 +230,14 @@ export const checkPath: CheckPath = async (
   if (targetType === "all") return fullPath;
 
   if (targetType === "files") {
-    const hasFiles =
-      dirInfo.filter((childNode) => childNode.isFile()).length > 0;
+    const hasFiles = dirInfo.filter((childNode) => childNode.isFile()).length > 0;
     if (!hasFiles) {
       throw new Error(noChildFiles);
     }
   }
 
   if (targetType === "dirs") {
-    const hasDirs =
-      dirInfo.filter((childNode) => childNode.isDirectory()).length > 0;
+    const hasDirs = dirInfo.filter((childNode) => childNode.isDirectory()).length > 0;
     if (!hasDirs) {
       throw new Error(noChildDirs);
     }
@@ -265,8 +245,20 @@ export const checkPath: CheckPath = async (
   return fullPath;
 };
 
-export const determineDir: DetermineDir = (transformPath) =>
-  transformPath ? transformPath : process.cwd();
+/** Will truncate baseName to the length of the supplied truncate argument
+ * If preserveOriginal is false or truncate evaluates to 0,
+ * it will return the baseName.
+ */
+export const truncateFile: TruncateFileName = ({ preserveOriginal, baseName, truncate }) => {
+  if (!preserveOriginal) {
+    return baseName;
+  }
+  const limit = Number(truncate);
+  if (Number.isNaN(limit)) throw new Error(truncateInvalidArgument);
+  if (limit === 0) return baseName;
+
+  return baseName.slice(0, limit);
+};
 
 export const composeRenameString: ComposeRenameString = ({
   baseName: _baseName,
@@ -280,8 +272,8 @@ export const composeRenameString: ComposeRenameString = ({
   format,
   noExtensionPreserve,
 }) => {
-  const position = textPosition ? textPosition : "append";
-  const extension = ext ? ext : "";
+  const position = textPosition || "append";
+  const extension = ext || "";
   let sep = "";
   // Allow for empty separator (direct concatenation)
   // For undefined cases, force default separator, unless newName is falsy.
@@ -291,7 +283,7 @@ export const composeRenameString: ComposeRenameString = ({
   let modifiedName = newName;
 
   // Truncate baseName OR add custom text.
-  const shouldTruncate = !isNaN(Number(truncate)) && preserveOriginal;
+  const shouldTruncate = !Number.isNaN(Number(truncate)) && preserveOriginal;
   let baseName = _baseName;
   if (shouldTruncate)
     baseName = truncateFile({
@@ -300,11 +292,7 @@ export const composeRenameString: ComposeRenameString = ({
       truncate: truncate!,
     });
   // Custom text overrides preserveOriginal setting.
-  const customOrOriginalText = addText
-    ? addText
-    : preserveOriginal
-    ? baseName
-    : "";
+  const customOrOriginalText = addText || (preserveOriginal ? baseName : "");
   if (customOrOriginalText) {
     if (position === "append") {
       modifiedName = `${newName}${sep}${customOrOriginalText}`;
@@ -323,10 +311,9 @@ export const composeRenameString: ComposeRenameString = ({
   return `${modifiedName}${extension}`;
 };
 
-/**A factory function which creates an async array of renaming operations
+/** A factory function which creates an async array of renaming operations
  * for either a transform or a revert operation. Restore operations are triggered
- * if a filesToRevert argument is supplied.
- */
+ * if a filesToRevert argument is supplied. */
 export const createBatchRenameList: CreateBatchRenameList = ({
   transforms,
   sourcePath,
@@ -361,12 +348,9 @@ export const createBatchRenameList: CreateBatchRenameList = ({
   return batchRename;
 };
 
-/**Remove entries from the list for which the renaming operation
+/** Remove entries from the list for which the renaming operation
  * resulted in a rejected promise. */
-export const settledPromisesEval = <
-  T extends G[],
-  G extends BaseRenameItem | RenameItem
->({
+export const settledPromisesEval = <T extends G[], G extends BaseRenameItem | RenameItem>({
   transformedNames,
   promiseResults,
   operationType,
@@ -381,8 +365,7 @@ export const settledPromisesEval = <
   ).length;
 
   if (promisesRejected === 0) return { successful: transformedNames, failed };
-  if (promisesRejected === transformedNames.length)
-    throw new Error(allRenameFailed);
+  if (promisesRejected === transformedNames.length) throw new Error(allRenameFailed);
 
   console.log(failReport(promisesRejected, operationType));
 
@@ -405,28 +388,10 @@ export const settledPromisesEval = <
   return { successful: [...transformMap.values()] as T, failed };
 };
 
-/** Will truncate baseName to the length of the supplied truncate argument
- * If preserveOriginal is false or truncate evaluates to 0,
- * it will return the baseName.
- */
-export const truncateFile: TruncateFileName = ({
-  preserveOriginal,
-  baseName,
-  truncate,
-}) => {
-  if (!preserveOriginal) {
-    return baseName;
-  }
-  const limit = Number(truncate);
-  if (isNaN(limit)) throw new Error(truncateInvalidArgument);
-  if (limit === 0) return baseName;
-
-  return baseName.slice(0, limit);
-};
-
 export const askQuestion = (question: string): Promise<string> => {
   const rl = readline.createInterface(process.stdin, process.stdout);
   return new Promise((resolve) => {
+    // eslint-disable-next-line prefer-template
     rl.question(question + "\n", (answer) => resolve(answer));
   });
 };

@@ -281,7 +281,7 @@ export interface RenameItem extends BaseRenameItem {
 export type RenameItemsArray = RenameItem[];
 
 /** Rollback file whose transform property that includes a history of transform operations
- * (i.e. an array of arrays).*/
+ * (i.e. an array of arrays). */
 export interface RollbackFile {
   sourcePath: string;
   transforms: RenameItemsArray[];

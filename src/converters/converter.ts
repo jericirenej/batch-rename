@@ -1,10 +1,6 @@
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
-import {
-  ROLLBACK_FILE_NAME,
-  VALID_DRY_RUN_ANSWERS,
-  VALID_TRANSFORM_TYPES
-} from "../constants.js";
+import { ROLLBACK_FILE_NAME, VALID_DRY_RUN_ANSWERS, VALID_TRANSFORM_TYPES } from "../constants.js";
 import { ERRORS } from "../messages/errMessages.js";
 import { STATUS } from "../messages/statusMessages.js";
 import type {
@@ -37,6 +33,7 @@ import { formatTextTransform } from "./formatTextTransform.js";
 import { numericTransform } from "./numericTransform.js";
 import { keepTransform, omitTransform, searchAndReplace } from "./searchAndReplace.js";
 import { truncateTransform } from "./truncateTransform.js";
+
 const {
   duplicateRenames,
   noTransformFunctionAvailable,
@@ -54,7 +51,7 @@ const {
 } = STATUS.dryRun;
 
 export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
-  typeof VALID_TRANSFORM_TYPES[number],
+  (typeof VALID_TRANSFORM_TYPES)[number],
   (args: GenerateRenameListArgs) => BaseRenameItem[]
 > = {
   addText: (args: GenerateRenameListArgs) => addTextTransform(args),
@@ -64,16 +61,73 @@ export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   keep: (args: GenerateRenameListArgs) => keepTransform(args),
   omit: (args: GenerateRenameListArgs) => omitTransform(args),
   truncate: (args: GenerateRenameListArgs) => truncateTransform(args),
-  extensionModify: (args: GenerateRenameListArgs) =>
-    extensionModifyTransform(args),
+  extensionModify: (args: GenerateRenameListArgs) => extensionModifyTransform(args),
   format: (args: GenerateRenameListArgs) => formatTextTransform(args),
 };
+
+export const generateRenameList: GenerateRenameList = (args) => {
+  const { transformPattern } = args;
+  const primaryTransform = transformPattern[0];
+  if (Object.keys(TRANSFORM_CORRESPONDENCE_TABLE).includes(primaryTransform)) {
+    return TRANSFORM_CORRESPONDENCE_TABLE[primaryTransform](args);
+  }
+  throw new Error(noTransformFunctionAvailable);
+};
+
+export const dryRunTransform: DryRunTransform = async ({
+  transformPath,
+  transformPattern,
+  transformedNames,
+  fileList,
+}) => {
+  const changedNames = transformedNames.filter(
+    (renameInfo) => renameInfo.original !== renameInfo.rename
+  );
+  if (changedNames.length === 0) {
+    console.log(exitVoidTransform);
+    return false;
+  }
+
+  const transformData: Record<string, number> = {};
+  (["transforms", "results"] as const).forEach((checkType) => {
+    transformData[checkType] = numberOfDuplicatedNames({
+      renameList: transformedNames,
+      checkType,
+    });
+  });
+  const { transforms: unaffectedFiles, results: targetDuplication } = transformData;
+  const willOverwrite = willOverWriteExisting(transformedNames, fileList);
+
+  console.log(transformIntro(transformPattern, transformPath));
+  console.table(changedNames, ["original", "rename"]);
+
+  if (unaffectedFiles > 0) {
+    console.log(warningUnaffectedFiles(unaffectedFiles));
+  }
+  if (targetDuplication > 0) {
+    console.log(warningDuplication(targetDuplication));
+    return false;
+  }
+
+  if (willOverwrite) {
+    console.log(warningOverwrite);
+    return false;
+  }
+
+  const response = await askQuestion(questionPerformTransform);
+  if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) {
+    return true;
+  }
+  console.log(exitWithoutTransform);
+  return false;
+};
+
 
 export const convertFiles = async (args: RenameListArgs): Promise<void> => {
   const { transformPattern, transformPath, exclude, targetType } = args;
   const targetDir = determineDir(transformPath);
-  const splitFileList = await listFiles(targetDir, exclude, targetType).then(
-    (fileList) => extractBaseAndExt(fileList, targetDir)
+  const splitFileList = await listFiles(targetDir, exclude, targetType).then((fileList) =>
+    extractBaseAndExt(fileList, targetDir)
   );
   let listWithStats!: FileListWithStatsArray;
 
@@ -81,7 +135,7 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     listWithStats = await provideFileStats(splitFileList);
   }
 
-  const fileList: SplitFileList = listWithStats ? listWithStats : splitFileList;
+  const fileList: SplitFileList = listWithStats || splitFileList;
 
   const transformArgs: GenerateRenameListArgs = {
     ...args,
@@ -138,62 +192,4 @@ export const convertFiles = async (args: RenameListArgs): Promise<void> => {
     "utf-8"
   );
   process.stdout.write("DONE.\n");
-};
-
-export const generateRenameList: GenerateRenameList = (args) => {
-  const { transformPattern } = args;
-  const primaryTransform = transformPattern[0];
-  if (Object.keys(TRANSFORM_CORRESPONDENCE_TABLE).includes(primaryTransform)) {
-    return TRANSFORM_CORRESPONDENCE_TABLE[primaryTransform](args);
-  }
-  throw new Error(noTransformFunctionAvailable);
-};
-
-export const dryRunTransform: DryRunTransform = async ({
-  transformPath,
-  transformPattern,
-  transformedNames,
-  fileList,
-}) => {
-  const changedNames = transformedNames.filter(
-    (renameInfo) => renameInfo.original !== renameInfo.rename
-  );
-  if (changedNames.length === 0) {
-    console.log(exitVoidTransform);
-    return false;
-  }
-
-  const transformData: Record<string, number> = {};
-  (["transforms", "results"] as const).forEach((checkType) => {
-    transformData[checkType] = numberOfDuplicatedNames({
-      renameList: transformedNames,
-      checkType,
-    });
-  });
-  const { transforms: unaffectedFiles, results: targetDuplication } =
-    transformData;
-  const willOverwrite = willOverWriteExisting(transformedNames, fileList);
-
-  console.log(transformIntro(transformPattern, transformPath));
-  console.table(changedNames, ["original", "rename"]);
-
-  if (unaffectedFiles > 0) {
-    console.log(warningUnaffectedFiles(unaffectedFiles));
-  }
-  if (targetDuplication > 0) {
-    console.log(warningDuplication(targetDuplication));
-    return false;
-  }
-
-  if (willOverwrite) {
-    console.log(warningOverwrite);
-    return false;
-  }
-
-  const response = await askQuestion(questionPerformTransform);
-  if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) {
-    return true;
-  }
-  console.log(exitWithoutTransform);
-  return false;
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-loop-func */
 import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
@@ -19,8 +20,7 @@ const {
 
 const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
-const { mockLegacyRollback, mockRollbackFile, mockTransforms, mockItems } =
-  mockRollbackToolSet;
+const { mockLegacyRollback, mockRollbackFile, mockTransforms, mockItems } = mockRollbackToolSet;
 
 jest.mock("nanoid");
 const mockedNanoId = jest.mocked(nanoid);
@@ -31,20 +31,15 @@ describe("checkExistingFiles", () => {
     [mockItem1(2), mockItem2(1)],
     [mockItem1(1), mockItem3(1), mockItem4(1)],
   ];
-  const allPossibleFiles = [
-    mockItem1(2),
-    mockItem2(1),
-    mockItem3(1),
-    mockItem4(1),
-  ].map(({ rename }) => rename);
+  const allPossibleFiles = [mockItem1(2), mockItem2(1), mockItem3(1), mockItem4(1)].map(
+    ({ rename }) => rename
+  );
 
   it("Should return all matched existing files at a given level and warn if files are missing", () => {
     const missingAtSecondLevel = mockItem4(1).rename;
     const missingAtFirstLevel = mockItem2(1).rename;
     const allMissing = [missingAtSecondLevel, missingAtFirstLevel];
-    const existingWithoutMissed = allPossibleFiles.filter(
-      (name) => !allMissing.includes(name)
-    );
+    const existingWithoutMissed = allPossibleFiles.filter((name) => !allMissing.includes(name));
     const testCases = [
       {
         rollbackLevel: 1,
@@ -67,13 +62,9 @@ describe("checkExistingFiles", () => {
         transforms: mockTransform,
         existingFiles: existingWithoutMissed,
       });
-      expect(jsonReplicate(filesToRestore).sort()).toEqual(
-        jsonReplicate(restore).sort()
-      );
+      expect(jsonReplicate(filesToRestore).sort()).toEqual(jsonReplicate(restore).sort());
 
-      expect(jsonReplicate(missingFiles).sort()).toEqual(
-        jsonReplicate(missing).sort()
-      );
+      expect(jsonReplicate(missingFiles).sort()).toEqual(jsonReplicate(missing).sort());
     }
   });
   it("Should ignore existing files that are not included inside transform file", () => {
@@ -83,25 +74,18 @@ describe("checkExistingFiles", () => {
       rollbackLevel: 2,
       existingFiles: allPossibleWithExcess,
     });
-    expect(jsonReplicate(filesToRestore).sort()).toEqual(
-      jsonReplicate(allPossibleFiles).sort()
-    );
+    expect(jsonReplicate(filesToRestore).sort()).toEqual(jsonReplicate(allPossibleFiles).sort());
     expect(missingFiles.length).toBe(0);
   });
 });
 
 describe("determineRollbackLevel", () => {
   const rollbackLength = 10,
-    transformList = new Array(rollbackLength).fill(
-      mockTransforms[0]
-    ) as RenameItemsArray[];
+    transformList = new Array(rollbackLength).fill(mockTransforms[0]) as RenameItemsArray[];
   let spyOnConsole: SpyInstance;
-  beforeEach(
-    () =>
-      (spyOnConsole = jest
-        .spyOn(console, "log")
-        .mockImplementation((message?: any) => {}))
-  );
+  beforeEach(() => {
+    spyOnConsole = jest.spyOn(console, "log").mockImplementation((message?: any) => {});
+  });
   afterEach(() => jest.clearAllMocks());
   afterAll(() => spyOnConsole.mockRestore());
   it("Should default to maximum restore level if rollbackLevel is not specified.", () => {
@@ -142,15 +126,7 @@ describe("determineRollbackLevel", () => {
 
 describe("isLegacyRestore", () => {
   it("Should return false for falsy values and non-arrays", () => {
-    for (const testCase of [
-      undefined,
-      null,
-      "something",
-      "",
-      35,
-      {},
-      { property: "property" },
-    ]) {
+    for (const testCase of [undefined, null, "something", "", 35, {}, { property: "property" }]) {
       expect(isLegacyRestore(testCase)).toBe(false);
     }
   });
@@ -164,9 +140,7 @@ describe("isLegacyRestore", () => {
 
 describe("legacyRestoreMapper", () => {
   it("Should transform legacy rollback files", () => {
-    mockTransforms[0].forEach(({ referenceId }) =>
-      mockedNanoId.mockReturnValueOnce(referenceId)
-    );
+    mockTransforms[0].forEach(({ referenceId }) => mockedNanoId.mockReturnValueOnce(referenceId));
     const mappedResult = legacyRestoreMapper(mockLegacyRollback);
     const expected: RollbackFile = {
       ...mockRollbackFile,
@@ -179,15 +153,7 @@ describe("legacyRestoreMapper", () => {
 describe("isCurrentRestore", () => {
   const { sourcePath, mockRollbackFile, mockTransforms } = mockRollbackToolSet;
   it("Should return false for falsy values, arrays and primitives", () => {
-    for (const testCase of [
-      undefined,
-      null,
-      "something",
-      "",
-      35,
-      [],
-      [1, 2, 3],
-    ]) {
+    for (const testCase of [undefined, null, "something", "", 35, [], [1, 2, 3]]) {
       expect(isCurrentRestore(testCase)).toBe(false);
     }
   });
@@ -203,23 +169,17 @@ describe("isCurrentRestore", () => {
     expect(isCurrentRestore(improperKeys)).toBe(false);
   });
   it("Should return false if one of the transforms has improper key or non-string value", () => {
-    const renameCopy = JSON.parse(
-      JSON.stringify(mockRollbackFile)
-    ) as RollbackFile;
-    const improperKey = renameCopy.transforms[0].map(
-      ({ original, referenceId, rename }) => ({
-        original,
-        rename,
-        someReference: referenceId,
-      })
-    );
-    const improperValue = renameCopy.transforms[0].map(
-      ({ original, rename }) => ({
-        original,
-        rename,
-        referenceId: 55,
-      })
-    );
+    const renameCopy = JSON.parse(JSON.stringify(mockRollbackFile)) as RollbackFile;
+    const improperKey = renameCopy.transforms[0].map(({ original, referenceId, rename }) => ({
+      original,
+      rename,
+      someReference: referenceId,
+    }));
+    const improperValue = renameCopy.transforms[0].map(({ original, rename }) => ({
+      original,
+      rename,
+      referenceId: 55,
+    }));
     for (const testCase of [improperKey, improperValue])
       expect(isCurrentRestore(testCase)).toBe(false);
   });
@@ -243,23 +203,19 @@ describe("checkRestoreFile", () => {
     spyOnLegacyRestoreMapper = jest.spyOn(restoreUtils, "legacyRestoreMapper");
   let spyOnConsole: SpyInstance<typeof console.log>;
   beforeEach(() => {
-    spyOnConsole = jest
-      .spyOn(console, "log")
-      .mockImplementation((message?: any) => {});
+    spyOnConsole = jest.spyOn(console, "log").mockImplementation((message?: any) => {});
     jest.clearAllMocks();
   });
   afterAll(() => spyOnConsole.mockRestore());
   it("Should throw an error, if supplied param is not legacy or current restore file", () => {
-    [spyOnCurrentRestore, spyOnLegacyRestore].forEach((spy) =>
-      spy.mockReturnValueOnce(false)
-    );
+    [spyOnCurrentRestore, spyOnLegacyRestore].forEach((spy) => spy.mockReturnValueOnce(false));
     expect(() => checkRestoreFile(arg)).toThrowError(incorrectRollbackFormat);
   });
   it("Should return current rollback param directly", () => {
     spyOnCurrentRestore.mockReturnValueOnce(true);
     expect(checkRestoreFile(arg)).toEqual(arg);
-    [spyOnLegacyRestore, spyOnConsole, spyOnLegacyRestoreMapper].forEach(
-      (spy) => expect(spy).not.toHaveBeenCalled()
+    [spyOnLegacyRestore, spyOnConsole, spyOnLegacyRestoreMapper].forEach((spy) =>
+      expect(spy).not.toHaveBeenCalled()
     );
   });
   it("Should emit message, and return result for legacy restore arg", () => {

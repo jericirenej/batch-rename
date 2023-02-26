@@ -22,6 +22,7 @@ describe("generateSearchAndReplaceArgs", () => {
     Object.entries(replaceConfig).forEach((entry, index) => {
       const [key, value] = [entry[0], entry[1]];
       expect(key).toBe(exampleArgs[index]);
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       index === 0
         ? expect(value instanceof RegExp).toBe(true)
         : expect(typeof value).toBe("string");
@@ -163,15 +164,14 @@ describe("searchAndReplace", () => {
 
 describe("keepTransform and omitTransform", () => {
   const splitFileList = mockKeepList;
-  const keep = `Part(\\d{3})`;
-  const omit = `Part`;
+  const keep = "Part(\\d{3})";
+  const omit = "Part";
   const customText = "custom";
   const baseKeepArgs: KeepTransformArgs = { splitFileList, keep };
   const baseOmitArgs: OmitTransformArgs = { splitFileList, omit };
   const baseExpect = splitFileList.map(({ baseName, ext }) => ({
     original: `${baseName}${ext}`,
   }));
-  0;
   afterEach(() => jest.clearAllMocks());
   it("With undefined 'keep' or 'omit' arg, should return empty array", () => {
     (

@@ -1,33 +1,20 @@
 import process from "process";
 import program from "../commands/generateCommands.js";
 import * as parseCommands from "../commands/parseCommands.js";
-import {
-  EXCLUDED_CONVERT_OPTIONS,
-  VALID_TRANSFORM_TYPES
-} from "../constants.js";
+import { EXCLUDED_CONVERT_OPTIONS, VALID_TRANSFORM_TYPES } from "../constants.js";
 import * as converters from "../converters/converter.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type {
-  OptionKeysWithValues,
-  OptionKeysWithValuesAndRestArgs
-} from "../types.js";
+import type { OptionKeysWithValues, OptionKeysWithValuesAndRestArgs } from "../types.js";
 import * as utils from "../utils/utils.js";
 import { examplePath } from "./mocks.js";
 
-const {
-  parseOptions,
-  setTransformationPath,
-  utilityActionsCheck,
-  transformationCheck,
-} = parseCommands;
+const { parseOptions, setTransformationPath, utilityActionsCheck, transformationCheck } =
+  parseCommands;
 const spyOnProgramHelp = jest.spyOn(program, "help"),
   spyOnProcessExit = jest.spyOn(process, "exit"),
   spyOnConvertFiles = jest.spyOn(converters, "convertFiles"),
   spyOnUtilityActionsCheck = jest.spyOn(parseCommands, "utilityActionsCheck"),
-  spyOnSetTransformationPath = jest.spyOn(
-    parseCommands,
-    "setTransformationPath"
-  ),
+  spyOnSetTransformationPath = jest.spyOn(parseCommands, "setTransformationPath"),
   spyOnTransformationCheck = jest.spyOn(parseCommands, "transformationCheck");
 
 describe("parseOptions", () => {
@@ -51,17 +38,13 @@ describe("parseOptions", () => {
     spyOnConsoleError.mockRestore();
   });
   it("Should call program help, if no arguments are supplied", async () => {
-    const spyOnProcessStdOut = jest
-      .spyOn(process.stdout, "write")
-      .mockImplementation();
+    const spyOnProcessStdOut = jest.spyOn(process.stdout, "write").mockImplementation();
     program.exitOverride();
 
     spyOnProcessExit.mockImplementationOnce((code?: number) => {
       throw new Error(code ? code.toString() : undefined);
     });
-    await expect(() =>
-      parseOptions({} as OptionKeysWithValuesAndRestArgs)
-    ).rejects.toThrow();
+    await expect(() => parseOptions({} as OptionKeysWithValuesAndRestArgs)).rejects.toThrow();
     expect(spyOnProgramHelp).toHaveBeenCalled();
     spyOnProcessExit.mockRestore();
     spyOnProcessStdOut.mockRestore();
@@ -87,8 +70,7 @@ describe("parseOptions", () => {
       ...exampleArgs,
       preserveOriginal: undefined as unknown as string,
     });
-    const preserveOriginal =
-      spyOnConvertFiles.mock.calls.flat()[0].preserveOriginal;
+    const { preserveOriginal } = spyOnConvertFiles.mock.calls.flat()[0];
     expect(preserveOriginal).toBe(true);
     spyOnToLowerCase.mockRestore();
   });
@@ -120,9 +102,7 @@ describe("parseOptions", () => {
       } else {
         await parseOptions({ ...exampleArgs, skipRollback: val });
       }
-      const skipRollbackArg = spyOnConvertFiles.mock.calls
-        .flat()
-        .at(-1)?.skipRollback;
+      const skipRollbackArg = spyOnConvertFiles.mock.calls.flat().at(-1)?.skipRollback;
       expect(skipRollbackArg).toBe(expected);
     }
   });
@@ -136,8 +116,7 @@ describe("parseOptions", () => {
     ].forEach(async (preserveConfig, index) => {
       const { value, expected } = preserveConfig;
       await parseOptions({ ...exampleArgs, preserveOriginal: value });
-      const preserveOriginal =
-        spyOnConvertFiles.mock.calls.flat()[index].preserveOriginal;
+      const { preserveOriginal } = spyOnConvertFiles.mock.calls.flat()[index];
       expect(preserveOriginal).toBe(expected);
     });
   });
@@ -147,24 +126,15 @@ describe("parseOptions", () => {
       { ...exampleArgs, noExtensionPreserve: true, detailedDate: true },
       { ...exampleArgs, format: "uppercase" },
     ];
-    const extraKeys = [
-      "transformPattern",
-      "transformPath",
-      "dryRun",
-      "skipRollback",
-    ];
+    const extraKeys = ["transformPattern", "transformPath", "dryRun", "skipRollback"];
     argList.forEach(async (args) => {
       spyOnConvertFiles.mockClear();
       await parseOptions(args);
       const expectedKeys = extraKeys.concat(
-        Object.keys(args).filter(
-          (arg) => !EXCLUDED_CONVERT_OPTIONS.includes(arg)
-        )
+        Object.keys(args).filter((arg) => !EXCLUDED_CONVERT_OPTIONS.includes(arg))
       );
       const receivedKeys = Object.keys(spyOnConvertFiles.mock.calls.flat()[0]);
-      expect(receivedKeys.every((key) => expectedKeys.includes(key))).toBe(
-        true
-      );
+      expect(receivedKeys.every((key) => expectedKeys.includes(key))).toBe(true);
     });
   });
 });
@@ -227,10 +197,7 @@ describe("setTransformationPath", () => {
       [undefined, undefined],
     ].forEach(async (argConfiguration) => {
       const [folder, restArgs] = [argConfiguration[0], argConfiguration[1]];
-      const result = await setTransformationPath(
-        folder as unknown as string,
-        restArgs
-      );
+      const result = await setTransformationPath(folder as unknown as string, restArgs);
       expect(result).toBe(undefined);
       expect(spyOnCheckPath).not.toHaveBeenCalled();
     });

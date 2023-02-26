@@ -2,7 +2,40 @@ import { VALID_NUMERIC_TRANSFORM_TYPES as numericTransformFunctions } from "../c
 import type { BaseRenameItem, NumericTransform } from "../types";
 import { composeRenameString } from "../utils/utils.js";
 
-/**Return a list of odd|even names, along with original file names */
+export const generatePaddedNumber = (
+  sequenceNumber: number,
+  listLength: number
+): string => {
+  const sequenceNumLength = sequenceNumber.toString().length;
+  const diff = listLength - sequenceNumLength + 1;
+  return [...new Array(diff).fill(0), sequenceNumber].join("");
+};
+
+export const checkBaseIndex = (
+  providedIndex: string | undefined
+): number | null => {
+  if (!(providedIndex && providedIndex.length)) return null;
+  const baseNumber = Number(providedIndex);
+  if (Number.isNaN(baseNumber)) return null;
+  if (baseNumber < 0) return null;
+  return Math.floor(baseNumber);
+};
+
+export const generateSequenceNumber = (
+  transformType: typeof numericTransformFunctions[number],
+  sequenceNumber: number,
+  baseIndex: number | null
+): number => {
+  if (transformType === "odd") return 2 * sequenceNumber + 1;
+  if (transformType === "even") return 2 * (sequenceNumber + 1);
+  if (baseIndex === null) {
+    return sequenceNumber + 1;
+  }
+  return sequenceNumber;
+};
+
+
+/** Return a list of odd|even names, along with original file names */
 export const numericTransform: NumericTransform = ({
   splitFileList,
   addText,
@@ -44,36 +77,4 @@ export const numericTransform: NumericTransform = ({
     const renameItem:BaseRenameItem = { rename, original: baseName + ext }
     return renameItem;
   });
-};
-
-export const generateSequenceNumber = (
-  transformType: typeof numericTransformFunctions[number],
-  sequenceNumber: number,
-  baseIndex: number | null
-): number => {
-  if (transformType === "odd") return 2 * sequenceNumber + 1;
-  if (transformType === "even") return 2 * (sequenceNumber + 1);
-  if (baseIndex === null) {
-    return sequenceNumber + 1;
-  }
-  return sequenceNumber;
-};
-
-export const generatePaddedNumber = (
-  sequenceNumber: number,
-  listLength: number
-): string => {
-  const sequenceNumLength = sequenceNumber.toString().length;
-  const diff = listLength - sequenceNumLength + 1;
-  return [...new Array(diff).fill(0), sequenceNumber].join("");
-};
-
-export const checkBaseIndex = (
-  providedIndex: string | undefined
-): number | null => {
-  if (!(providedIndex && providedIndex.length)) return null;
-  const baseNumber = Number(providedIndex);
-  if (Number.isNaN(baseNumber)) return null;
-  if (baseNumber < 0) return null;
-  return Math.floor(baseNumber);
 };

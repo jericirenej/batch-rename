@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
 import { lstat, readdir, rename } from "fs/promises";
@@ -46,13 +47,7 @@ const {
   truncateFile,
   willOverWriteExisting,
 } = utils;
-const {
-  noChildFiles,
-  noChildDirs,
-  noChildEntries,
-  pathDoesNotExist,
-  pathIsNotDir,
-} = ERRORS.utils;
+const { noChildFiles, noChildDirs, noChildEntries, pathDoesNotExist, pathIsNotDir } = ERRORS.utils;
 
 const { renameLists } = mockRenameListToolSet;
 const { distinct, duplicateOriginalAndRename, newNameRepeat } = renameLists;
@@ -104,11 +99,10 @@ describe("parseRestoreArg", () => {
     [true, false].forEach((arg) => expect(parseRestoreArg(arg)).toBe(0));
   });
   it("Undefined, null, etc. should convert to 0", () => {
-    [null, NaN, undefined].forEach((arg) =>
-      expect(parseRestoreArg(arg)).toBe(0)
-    );
+    [null, NaN, undefined].forEach((arg) => expect(parseRestoreArg(arg)).toBe(0));
   });
   it("Exception should return 0", () => {
+    // eslint-disable-next-line symbol-description
     expect(parseRestoreArg(Symbol())).toBe(0);
   });
 });
@@ -123,16 +117,10 @@ describe("extractCurrentReferences", () => {
   ];
   const missingNames = ["missing1", "missing2"];
   const namesWithHistory = [mockItem1(2), mockItem1(1), mockItem3(1)];
-  const suppliedNames = [
-    ...namesWithHistory.map(({ rename }) => rename),
-    ...missingNames,
-  ];
+  const suppliedNames = [...namesWithHistory.map(({ rename }) => rename), ...missingNames];
 
   it("Should allocate referenceIds to passed names", () => {
-    const { noIds, withIds } = extractCurrentReferences(
-      transforms,
-      suppliedNames
-    );
+    const { noIds, withIds } = extractCurrentReferences(transforms, suppliedNames);
     const expectedWithIds = namesWithHistory.reduce((acc, current) => {
       acc[current.rename] = current.referenceId;
       return acc;
@@ -180,13 +168,12 @@ describe("listFiles", () => {
   it("Should return list of alphabetically sorted file names", async () => {
     const mockNames = ["zname", "aname", "bname", "123"];
     const sorted = [...mockNames].sort();
-    const mockedDirent = createDirentArray(
-      mockNames.length,
-      mockNames.length
-    ).map((dirent, index) => {
-      dirent.name = mockNames[index];
-      return dirent;
-    });
+    const mockedDirent = createDirentArray(mockNames.length, mockNames.length).map(
+      (dirent, index) => {
+        dirent.name = mockNames[index];
+        return dirent;
+      }
+    );
     mockedReadDir.mockResolvedValueOnce(mockedDirent);
     const resultNames = (await listFiles(examplePath)).map(({ name }) => name);
     expect(resultNames).toEqual(sorted);
@@ -199,26 +186,17 @@ describe("listFiles", () => {
       mockFileNames.length,
       mockDirectoryNames.length
     );
-    [...mockFileNames, ...mockDirectoryNames].forEach(
-      (entryName, index) => (mockedDirent[index].name = entryName)
-    );
+    [...mockFileNames, ...mockDirectoryNames].forEach((entryName, index) => {
+      mockedDirent[index].name = entryName;
+    });
     mockedReadDir.mockResolvedValueOnce(mockedDirent);
-    const resultNames = (await listFiles(examplePath, undefined, "all")).map(
-      ({ name }) => name
-    );
-    const mockDirNamesIndexes = mockDirectoryNames.map((dirName) =>
-        resultNames.indexOf(dirName)
-      ),
-      mockFileNamesIndexes = mockFileNames.map((fileName) =>
-        resultNames.indexOf(fileName)
-      );
+    const resultNames = (await listFiles(examplePath, undefined, "all")).map(({ name }) => name);
+    const mockDirNamesIndexes = mockDirectoryNames.map((dirName) => resultNames.indexOf(dirName)),
+      mockFileNamesIndexes = mockFileNames.map((fileName) => resultNames.indexOf(fileName));
 
-    const noNegativeIndex = [
-      ...mockDirNamesIndexes,
-      ...mockFileNamesIndexes,
-    ].every((i) => i >= 0);
+    const noNegativeIndex = [...mockDirNamesIndexes, ...mockFileNamesIndexes].every((i) => i >= 0);
     expect(noNegativeIndex).toBe(true);
-    
+
     const maxDirIndex = Math.max(
         ...mockDirectoryNames.map((dirName) => resultNames.indexOf(dirName))
       ),
@@ -253,11 +231,8 @@ describe("listFiles", () => {
       return dirent;
     });
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
-    const foundFiles = await (
-      await listFiles(examplePath)
-    ).map((file) => file.name);
-    const isRollbackPresent =
-      foundFiles.filter((file) => file === ROLLBACK_FILE_NAME).length > 0;
+    const foundFiles = await (await listFiles(examplePath)).map((file) => file.name);
+    const isRollbackPresent = foundFiles.filter((file) => file === ROLLBACK_FILE_NAME).length > 0;
     expect(isRollbackPresent).toBe(false);
   });
   it("Should not include directories by default", async () => {
@@ -285,15 +260,13 @@ describe("listFiles", () => {
     const direntLength = 10;
     const exampleDirentArray = createDirentArray(direntLength, direntLength);
     const shouldMatch = ["John", "Johnny", "Johnson"];
-    shouldMatch.forEach(
-      (entry, index) => (exampleDirentArray[index].name = entry)
-    );
+    shouldMatch.forEach((entry, index) => {
+      exampleDirentArray[index].name = entry;
+    });
     mockedReadDir.mockResolvedValueOnce(exampleDirentArray);
     const foundFiles = await listFiles(examplePath, excludeFilter);
     expect(foundFiles.length).toBe(direntLength - shouldMatch.length);
-    expect(
-      foundFiles.filter((file) => shouldMatch.includes(file.name)).length
-    ).toBe(0);
+    expect(foundFiles.filter((file) => shouldMatch.includes(file.name)).length).toBe(0);
   });
 });
 describe("areNewNamesDistinct", () => {
@@ -306,9 +279,7 @@ describe("areNewNamesDistinct", () => {
 describe("numberOfDuplicatedNames", () => {
   it("Should properly evaluate transform duplicates", () => {
     const checkType = "transforms";
-    expect(numberOfDuplicatedNames({ renameList: distinct, checkType })).toBe(
-      0
-    );
+    expect(numberOfDuplicatedNames({ renameList: distinct, checkType })).toBe(0);
     expect(
       numberOfDuplicatedNames({
         renameList: duplicateOriginalAndRename,
@@ -318,9 +289,7 @@ describe("numberOfDuplicatedNames", () => {
   });
   it("Should properly evaluate rename duplicates", () => {
     const checkType = "results";
-    expect(numberOfDuplicatedNames({ renameList: distinct, checkType })).toBe(
-      0
-    );
+    expect(numberOfDuplicatedNames({ renameList: distinct, checkType })).toBe(0);
     expect(
       numberOfDuplicatedNames({
         renameList: newNameRepeat,
@@ -354,17 +323,11 @@ describe("willOverwriteExisting", () => {
     expect(willOverWriteExisting(mockRenameList, mockSplitFile)).toBe(false);
   });
   it("Should return false, if no renames would overwrite existing files", () => {
-    const updatedSplitFile = [
-      ...mockSplitFile,
-      { baseName: "other", ext },
-    ] as SplitFileList;
+    const updatedSplitFile = [...mockSplitFile, { baseName: "other", ext }] as SplitFileList;
     expect(willOverWriteExisting(mockRenameList, updatedSplitFile)).toBe(false);
   });
   it("Should return true, if a rename would overwrite an existing file", () => {
-    const updatedSplitFile = [
-      ...mockSplitFile,
-      { baseName: "rename1", ext },
-    ] as SplitFileList;
+    const updatedSplitFile = [...mockSplitFile, { baseName: "rename1", ext }] as SplitFileList;
     expect(willOverWriteExisting(mockRenameList, updatedSplitFile)).toBe(true);
   });
 });
@@ -380,9 +343,7 @@ describe("checkPath", () => {
   afterEach(() => jest.resetAllMocks());
   it("Should throw error, if path does not exist", async () => {
     mockedFs.existsSync.mockReturnValueOnce(false);
-    await expect(() => checkPath(examplePath)).rejects.toThrowError(
-      pathDoesNotExist
-    );
+    await expect(() => checkPath(examplePath)).rejects.toThrowError(pathDoesNotExist);
   });
   it("Should throw error if path is not a directory", async () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
@@ -403,17 +364,13 @@ describe("checkPath", () => {
     for (const fileType of fileTypes) {
       mockTargetDirResolve();
       mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 0, 10));
-      await expect(checkPath(examplePath, fileType)).rejects.toThrowError(
-        noChildFiles
-      );
+      await expect(checkPath(examplePath, fileType)).rejects.toThrowError(noChildFiles);
     }
   });
   it("Should throw error, if directory has no sub-directories if fileType is set to 'dirs'", async () => {
     mockTargetDirResolve();
     mockedReadDir.mockResolvedValueOnce(createDirentArray(10, 10, 0));
-    await expect(checkPath(examplePath, "dirs")).rejects.toThrowError(
-      noChildDirs
-    );
+    await expect(checkPath(examplePath, "dirs")).rejects.toThrowError(noChildDirs);
   });
   it("Should return filePath, if targetType argument is true and targetPath has only dir entries", async () => {
     mockedFs.existsSync.mockReturnValueOnce(true);
@@ -439,9 +396,7 @@ describe("checkPath", () => {
 
 describe("determineDir", () => {
   it("determineDir should return truthy argument, otherwise call process.cwd", () => {
-    const spyOnCwd = jest
-      .spyOn(process, "cwd")
-      .mockReturnValueOnce(examplePath);
+    const spyOnCwd = jest.spyOn(process, "cwd").mockReturnValueOnce(examplePath);
     expect(determineDir(truthyArgument)).toBe(truthyArgument);
     expect(determineDir(undefined)).toBe(examplePath);
     expect(spyOnCwd).toHaveBeenCalledTimes(1);
@@ -449,12 +404,7 @@ describe("determineDir", () => {
 });
 
 describe("composeRenameString", () => {
-  const [baseName, ext, addText, newName] = [
-    "baseName",
-    ".ext",
-    "addText",
-    "newName",
-  ];
+  const [baseName, ext, addText, newName] = ["baseName", ".ext", "addText", "newName"];
   const defaultSep = DEFAULT_SEPARATOR;
   const args: ComposeRenameStringArgs = {
     baseName,
@@ -469,9 +419,7 @@ describe("composeRenameString", () => {
   });
   it("addText should override baseName and preserveOriginal", () => {
     const expected = `${[newName, addText].join(defaultSep)}${ext}`;
-    expect(composeRenameString({ ...args, preserveOriginal: true })).toBe(
-      expected
-    );
+    expect(composeRenameString({ ...args, preserveOriginal: true })).toBe(expected);
   });
   it("Should drop original baseName, if preserveOriginal is false|undefined and no addText supplied", () => {
     const expected = `${newName}${ext}`;
@@ -492,19 +440,13 @@ describe("composeRenameString", () => {
   });
   it("Should return newName-baseName only, if extension is undefined", () => {
     const expected = `${newName}${defaultSep}${baseName}`;
-    expect(
-      composeRenameString({ ...args, addText: undefined, ext: undefined })
-    ).toBe(expected);
+    expect(composeRenameString({ ...args, addText: undefined, ext: undefined })).toBe(expected);
   });
   it("Should respect textPosition", () => {
     let expected = `${[addText, newName].join(defaultSep)}${ext}`;
-    expect(composeRenameString({ ...args, textPosition: "prepend" })).toBe(
-      expected
-    );
+    expect(composeRenameString({ ...args, textPosition: "prepend" })).toBe(expected);
     expected = `${[newName, addText].join(defaultSep)}${ext}`;
-    expect(composeRenameString({ ...args, textPosition: "append" })).toBe(
-      expected
-    );
+    expect(composeRenameString({ ...args, textPosition: "append" })).toBe(expected);
   });
   it("Should respect separator setting", () => {
     const newSep = "_";
@@ -592,9 +534,7 @@ describe("createBatchRenameList", () => {
     beforeEach(() => mockedRename.mockReturnValue(Promise.resolve()));
     afterEach(() => mockedRename.mockReset());
     it("If filesToRevert are supplied, return appropriate batchRename list", () => {
-      const revertList = conversionList.transforms.map(
-        (renameInfo) => renameInfo.rename
-      );
+      const revertList = conversionList.transforms.map((renameInfo) => renameInfo.rename);
       const expectedLength = revertList.length;
       const batchPromise = createBatchRenameList({
         ...conversionList,
@@ -603,9 +543,7 @@ describe("createBatchRenameList", () => {
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchList should contain appropriate data", async () => {
-      const filesToRestore = conversionList.transforms.map(
-        (renameInfo) => renameInfo.rename
-      );
+      const filesToRestore = conversionList.transforms.map((renameInfo) => renameInfo.rename);
       const result: [string, string][] = [];
       mockedRename
         .mockReset()
@@ -635,9 +573,7 @@ describe("createBatchRenameList", () => {
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchPromise list should not contain entries where original and renamed file names are identical", () => {
-      const filesToRestore = duplicateOriginalAndRename.map(
-        (renameInfo) => renameInfo.rename
-      );
+      const filesToRestore = duplicateOriginalAndRename.map((renameInfo) => renameInfo.rename);
       const expectedLength = duplicateOriginalAndRename.filter(
         (renameInfo) => renameInfo.original !== renameInfo.rename
       ).length;
@@ -648,9 +584,7 @@ describe("createBatchRenameList", () => {
       expect(batchPromise.length).toBe(expectedLength);
     });
     it("batchPromise list should not include files whose names are not found in renameList", () => {
-      const filesToRestore = conversionList.transforms.map(
-        (renameInfo) => renameInfo.rename
-      );
+      const filesToRestore = conversionList.transforms.map((renameInfo) => renameInfo.rename);
       const truncatedRenameList = conversionList.transforms.slice(0, -1);
       const expectedLength = truncatedRenameList.length;
       const batchPromise = createBatchRenameList({
@@ -665,12 +599,9 @@ describe("createBatchRenameList", () => {
 
 describe("settledPromisesEval", () => {
   let spyOnConsole: SpyInstance;
-  beforeEach(
-    () =>
-      (spyOnConsole = jest
-        .spyOn(console, "log")
-        .mockImplementation((message?: string) => {}))
-  );
+  beforeEach(() => {
+    spyOnConsole = jest.spyOn(console, "log").mockImplementation((message?: string) => {});
+  });
   afterEach(() => spyOnConsole.mockRestore());
   const args = {
       transformedNames: distinct,
@@ -679,12 +610,11 @@ describe("settledPromisesEval", () => {
     settledLength = distinct.length,
     fulfilled = {
       status: "fulfilled",
+      // eslint-disable-next-line no-void
       value: void 0,
     } as const;
   it("Should return unmodified rename list, if all promises are fulfilled", () => {
-    const promiseResults = new Array(settledLength).fill(
-      fulfilled
-    ) as PromiseSettledResult<void>[];
+    const promiseResults = new Array(settledLength).fill(fulfilled) as PromiseSettledResult<void>[];
     const { failed, successful } = settledPromisesEval({
       ...args,
       promiseResults,
@@ -715,9 +645,7 @@ describe("settledPromisesEval", () => {
     });
     expect(successful.length).toBe(distinct.length - 2);
     expect(successful).toEqual([distinct[1]]);
-    expect(sortedJsonReplicate(failed)).toEqual(
-      sortedJsonReplicate([distinct[0], distinct[2]])
-    );
+    expect(sortedJsonReplicate(failed)).toEqual(sortedJsonReplicate([distinct[0], distinct[2]]));
   });
   it("Should produce appropriate failReport and failItem messages", () => {
     const promiseResults: PromiseSettledResult<void>[] = [
@@ -730,11 +658,7 @@ describe("settledPromisesEval", () => {
       settledPromisesEval({ ...args, operationType, promiseResults });
 
       const expectedFailReport = failReport(1, operationType);
-      const expectedFailItem = failItem(
-        distinct[2].original,
-        distinct[2].rename,
-        operationType
-      );
+      const expectedFailItem = failItem(distinct[2].original, distinct[2].rename, operationType);
 
       expect(spyOnConsole).toHaveBeenCalledTimes(2);
       expect(spyOnConsole).toHaveBeenNthCalledWith(1, expectedFailReport);
@@ -757,9 +681,7 @@ describe("truncateFile", () => {
   });
   it("Should throw error, if truncate argument is invalid", () => {
     const invalidArgs = { ...generalArgs, truncate: "invalid" };
-    expect(() => truncateFile(invalidArgs)).toThrowError(
-      ERRORS.transforms.truncateInvalidArgument
-    );
+    expect(() => truncateFile(invalidArgs)).toThrowError(ERRORS.transforms.truncateInvalidArgument);
   });
   it("Should return baseName, if truncate argument evaluates to zero", () => {
     const zeroTruncate1 = { ...generalArgs, truncate: "" };

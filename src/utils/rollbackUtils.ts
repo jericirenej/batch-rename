@@ -16,9 +16,7 @@ import { determineDir, extractCurrentReferences } from "./utils.js";
 
 const { noRollbackFile } = ERRORS.cleanRollback;
 
-export const readRollbackFile = async (
-  sourcePath?: string
-): Promise<RollbackFile | null> => {
+export const readRollbackFile = async (sourcePath?: string): Promise<RollbackFile | null> => {
   const targetDir = determineDir(sourcePath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
@@ -30,42 +28,27 @@ export const readRollbackFile = async (
   return verifiedRollbackFile;
 };
 
-export const createRollback: CreateRollbackFile = async ({
-  sourcePath,
-  transforms,
-}) => {
+export const createRollback: CreateRollbackFile = async ({ sourcePath, transforms }) => {
   const currentRollback = await readRollbackFile(sourcePath);
   if (currentRollback === null) {
-    const renameItems: RenameItemsArray = transforms.map(
-      ({ original, rename }) => ({
-        original,
-        rename,
-        referenceId: nanoid(),
-      })
-    );
+    const renameItems: RenameItemsArray = transforms.map(({ original, rename }) => ({
+      original,
+      rename,
+      referenceId: nanoid(),
+    }));
     return { sourcePath, transforms: [renameItems] };
   }
   const existingTransforms = currentRollback.transforms;
   const currentOriginals = transforms.map(({ original }) => original);
-  const { withIds } = extractCurrentReferences(
-    existingTransforms,
-    currentOriginals
-  );
-  const newTransforms: RenameItemsArray = transforms.map(
-    ({ original, rename }) => {
-      const referenceId = withIds[original] ?? nanoid();
-      return { original, rename, referenceId };
-    }
-  );
+  const { withIds } = extractCurrentReferences(existingTransforms, currentOriginals);
+  const newTransforms: RenameItemsArray = transforms.map(({ original, rename }) => {
+    const referenceId = withIds[original] ?? nanoid();
+    return { original, rename, referenceId };
+  });
   return { sourcePath, transforms: [newTransforms, ...existingTransforms] };
 };
 
-
-export const trimRollbackFile: TrimRollbackFile = async ({
-  sourcePath,
-  targetLevel,
-  failed,
-}) => {
+export const trimRollbackFile: TrimRollbackFile = async ({ sourcePath, targetLevel, failed }) => {
   const targetDir = determineDir(sourcePath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
@@ -77,9 +60,7 @@ export const trimRollbackFile: TrimRollbackFile = async ({
   const verifiedRollback = checkRestoreFile(rollbackFile);
   const remainingTransforms = verifiedRollback.transforms.slice(targetLevel);
 
-  const shouldDelete = [remainingTransforms, failed].every(
-    (arr) => !arr.length
-  );
+  const shouldDelete = [remainingTransforms, failed].every((arr) => !arr.length);
 
   if (shouldDelete) {
     process.stdout.write("Deleting rollback file...");
@@ -92,34 +73,30 @@ export const trimRollbackFile: TrimRollbackFile = async ({
   if (failed.length) {
     const mappedEntry = new Map() as Map<string, RenameItem>;
 
-    remainingTransforms[0]?.reduce(
-      (map, curr) => map.set(curr.referenceId, curr),
-      mappedEntry
-    );
+    remainingTransforms[0]?.reduce((map, curr) => map.set(curr.referenceId, curr), mappedEntry);
 
-    !mappedEntry.size ? mappedFailed = [...failed] :
+    if (!mappedEntry.size) {
+      mappedFailed = [...failed];
+    } else {
       failed.forEach(({ rename, original, referenceId }) => {
         const ref = mappedEntry.get(referenceId);
         if (!ref) return mappedFailed.push({ rename, original, referenceId });
 
         const isDistinct = original !== ref.rename;
-          mappedFailed.push({
-            rename,
-            original: isDistinct ? ref.rename : original,
-            referenceId,
-          });
+        mappedFailed.push({
+          rename,
+          original: isDistinct ? ref.rename : original,
+          referenceId,
+        });
       });
-    
-    console.log(
-      "Failed restore items will be appended to most recent rollback entry."
-    );
+    }
+
+    console.log("Failed restore items will be appended to most recent rollback entry.");
   }
 
   const newRollbackFile: RollbackFile = {
     sourcePath,
-    transforms: [[...mappedFailed], ...remainingTransforms].filter(
-      (entry) => entry.length
-    ),
+    transforms: [[...mappedFailed], ...remainingTransforms].filter((entry) => entry.length),
   };
 
   process.stdout.write("Updating rollback file...");
@@ -132,9 +109,7 @@ export const trimRollbackFile: TrimRollbackFile = async ({
   process.stdout.write("DONE!");
 };
 
-export const deleteRollbackFile = async (
-  transformPath?: string
-): Promise<void> => {
+export const deleteRollbackFile = async (transformPath?: string): Promise<void> => {
   const targetDir = determineDir(transformPath);
   const targetPath = resolve(targetDir, ROLLBACK_FILE_NAME);
   const rollBackFileExists = existsSync(targetPath);
