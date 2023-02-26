@@ -10,24 +10,15 @@ export const VALID_TRANSFORM_TYPES = [
   "addText",
   "extensionModify",
   "format",
-  "omit"
+  "omit",
 ] as const;
 
-export const VALID_DATE_TRANSFORM_TYPES = [
-  "creationDate",
-  "lastAccessed",
-  "lastModified",
-] as const;
+export const VALID_DATE_TRANSFORM_TYPES = ["creationDate", "lastAccessed", "lastModified"] as const;
 
-export const EXT_REGEX =
-  // eslint-disable-next-line no-useless-escape
-  /(?<=[\[\]\(\)\p{Alphabetic}\p{Decimal_Number}\p{Mark}-]+)(\.\w+)$/u;
+// eslint-disable-next-line no-useless-escape
+export const EXT_REGEX = /(?<=[\[\]\(\)\p{Alphabetic}\p{Decimal_Number}\p{Mark}-]+)(\.\w+)$/u;
 
-export const VALID_NUMERIC_TRANSFORM_TYPES = [
-  "sequence",
-  "even",
-  "odd",
-] as const;
+export const VALID_NUMERIC_TRANSFORM_TYPES = ["sequence", "even", "odd"] as const;
 
 export const VALID_DRY_RUN_ANSWERS = ["y", "yes"];
 export const UTILITY_ACTIONS = ["restore", "cleanRollback"] as const;
