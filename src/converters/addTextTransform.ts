@@ -9,15 +9,15 @@ export const addTextTransform: AddTextTransform = ({
   addText,
   format,
   noExtensionPreserve,
-}) => {
-  return splitFileList.map((fileInfo) => {
-    const { baseName, ext, sourcePath } = fileInfo;
+}) =>
+  splitFileList.map((fileInfo) => {
+    const { baseName, ext } = fileInfo;
     let newName = baseName;
-    if(truncate) {
-      newName = truncateFile({baseName, preserveOriginal:true, truncate});
+    if (truncate) {
+      newName = truncateFile({ baseName, preserveOriginal: true, truncate });
     }
     const rename = composeRenameString({
-      baseName: baseName,
+      baseName,
       newName,
       addText: addText!,
       ext,
@@ -28,7 +28,6 @@ export const addTextTransform: AddTextTransform = ({
       noExtensionPreserve,
     });
     const original = `${baseName}${ext}`;
-    const renameItem:BaseRenameItem = {original, rename};
+    const renameItem: BaseRenameItem = { original, rename };
     return renameItem;
   });
-};
