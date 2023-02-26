@@ -18,33 +18,33 @@ export interface LegacyRenameItem extends BaseRenameItem {
 export type LegacyRenameList = LegacyRenameItem[];
 
 const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
-const { legacyConversion, rollbackLevelOverMax } =
-  STATUS.restoreFileMapper;
+const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
 
 /** Check which existing files names can be found in the rollback file
  * and which are missing */
 export const checkExistingFiles: CheckExistingFiles = ({
   existingFiles,
   transforms,
-  rollbackLevel
+  rollbackLevel,
 }) => {
   const filesToRestore: string[] = [],
     fileNames = new Set(existingFiles);
 
-  const flattenedTransforms = transforms.slice(0,rollbackLevel).flat();
-  const hashMap = flattenedTransforms.reduce(
-    (map, { referenceId, rename }) => {
-      const target = map.get(referenceId);
-      target ? map.set(referenceId, [...target, rename]) : map.set(referenceId, [rename]);
-      return map;
-    },
-    new Map<string,string[]>()
-  );
+  const flattenedTransforms = transforms.slice(0, rollbackLevel).flat();
+  const hashMap = flattenedTransforms.reduce((map, { referenceId, rename }) => {
+    const target = map.get(referenceId);
+    if (target) {
+      map.set(referenceId, [...target, rename]);
+    } else {
+      map.set(referenceId, [rename]);
+    }
+    return map;
+  }, new Map<string, string[]>());
 
   let missingFiles: string[] = [];
 
   // Check that all rename files can be mapped to existing. Go from oldest to newest.
-  for (let i = flattenedTransforms.length - 1; i >= 0; i--) {
+  for (let i = flattenedTransforms.length - 1; i >= 0; i -= 1) {
     if (!fileNames.size || !hashMap.size) break;
     const target = flattenedTransforms[i];
     if (fileNames.has(target.rename)) {
@@ -54,7 +54,6 @@ export const checkExistingFiles: CheckExistingFiles = ({
     }
   }
 
-  
   // If any files are missing, return the rename at the target level
   if (hashMap.size) {
     missingFiles = [...hashMap.entries()].map(([key, val]) => val).flat();
@@ -63,15 +62,14 @@ export const checkExistingFiles: CheckExistingFiles = ({
   return { filesToRestore, missingFiles };
 };
 
-/**Determine target rollback level, based on transform list length and passed
+/** Determine target rollback level, based on transform list length and passed
  * rollbackLevel value. By default, maximum restore level  will be set. */
 export const determineRollbackLevel: DetermineRollbackLevel = ({
   transformList,
   rollbackLevel,
 }) => {
   const maximumRestoreLevel = transformList.length;
-  if (rollbackLevel === 0 || rollbackLevel === undefined)
-    return maximumRestoreLevel;
+  if (rollbackLevel === 0 || rollbackLevel === undefined) return maximumRestoreLevel;
   if (rollbackLevel > maximumRestoreLevel) {
     console.log(rollbackLevelOverMax);
     return maximumRestoreLevel;
@@ -79,29 +77,26 @@ export const determineRollbackLevel: DetermineRollbackLevel = ({
   return rollbackLevel;
 };
 
-/**Convert legacy rollback file which supported only single rollbacks to the new
+/** Convert legacy rollback file which supported only single rollbacks to the new
  * rollback format. */
-export const legacyRestoreMapper = (
-  legacyRollbackFile: LegacyRenameList
-): RollbackFile => {
-  const sourcePath = legacyRollbackFile[0].sourcePath;
+export const legacyRestoreMapper = (legacyRollbackFile: LegacyRenameList): RollbackFile => {
+  const { sourcePath } = legacyRollbackFile[0];
   const restoreList: RollbackFile = {
     sourcePath,
     transforms: [],
   };
-  const legacyRollbackWithReferenceId: RenameItemsArray =
-    legacyRollbackFile.map(({ rename, original }) => ({
+  const legacyRollbackWithReferenceId: RenameItemsArray = legacyRollbackFile.map(
+    ({ rename, original }) => ({
       original,
       rename,
       referenceId: nanoid(),
-    }));
+    })
+  );
   return { ...restoreList, transforms: [[...legacyRollbackWithReferenceId]] };
 };
 
-/**Type guard for legacy restore files */
-export const isLegacyRestore = (
-  rollbackFile: unknown
-): rollbackFile is LegacyRenameList => {
+/** Type guard for legacy restore files */
+export const isLegacyRestore = (rollbackFile: unknown): rollbackFile is LegacyRenameList => {
   if (!(rollbackFile && Array.isArray(rollbackFile))) return false;
   const legacyProps = ["rename", "original", "sourcePath"];
   const isLegacy = rollbackFile.every((entry) => {
@@ -110,9 +105,7 @@ export const isLegacyRestore = (
     for (const [key, value] of objEntries) {
       const isValueString = typeof value === "string";
       const isKeyIncluded = legacyProps.includes(key);
-      const conditions = [isValueString, isKeyIncluded].every(
-        (evaluation) => evaluation
-      );
+      const conditions = [isValueString, isKeyIncluded].every((evaluation) => evaluation);
       if (!conditions) return false;
     }
     return true;
@@ -120,10 +113,8 @@ export const isLegacyRestore = (
   return isLegacy;
 };
 
-/**Type guard for current restore files */
-export const isCurrentRestore = (
-  rollbackFile: unknown
-): rollbackFile is RollbackFile => {
+/** Type guard for current restore files */
+export const isCurrentRestore = (rollbackFile: unknown): rollbackFile is RollbackFile => {
   if (!rollbackFile) return false;
   if (Array.isArray(rollbackFile)) return false;
   if (typeof rollbackFile !== "object") return false;
@@ -137,37 +128,29 @@ export const isCurrentRestore = (
 
   const topLevelObject = rollbackFile as Record<keyof RollbackFile, any>;
   const areTopLevelProperTypes =
-    typeof topLevelObject.sourcePath === "string" &&
-    Array.isArray(topLevelObject.transforms);
+    typeof topLevelObject.sourcePath === "string" && Array.isArray(topLevelObject.transforms);
   if (!areTopLevelProperTypes) return false;
 
-  const renameItemKeys: (keyof RenameItem)[] = [
-    "original",
-    "referenceId",
-    "rename",
-  ];
-  const isEachTransformProper = (topLevelObject.transforms as unknown[]).every(
-    (transform) => {
-      if (!Array.isArray(transform)) return false;
-      for (const fileTransform of transform) {
-        if (Array.isArray(fileTransform) || typeof fileTransform !== "object")
-          return false;
+  const renameItemKeys: (keyof RenameItem)[] = ["original", "referenceId", "rename"];
+  const isEachTransformProper = (topLevelObject.transforms as unknown[]).every((transform) => {
+    if (!Array.isArray(transform)) return false;
+    for (const fileTransform of transform) {
+      if (Array.isArray(fileTransform) || typeof fileTransform !== "object") return false;
 
-        const areKeysProper = renameItemKeys.every(
-          (key) => fileTransform[key] && typeof fileTransform[key] === "string"
-        );
-        if (!areKeysProper) return false;
-      }
-      return true;
+      const areKeysProper = renameItemKeys.every(
+        (key) => fileTransform[key] && typeof fileTransform[key] === "string"
+      );
+      if (!areKeysProper) return false;
     }
-  );
+    return true;
+  });
 
   return isEachTransformProper;
 };
 
-/**Check that the rollbackFile conforms to either the current or legacy
+/** Check that the rollbackFile conforms to either the current or legacy
  * rollback file type. Converts legacy rollbacks to current type.
- * Throws error, if file does not conform.*/
+ * Throws error, if file does not conform. */
 export const checkRestoreFile = (rollbackFile: unknown): RollbackFile => {
   if (isCurrentRestore(rollbackFile)) return rollbackFile;
   if (isLegacyRestore(rollbackFile)) {
@@ -179,10 +162,7 @@ export const checkRestoreFile = (rollbackFile: unknown): RollbackFile => {
 
 /** Return current and target rename for files. If a file's reference
  * is not found at target level, the next most recent name will be supplied. */
-export const restoreByLevels: RestoreByLevels = ({
-  rollbackFile,
-  rollbackLevel = 0,
-}) => {
+export const restoreByLevels: RestoreByLevels = ({ rollbackFile, rollbackLevel = 0 }) => {
   const { transforms, sourcePath } = rollbackFile;
   const targetLevel = determineRollbackLevel({
     transformList: transforms,
@@ -190,21 +170,12 @@ export const restoreByLevels: RestoreByLevels = ({
   });
   const targetSlice = transforms.slice(0, targetLevel).flat();
   const reverseSlice = jsonReplicate(targetSlice).reverse();
-  const uniqueReferences = [
-    ...new Set(targetSlice.map(({ referenceId }) => referenceId)),
-  ];
-  const mappedTransform = new Map<
-    string,
-    { rename: string; original: string }
-  >();
+  const uniqueReferences = [...new Set(targetSlice.map(({ referenceId }) => referenceId))];
+  const mappedTransform = new Map<string, { rename: string; original: string }>();
 
   uniqueReferences.forEach((ref) => {
-    const rename = targetSlice.find(
-      ({ referenceId }) => referenceId === ref
-    )?.rename;
-    const original = reverseSlice.find(
-      ({ referenceId }) => referenceId === ref
-    )?.original;
+    const rename = targetSlice.find(({ referenceId }) => referenceId === ref)?.rename;
+    const original = reverseSlice.find(({ referenceId }) => referenceId === ref)?.original;
     if (rename && original) {
       mappedTransform.set(ref, { original, rename });
     }
