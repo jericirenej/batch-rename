@@ -15,7 +15,7 @@
 
 
 ## How to run
-**Preferred*:* - Download the production version of the script in the [Releases subpage](https://github.com/jericirenej/batch-rename/releases). Then run `node /path-to-your-file/batchRename.mjs` with the appropriate option.
+- **Preferred**: Download the production version of the script in the [Releases subpage](https://github.com/jericirenej/batch-rename/releases). Then run `node /path-to-your-file/batchRename.mjs` with the appropriate option.
 Clone the repo, then run `npm install`. Afterwards, you can either:
 - Run the script inside the project folder by executing `npm run compile` and `node dist/index.js` with appropriate options. Alternatively, you can also transpile the code directly via `npx ts-node src/index.ts`.
 - As a standalone script: Execute `npm run build` or `npx webpack` which will bundle the application into a single standalone bundle in the `prod` folder, called `batchRename.mjs` 
