@@ -1,29 +1,24 @@
 # batchRename
-**A lean Node.js script for batch file renaming based on number sequencing, date properties, or regex patterns with rollback support.**
+**A lean, no nonsense Node.js utility for batch file renaming with rollback support.**
 
 <br>
 
-## New features
-- **Multi level rollback** is now implemented. Each rollback file now stores a history of all the transforms performed. This means you can perform multiple transformation on existing / newly added files, then restore back to previous file names by discrete levels. 
-  - Just add the number of rollbacks you wish to perform next to the `restore` flag. Or omit the argument to roll back to the beginning!
-  - Implementing the rollback feature meant a complete rewrite of the rollback logic. However, previous (legacy) rollback files are still supported and will be converted to the current format automatically.
-  - **Handling of failed restores**: If a restore operation fails on write (for example, because the file is locked by the OS), the failed restore files will be re-added to the rollback file as the most recent transformation so that the changes are not discarded. 
-- **Convert and restore operations run in dryRun by default** so that changes can be previewed and executed via explicit confirmation. 
-  - The `cleanRollbackFile` is an exception currently: it will run immediately, without confirm prompt.
-- **Ability to skip writing rollback file** on transform operations: by using the `skipRollback` option.
-- **Ensure alphabetical sorting of read files and directories**: Ascending alphabetical sorting. Directories placed before files.
-- **Omit** transform added to complement the already existing `keep` transform.
-- Various bug fixes. Test improvements, mock files consolidation.
+## Main features
+- **A variety of transform operations:** Search and replace variants, numeric and date transforms, truncate, add text and format transforms.
+- **Flexible operation:** You can target files (default), directories, or both. Transforms can be directed at base names only (default), just extensions, or the whole name. Some transformations (in particular `addText, truncate, and format`) may be combined to produce a compound effect. 
+- **Lightweight:** Compiled script comes in at just over 61 KB.
+- **Results preview:** All transform operation run in `dryRun` mode by default so they can be previewed and executed only upon explicit confirmation.
+  - The `cleanRollbackFile` utility option is a current exception: it will run immediately, without confirm prompt.
+- **Multi level rollback:** By default, each transform operation will create or update a rollback file in the target directory with a history of all transforms. This means multiple transforms on existing / newly added files can be made and rolled back. 
+  - The rollback logic also gracefully handles failed restore operations (for example, because of file locks), by re-adding them to the rollback file as the most recent transformation available for restore.
+- **Safety features:** In addition to the built-in rollback functionality, the script also strives to prevent duplicate transforms that would result in file overwrites from happening.
 
 
 ## How to run
-Clone the repo, then run `npm install`.
-Afterwards, the script can be used in one of the following ways:
-- Inside the project folder:
-  - Run `npm run dev` to transpile TypeScript to JavaScript
-  - Run `node dist/index.js` with appropriate options.
-- As a standalone script:
-  - Run `npm run build` or `npx webpack` which will bundle the application into a single standalone bundle in the `prod` folder, called `batchRename.mjs`
+**Preferred*:* - Download the production version of the script in the [Releases subpage](https://github.com/jericirenej/batch-rename/releases). Then run `node /path-to-your-file/batchRename.mjs` with the appropriate option.
+Clone the repo, then run `npm install`. Afterwards, you can either:
+- Run the script inside the project folder by executing `npm run compile` and `node dist/index.js` with appropriate options. Alternatively, you can also transpile the code directly via `npx ts-node src/index.ts`.
+- As a standalone script: Execute `npm run build` or `npx webpack` which will bundle the application into a single standalone bundle in the `prod` folder, called `batchRename.mjs` 
 
 ## Examples | Quick start
 Rename files using a search and replace algorithm. Target folder set explicitly.
@@ -44,7 +39,7 @@ Append creation date to files AND folders in the current folder and specify a cu
 
 Preview the odd numbering transform with custom text append in a target folder.
 
-`node batchRename.mjs -n odd -f [targetFolder] -a CUSTOM_TEXT --textPosition append`
+`node batchRename.mjs -n odd -t [targetFolder] -a CUSTOM_TEXT --textPosition append`
 
 Rollback | restore to original file names in target folder.
 
@@ -60,40 +55,44 @@ Change extension of all files, except excluded.
 
 
 ## Usage guide
-To run the script successfully, you will have to provide one of the valid transform types (`numericTransform, searchAndReplace, dateTransform, keep, omit truncate, format, addText`), together with other optional arguments, or a restore argument. Running script with no arguments will show the help menu and exit.
+- One of the valid transform types must be provided (`numericTransform, searchAndReplace, dateTransform, keep, omit, truncate, format, addText`), together with other optional arguments. 
+- Alternatively, a rollback operation may be perform by supplying the appropriate option.
+- Running script with no arguments will show the help menu and exit.
 
 When performing the rename operation, the script will write a restore file (`.rollback.json`) to the target folder (except if `--skipRollback` flag is set). Without this file, restore operations are not possible. 
 
-Dry run is enabled by default. This means that you will see planned changes and these will be executed only after explicitly confirming them. It is **strongly encouraged not to disable the dry run mode.** 
+Dry run is enabled by default. This means that planned changes will be displayed and executed only after explicitly confirming them. It is **strongly encouraged not to disable the dry run mode.** 
 
 The script will not perform a rename if it would lead to name collisions (i.e. several files sharing the same name).
 
+### Options overview
+
 |Flag|Arguments|Description|
 |------|-----------|--------|
-|`-n, -numericTransform`|`[sequential \| even \| odd]`|Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to `sequence`. To help with file-sorting, the number of digits will always be one more than the (so, a list of 10 files will use three digits: 001, 002 ...) |
-|`-d --dateRename`|`<creationDate, lastAccessed, lastModifies>`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
-|`-s, --searchAndReplace`|`<string\|regex> <replacer>`|Takes a string or a regex filter argument and a replacer string. By default, the transform will preserve file extensions, unless a `--noPreserveExtension` option is supplied|
-|`-k --keep`|`<regex\|string>`|Will remove everything, except the matched part of the name. Essentially the same as replacing positive look-behinds and look-aheads captures and with empty strings. Can be used together with addText, textPosition, format, noExtensionPreserve, and separator flags.|
+|`-n, -numericTransform`|`[sequential \| even \| odd]`|Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to `sequence`. To help with file-sorting, the number of digits will always be one more than the number taken up by the total count of target files (a list of 10 files is represented by two digits - therefore, three digits will be used: 001, 002 ...). |
+|`-d --dateRename`|`<creationDate, lastAccessed, lastModified>`| Use date-related file information to rename a file. Defaults to `creationDate`. Can be used together wit the `--detailedDate` flag to add time information.|
+|`-s, --searchAndReplace`|`<string\|regex> <replacer>`|Takes a string or a regex filter argument and a replacer string. By default, the transform will preserve file extensions, unless a `--noPreserveExtension` option is supplied.|
+|`-k --keep`|`<regex\|string>`|Will remove everything, except the matched part of the name. Essentially the same as replacing positive look-behind and look-ahead captures and with empty strings. Can be used together with addText, textPosition, format, noExtensionPreserve, and separator flags.|
 |`-o --omit`|`<regex\|string>`|Will remove all matched parts of the name. Can be used together with addText, textPosition, format, noExtensionPreserve, and separator flags.|
-|`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or addText is supplied, it has no effect.|
+|`-t, --truncate`|`<number>`|Truncate the baseName. Can be used in combination with other transform types or on its own. If used on its own, and preserveOriginal is false, it has no effect.|
 |`-f, --format`|`[uppercase \| lowercase \| capitalize]`|Perform one of the specified transformations on the final rename. Can be used in conjunction with other transforms (except extensionModify).|
 |`-a, --addText`|`<string>`|Text to add to the target filename. Can be used on its own, together with 'textPosition' flag, or in combination with other transform types. Overwrites the `preserveOriginal` flag.|
-|`-e, --extensionModify`|`<string>`|Modify extension of target files. Can also be used together with the exclude option|
+|`-e, --extensionModify`|`<string>`|Modify extension of target files. Can also be used together with the exclude option.|
 |`--target`|`<path>`|Folder in which the transformation should take place. *Can also be set implicitly* with an extra script argument (explicit setting takes precedence). If omitted, the script defaults to current working directory.|
-|`--targetType`|`['files'\|'dirs'\|'all']`|Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.|
+|`--targetType`|`['files'\|'dirs'\|'all']`|Determine which file types should be included in transform. Defaults to 'files' if omitted or supplied without option.|
 |`-r, --restore`|`[number]`|Restore transformed files to target rollback level. If no level is provided, maximum restore level will be used.|
 |`-D, --dryRun`|`<boolean>`|Log expected output and write only after confirmation. Defaults to true.|
-|`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin|
+|`-b, --baseIndex`|`<number>`|For numeric transform, optional argument to specify the base index from which the sequencing will begin.|
 |`--exclude`|`<string\|regex>`|Preemptively exclude files that match a given string or regular expression from being evaluated in the transform functions|
 |`-p, --preserveOriginal`|`[boolean]`| Preserve original file name. Not relevant for the `searchAndReplace` transform type. Defaults to `true`.|
-|`--noExtensionPreserve`||An option for the 'searchAndPreserve' and 'format' transforms which includes the file extension in the transform operation.|
-|`--textPosition`|`[prepend \| append]`|Applies to `preserveOriginal` or `addText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`|
+|`--noExtensionPreserve`||An option for the `searchAndReplace` and `format` transforms which includes the file extension in the transform operation.|
+|`--textPosition`|`[prepend \| append]`|Applies to `preserveOriginal` or `addText`. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to `append`.|
 |`--detailedDate`||Appends time information (`T hh:mm:ss`) to date transformations.|
-|`--separator`|`<character>`|Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen (`-`).|
+|`--separator`|`<character>`|Specify a custom character which will be used as a separator the original \| custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen (`-`).|
 |`--skipRollback`|`[boolean]`|Skip writing transform details to rollback file. Defaults to true, if omitted.|
 |`--cleanRollback`|`[boolean]`|Remove rollback file.|
 |`-h, --help`||Show help.|
-|`-V, --version`||ShowScript version.|
+|`-V, --version`||Output the version number.|
 
 
 <br>

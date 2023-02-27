@@ -6,7 +6,7 @@ const programOptions: ProgramCLIOptions[] = [
     short: "n",
     long: "numericTransform",
     description:
-      "Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to 'sequence'",
+      "Rename files by using either a sequence (n+1), even (2n), or odd (2n+1) numbering algorithm. Defaults to 'sequence'.",
     type: "[type]",
     choices: ["sequence", "odd", "even"],
     defaultValue: "sequence",
@@ -25,7 +25,7 @@ const programOptions: ProgramCLIOptions[] = [
     long: "searchAndReplace",
     type: "<search, filter...>",
     description:
-      "Takes a string|regex filter argument and a replacer string.  By default, the transform will preserve file extensions, unless a '--noPreserveExtension' option is supplied",
+      "Takes a string|regex filter argument and a replacer string.  By default, the transform will preserve file extensions, unless a '--noPreserveExtension' option is supplied.",
     defaultValue: "",
   },
   {
@@ -54,7 +54,7 @@ const programOptions: ProgramCLIOptions[] = [
     short: "t",
     long: "truncate",
     description:
-      "Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false or addText is supplied, it has no effect.",
+      "Truncate the baseName. Can be used in combination with other transform types or on its own. If preserveOriginal is false, it has no effect.",
     type: "<number>",
     defaultValue: "",
   },
@@ -71,7 +71,7 @@ const programOptions: ProgramCLIOptions[] = [
     long: "extensionModify",
     type: "<string>",
     description:
-      "Modify extension of target files. Can also be used together with the exclude option",
+      "Modify extension of target files. Can also be used together with the exclude option.",
   },
   {
     short: "r",
@@ -93,7 +93,7 @@ const programOptions: ProgramCLIOptions[] = [
     long: "targetType",
     type: "[types]",
     description:
-      "Determine which file types should be included in transform. Defaults to 'files' If omitted or supplied without option.",
+      "Determine which file types should be included in transform. Defaults to 'files' if omitted or supplied without option.",
     choices: ["files", "dirs", "all"],
     defaultValue: "files",
   },
@@ -134,7 +134,7 @@ const programOptions: ProgramCLIOptions[] = [
     long: "noExtensionPreserve",
     type: "",
     description:
-      "An option for the 'searchAndPreserve' and 'format' transforms which includes the file extension in the transform operation.",
+      "An option for the 'searchAndReplace' and 'format' transforms which includes the file extension in the transform operation.",
     defaultValue: "",
   },
 
@@ -142,7 +142,7 @@ const programOptions: ProgramCLIOptions[] = [
     short: "",
     long: "textPosition",
     description:
-      "Applies to 'preserveOriginal' or 'addText'. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to 'append'",
+      "Applies to 'preserveOriginal' or 'addText'. Specifies where original or custom text should be appended with respect to the transformation text. Defaults to 'append'.",
     type: "[position]",
     choices: ["prepend", "append"],
     defaultValue: "append",
@@ -159,7 +159,7 @@ const programOptions: ProgramCLIOptions[] = [
     long: "separator",
     type: "[string]",
     description:
-      "Specify a custom character which will be used as a separator in the dateTransformation and between the original|custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen ('-').",
+      "Specify a custom character which will be used as a separator between the original | custom text and the transform text. Can be an empty string (in this case it will be ignored in date formatting). Defaults to hyphen ('-').",
   },
   {
     short: "",

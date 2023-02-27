@@ -21,7 +21,7 @@ export const truncateTransform: TruncateTransform = ({
   if (Number.isNaN(limit)) throw new Error(truncateInvalidArgument);
 
   return splitFileList.map((fileInfo) => {
-    const { baseName, ext, sourcePath } = fileInfo;
+    const { baseName, ext } = fileInfo;
     const newName = limit !== 0 ? baseName.slice(0, limit) : baseName;
     const rename = composeRenameString({
       baseName,
