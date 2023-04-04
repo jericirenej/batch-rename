@@ -2,6 +2,7 @@ import { dirname, resolve } from "path";
 import process from "process";
 import { fileURLToPath } from "url";
 
+// eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputName = "batchRename.mjs";
 const determineMode = () => {
