@@ -113,6 +113,7 @@ export const parseOptions = async (
         transformPath,
         rollbackLevel,
       });
+      return;
     }
     const transformPattern = transformationCheck(options);
 
