@@ -4,7 +4,11 @@ import * as parseCommands from "../commands/parseCommands.js";
 import { EXCLUDED_CONVERT_OPTIONS, VALID_TRANSFORM_TYPES } from "../constants.js";
 import * as converters from "../converters/converter.js";
 import { ERRORS } from "../messages/errMessages.js";
-import type { OptionKeysWithValues, OptionKeysWithValuesAndRestArgs } from "../types.js";
+import type {
+  OptionKeysWithValues,
+  OptionKeysWithValuesAndRestArgs,
+  UtilityActions,
+} from "../types.js";
 import * as utils from "../utils/utils.js";
 import { examplePath } from "./mocks.js";
 
@@ -58,6 +62,26 @@ describe("parseOptions", () => {
       spyOnTransformationCheck,
       spyOnConvertFiles,
     ].forEach((method) => expect(method).toHaveBeenCalledTimes(1));
+  });
+  it("Should call fireUtilityAction only if utility action check is positive", async () => {
+    const spyOnFireAction = jest.spyOn(parseCommands, "fireUtilityAction").mockResolvedValue();
+    for (const utilAction of ["rollback", undefined] as UtilityActions[]) {
+      spyOnUtilityActionsCheck.mockReturnValueOnce(utilAction);
+      await parseOptions(exampleArgs);
+    }
+    expect(spyOnFireAction).toHaveBeenCalledTimes(1);
+    spyOnFireAction.mockRestore();
+  });
+  it("Should return after fireUtilityAction, even if transform action is provided", async () => {
+    const spyOnFireAction = jest.spyOn(parseCommands, "fireUtilityAction").mockResolvedValueOnce();
+    spyOnUtilityActionsCheck.mockReturnValueOnce("restore");
+    await parseOptions({
+      numericTransform: true,
+      restore: true,
+    } as OptionKeysWithValuesAndRestArgs);
+    expect(spyOnUtilityActionsCheck).toHaveBeenCalledTimes(1);
+    expect(spyOnTransformationCheck).not.toHaveBeenCalled();
+    spyOnFireAction.mockRestore();
   });
   it("If evaluating preserveOriginal fails, preserveOriginal should be set to true", async () => {
     const spyOnToLowerCase = jest
