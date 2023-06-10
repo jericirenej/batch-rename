@@ -3,6 +3,11 @@
   "version": "1.0.1",
   "description": "File renaming utility.",
   "main": "index.js",
+  "workspaces": [
+    "packages/converter",
+    "packages/cli",
+    "packages/lib"
+  ],
   "scripts": {
     "dev": "tsc-watch",
     "test": "jest",
@@ -13,7 +18,8 @@
     "precompile": "npm run clean",
     "compile": "tsc",
     "ts-exec": "npx ts-node",
-    "ts-run": "npx ts-node src/index.ts"
+    "ts-run": "npx ts-node src/index.ts",
+    "compileAll": "npm run precompile && tsc packages/cli/"
   },
   "author": "Irenej Jerič",
   "license": "ISC",
