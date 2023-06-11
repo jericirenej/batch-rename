@@ -24,4 +24,4 @@ export const VALID_DRY_RUN_ANSWERS = ["y", "yes"];
 export const UTILITY_ACTIONS = ["restore", "cleanRollback"] as const;
 
 export const EXCLUDED_CONVERT_OPTIONS = ["target", "restArgs"];
-export const PROGRAM_VERSION = "1.0.0.";
+export const PROGRAM_VERSION = "1.0.1";
