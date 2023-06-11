@@ -18,7 +18,7 @@ export interface LegacyRenameItem extends BaseRenameItem {
 export type LegacyRenameList = LegacyRenameItem[];
 
 const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
-const { legacyConversion, rollbackLevelOverMax } = STATUS.restoreFileMapper;
+const { legacyConversion, rollbackLevelOverMax } = STATUS;
 
 /** Check which existing files names can be found in the rollback file
  * and which are missing */

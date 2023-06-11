@@ -25,12 +25,7 @@ import {
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =
   ERRORS.restore;
-const {
-  restoreMessage,
-  warningMissingFiles,
-  exitWithoutRestore,
-  questionPerformRestore,
-} = STATUS.restore;
+
 
 export const restoreBaseFunction: RestoreBaseFunction = async (
   transformPath,
@@ -87,15 +82,15 @@ export const dryRunRestore: DryRunRestore = async ({
     current: rename,
     restored: original,
   }));
-  console.log(restoreMessage(filesToRestore.length));
+  console.log(STATUS.restoreMessage(filesToRestore.length));
   console.table(tableData, ["current", "restored"]);
   if (missingLength) {
-    console.log(warningMissingFiles(missingLength));
+    console.log(STATUS.restoreWarningMissingFiles(missingLength));
     console.log(missingFiles);
   }
-  const response = await askQuestion(questionPerformRestore);
+  const response = await askQuestion(STATUS.questionPerformRestore);
   if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) return true;
-  console.log(exitWithoutRestore);
+  console.log(STATUS.exitWithoutRestore);
   return false;
 };
 

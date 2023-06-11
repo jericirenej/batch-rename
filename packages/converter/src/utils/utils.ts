@@ -40,7 +40,7 @@ const {
 } = ERRORS.utils;
 const { truncateInvalidArgument } = ERRORS.transforms;
 
-const { failReport, failItem } = STATUS.settledPromisesEval;
+const { failReport, failItem } = STATUS;
 
 export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
 export const jsonReplicate = <T>(arg: T): T => jsonParseReplicate(JSON.stringify(arg)) as T;

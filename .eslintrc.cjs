@@ -17,6 +17,7 @@ module.exports = {
     "no-console": "off",
     "consistent-return": "off",
     "import/prefer-default-export": "off",
+    "import/extensions": [{ js: "ignorePackages" }],
     "one-var": "off",
     "no-restricted-syntax": [
       "error",

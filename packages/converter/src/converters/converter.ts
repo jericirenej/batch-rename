@@ -45,14 +45,14 @@ const {
   noFilesToTransform,
 } = ERRORS.transforms;
 const {
-  exitWithoutTransform,
-  questionPerformTransform,
-  transformIntro,
-  warningUnaffectedFiles,
-  warningDuplication,
-  warningOverwrite,
-  exitVoidTransform,
-} = STATUS.dryRun;
+  dryRunExitWithoutTransform,
+  dryRunQuestionPerformTransform,
+  dryRunTransformIntro,
+  dryRunUnaffectedWarning,
+  dryRunDuplicationWarning,
+  dryRunWarningOverwrite,
+  dryRunExitVoidTransform,
+} = STATUS;
 
 export const TRANSFORM_CORRESPONDENCE_TABLE: Record<
   (typeof VALID_TRANSFORM_TYPES)[number],
@@ -88,7 +88,7 @@ export const dryRunTransform: DryRunTransform = async ({
     (renameInfo) => renameInfo.original !== renameInfo.rename
   );
   if (changedNames.length === 0) {
-    console.log(exitVoidTransform);
+    console.log(dryRunExitVoidTransform);
     return false;
   }
 
@@ -102,27 +102,27 @@ export const dryRunTransform: DryRunTransform = async ({
   const { transforms: unaffectedFiles, results: targetDuplication } = transformData;
   const willOverwrite = willOverWriteExisting(transformedNames, fileList);
 
-  console.log(transformIntro(transformPattern, transformPath));
+  console.log(dryRunTransformIntro(transformPattern, transformPath));
   console.table(changedNames, ["original", "rename"]);
 
   if (unaffectedFiles > 0) {
-    console.log(warningUnaffectedFiles(unaffectedFiles));
+    console.log(dryRunUnaffectedWarning(unaffectedFiles));
   }
   if (targetDuplication > 0) {
-    console.log(warningDuplication(targetDuplication));
+    console.log(dryRunDuplicationWarning(targetDuplication));
     return false;
   }
 
   if (willOverwrite) {
-    console.log(warningOverwrite);
+    console.log(dryRunWarningOverwrite);
     return false;
   }
 
-  const response = await askQuestion(questionPerformTransform);
+  const response = await askQuestion(dryRunQuestionPerformTransform);
   if (VALID_DRY_RUN_ANSWERS.includes(response.toLocaleLowerCase())) {
     return true;
   }
-  console.log(exitWithoutTransform);
+  console.log(dryRunExitVoidTransform);
   return false;
 };
 
