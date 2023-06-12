@@ -1,34 +1,34 @@
 import type {
-  BaseRenameItem,
-  DryRunTransform,
-  FileListWithStatsArray,
-  GenerateRenameList,
-  GenerateRenameListArgs,
-  RenameListArgs,
-  SplitFileList,
-} from "batch-rename-lib";
+    BaseRenameItem,
+    DryRunTransform,
+    FileListWithStatsArray,
+    GenerateRenameList,
+    GenerateRenameListArgs,
+    RenameListArgs,
+    SplitFileList,
+} from "@batch-rename/lib";
 import {
-  ERRORS,
-  ROLLBACK_FILE_NAME,
-  STATUS,
-  VALID_DRY_RUN_ANSWERS,
-  VALID_TRANSFORM_TYPES,
-} from "batch-rename-lib";
+    ERRORS,
+    ROLLBACK_FILE_NAME,
+    STATUS,
+    VALID_DRY_RUN_ANSWERS,
+    VALID_TRANSFORM_TYPES,
+} from "@batch-rename/lib";
 import { writeFile } from "fs/promises";
 import { resolve } from "path";
 import { createRollback } from "../utils/rollbackUtils.js";
 import {
-  areNewNamesDistinct,
-  areTransformsDistinct,
-  askQuestion,
-  createBatchRenameList,
-  determineDir,
-  extractBaseAndExt,
-  filterOutDuplicatedTransforms,
-  listFiles,
-  numberOfDuplicatedNames,
-  settledPromisesEval,
-  willOverWriteExisting,
+    areNewNamesDistinct,
+    areTransformsDistinct,
+    askQuestion,
+    createBatchRenameList,
+    determineDir,
+    extractBaseAndExt,
+    filterOutDuplicatedTransforms,
+    listFiles,
+    numberOfDuplicatedNames,
+    settledPromisesEval,
+    willOverWriteExisting,
 } from "../utils/utils.js";
 import { addTextTransform } from "./addTextTransform.js";
 import { dateTransform, provideFileStats } from "./dateTransform.js";

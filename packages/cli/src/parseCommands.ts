@@ -1,29 +1,29 @@
-import objectFilter from "@jericirenej/object-filter";
 import {
-  checkPath,
-  convertFiles,
-  deleteRollbackFile,
-  parseBoolOption,
-  parseRestoreArg,
-  restoreOriginalFileNames,
-} from "batch-rename-converter";
+    checkPath,
+    convertFiles,
+    deleteRollbackFile,
+    parseBoolOption,
+    parseRestoreArg,
+    restoreOriginalFileNames,
+} from "@batch-rename/converter";
 import type {
-  OptionKeysWithValues,
-  OptionKeysWithValuesAndRestArgs,
-  RenameListArgs,
-  SetTransformationPath,
-  TransformTypes,
-  UtilityActionArgs,
-  UtilityActions,
-  UtilityActionsCheck,
-  UtilityFunctionsArgs,
-} from "batch-rename-lib";
+    OptionKeysWithValues,
+    OptionKeysWithValuesAndRestArgs,
+    RenameListArgs,
+    SetTransformationPath,
+    TransformTypes,
+    UtilityActionArgs,
+    UtilityActions,
+    UtilityActionsCheck,
+    UtilityFunctionsArgs,
+} from "@batch-rename/lib";
 import {
-  ERRORS,
-  EXCLUDED_CONVERT_OPTIONS,
-  UTILITY_ACTIONS,
-  VALID_TRANSFORM_TYPES,
-} from "batch-rename-lib";
+    ERRORS,
+    EXCLUDED_CONVERT_OPTIONS,
+    UTILITY_ACTIONS,
+    VALID_TRANSFORM_TYPES,
+} from "@batch-rename/lib";
+import objectFilter from "@jericirenej/object-filter";
 import program from "./generateCommands.js";
 
 const { noTransformationPicked, onlyOneUtilAction } = ERRORS.transforms;

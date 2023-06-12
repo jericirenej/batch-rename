@@ -1,8 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "./src/", "outDir": "../../dist" },
+  "compilerOptions": {
+    "rootDir": "./src/",
+    "outDir": "../../dist",
+    "paths": { "@batch-rename/lib": ["../lib"], "@batch-rename/converter": ["../converter"] }
+  },
   "include": ["src/**/*.ts"],
   "exclude": ["src/tests"],
-  "paths": { "batch-rename-lib": "../lib", "batch-rename-converter": "../converter" },
   "references": [{ "path": "../converter" }, { "path": "../lib" }]
 }

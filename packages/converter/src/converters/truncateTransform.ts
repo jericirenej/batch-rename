@@ -1,5 +1,5 @@
-import type { BaseRenameItem, TruncateTransform } from "batch-rename-lib";
-import { ERRORS } from "batch-rename-lib";
+import type { BaseRenameItem, TruncateTransform } from "@batch-rename/lib";
+import { ERRORS } from "@batch-rename/lib";
 import { composeRenameString } from "../utils/utils.js";
 
 const {truncateNoPreserveOriginal, truncateInvalidArgument } = ERRORS.transforms;

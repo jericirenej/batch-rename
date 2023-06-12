@@ -1,13 +1,13 @@
 import type {
-  BaseRenameItem,
-  DateTransform,
-  DateTransformCorrespondenceTable,
-  FileListWithDates,
-  FileListWithStatsArray,
-  FormattedDate,
-  ProvideFileStats
-} from "batch-rename-lib";
-import { DEFAULT_SEPARATOR } from "batch-rename-lib";
+    BaseRenameItem,
+    DateTransform,
+    DateTransformCorrespondenceTable,
+    FileListWithDates,
+    FileListWithStatsArray,
+    FormattedDate,
+    ProvideFileStats
+} from "@batch-rename/lib";
+import { DEFAULT_SEPARATOR } from "@batch-rename/lib";
 import { Stats } from "fs";
 import { stat } from "fs/promises";
 import { join } from "path";

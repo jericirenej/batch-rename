@@ -1,0 +1,26 @@
+import type { JestConfigWithTsJest } from "ts-jest";
+
+import { pathsToModuleNameMapper } from "ts-jest";
+import { compilerOptions } from "./tsconfig.base.json";
+
+const esModules = ["nanoid"].join("|");
+
+const jestConfig: JestConfigWithTsJest = {
+  preset: "ts-jest/presets/default-esm",
+  testEnvironment: "node",
+  transform: {
+    "\\.[jt]sx?$": "ts-jest",
+  },
+  roots: ["<rootDir>"],
+  modulePaths: [compilerOptions.baseUrl, "<rootDir>/node_modules"],
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
+
+  extensionsToTreatAsEsm: [".ts"],
+  maxWorkers: 1,
+  // eslint-disable-next-line no-useless-escape
+  coveragePathIgnorePatterns: ["tests/", "programConfiguration", "index.ts", "dist", "/.w+/"],
+  collectCoverageFrom: ["packages/**/*.ts"],
+  transformIgnorePatterns: [`/node_modules/(?!${esModules})`],
+};
+
+export default jestConfig;

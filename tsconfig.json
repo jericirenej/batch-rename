@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/tests"]
+  "compilerOptions": {"baseUrl": "./"},
+  "include": ["packages/**/*.ts", "./jest.config.ts"],
 }

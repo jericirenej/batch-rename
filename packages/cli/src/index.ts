@@ -1,4 +1,4 @@
-import type { OptionKeysWithValues } from "batch-rename-lib";
+import type { OptionKeysWithValues } from "@batch-rename/lib";
 import program from "./generateCommands.js";
 import { parseOptions } from "./parseCommands.js";
 

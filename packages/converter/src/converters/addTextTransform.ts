@@ -1,4 +1,4 @@
-import type { AddTextTransform, BaseRenameItem } from "batch-rename-lib";
+import type { AddTextTransform, BaseRenameItem } from "@batch-rename/lib";
 import { composeRenameString, truncateFile } from "../utils/utils.js";
 
 export const addTextTransform: AddTextTransform = ({

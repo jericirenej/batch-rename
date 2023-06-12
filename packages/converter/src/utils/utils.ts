@@ -1,29 +1,29 @@
 import type {
-  AreNewNamesDistinct,
-  AreTransformsDistinct,
-  BaseRenameItem,
-  BaseRenameList,
-  CheckPath,
-  ComposeRenameString,
-  CreateBatchRenameList,
-  DetermineDir,
-  ExtractBaseAndExt,
-  ListFiles,
-  NumberOfDuplicatedNames,
-  PromiseRejectedWriteResult,
-  RenameItem,
-  RenameItemsArray,
-  SplitFileList,
-  TruncateFileName
-} from "batch-rename-lib";
+    AreNewNamesDistinct,
+    AreTransformsDistinct,
+    BaseRenameItem,
+    BaseRenameList,
+    CheckPath,
+    ComposeRenameString,
+    CreateBatchRenameList,
+    DetermineDir,
+    ExtractBaseAndExt,
+    ListFiles,
+    NumberOfDuplicatedNames,
+    PromiseRejectedWriteResult,
+    RenameItem,
+    RenameItemsArray,
+    SplitFileList,
+    TruncateFileName
+} from "@batch-rename/lib";
 import {
-  DEFAULT_SEPARATOR,
-  DEFAULT_TARGET_TYPE,
-  ERRORS,
-  EXT_REGEX,
-  ROLLBACK_FILE_NAME,
-  STATUS
-} from "batch-rename-lib";
+    DEFAULT_SEPARATOR,
+    DEFAULT_TARGET_TYPE,
+    ERRORS,
+    EXT_REGEX,
+    ROLLBACK_FILE_NAME,
+    STATUS
+} from "@batch-rename/lib";
 import { existsSync } from "fs";
 import { lstat, readdir, rename } from "fs/promises";
 import { join, parse, resolve } from "path";

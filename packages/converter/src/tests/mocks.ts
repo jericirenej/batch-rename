@@ -1,12 +1,12 @@
 import type {
-  BaseRenameItem,
-  ExtractBaseAndExtReturn,
-  ExtractBaseAndExtTemplate,
-  PromiseRejectedWriteResult,
-  RenameItem,
-  RenameItemsArray,
-  RollbackFile
-} from "batch-rename-lib";
+    BaseRenameItem,
+    ExtractBaseAndExtReturn,
+    ExtractBaseAndExtTemplate,
+    PromiseRejectedWriteResult,
+    RenameItem,
+    RenameItemsArray,
+    RollbackFile
+} from "@batch-rename/lib";
 import { Dirent, Stats } from "fs";
 import { join } from "path";
 import type { LegacyRenameList } from "../utils/restoreUtils.js";

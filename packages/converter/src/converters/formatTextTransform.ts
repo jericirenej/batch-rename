@@ -1,4 +1,4 @@
-import { BaseRenameItem, FormatTextTransform, ValidTextFormats } from "batch-rename-lib";
+import { BaseRenameItem, FormatTextTransform, ValidTextFormats } from "@batch-rename/lib";
 import { composeRenameString } from "../utils/utils.js";
 
 export const formatTextTransform: FormatTextTransform = ({

@@ -1,11 +1,11 @@
 import type {
-  ComposeRenameStringArgs,
-  DateTransformCorrespondenceTable,
-  FileListWithStatsArray,
-  FormattedDate,
-  GenerateRenameListArgs
-} from "batch-rename-lib";
-import { DEFAULT_SEPARATOR } from "batch-rename-lib";
+    ComposeRenameStringArgs,
+    DateTransformCorrespondenceTable,
+    FileListWithStatsArray,
+    FormattedDate,
+    GenerateRenameListArgs
+} from "@batch-rename/lib";
+import { DEFAULT_SEPARATOR } from "@batch-rename/lib";
 import type { PathLike } from "fs";
 import { stat } from "fs/promises";
 import * as dateTransforms from "../converters/dateTransform.js";

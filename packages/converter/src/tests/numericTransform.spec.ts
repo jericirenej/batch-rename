@@ -1,5 +1,5 @@
-import type { BaseRenameItem, GenerateRenameListArgs } from "batch-rename-lib";
-import { DEFAULT_SEPARATOR } from "batch-rename-lib";
+import type { BaseRenameItem, GenerateRenameListArgs } from "@batch-rename/lib";
+import { DEFAULT_SEPARATOR } from "@batch-rename/lib";
 import * as formatText from "../converters/formatTextTransform.js";
 import * as numericConverter from "../converters/numericTransform.js";
 import * as utils from "../utils/utils.js";

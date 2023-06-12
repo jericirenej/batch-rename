@@ -1,11 +1,11 @@
 import type {
-  CreateRollbackFile,
-  RenameItem,
-  RenameItemsArray,
-  RollbackFile,
-  TrimRollbackFile
-} from "batch-rename-lib";
-import { ERRORS, ROLLBACK_FILE_NAME } from "batch-rename-lib";
+    CreateRollbackFile,
+    RenameItem,
+    RenameItemsArray,
+    RollbackFile,
+    TrimRollbackFile
+} from "@batch-rename/lib";
+import { ERRORS, ROLLBACK_FILE_NAME } from "@batch-rename/lib";
 import { existsSync } from "fs";
 import { readFile, unlink, writeFile } from "fs/promises";
 import { nanoid } from "nanoid";

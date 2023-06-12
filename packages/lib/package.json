@@ -1,14 +1,13 @@
 {
-  "name": "batch-rename-lib",
+  "name": "@batch-rename/lib",
   "version": "1.0.1",
   "description": "Shared types and constants for the batch-rename utility",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "src/index.js",
   "exports": {
     "import": "./dist/index.js"
   },
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

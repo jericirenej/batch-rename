@@ -1,4 +1,4 @@
-import type { GenerateRenameListArgs } from "batch-rename-lib";
+import type { GenerateRenameListArgs } from "@batch-rename/lib";
 import { addTextTransform } from "../converters/addTextTransform.js";
 import * as formatText from "../converters/formatTextTransform.js";
 import * as utils from "../utils/utils.js";

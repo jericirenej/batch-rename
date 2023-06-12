@@ -1,4 +1,4 @@
-import type { BaseRenameItem, ExtensionModifyTransform } from "batch-rename-lib";
+import type { BaseRenameItem, ExtensionModifyTransform } from "@batch-rename/lib";
 
 export const extensionModifyTransform: ExtensionModifyTransform = ({
   splitFileList,

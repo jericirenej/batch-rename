@@ -1,14 +1,14 @@
 /* eslint-disable no-param-reassign */
-import { jest } from "@jest/globals";
 import type {
-  BaseRenameList,
-  ComposeRenameStringArgs,
-  ExtractBaseAndExtTemplate,
-  RenameItemsArray,
-  SplitFileList,
-  ValidTypes
-} from "batch-rename-lib";
-import { DEFAULT_SEPARATOR, ERRORS, ROLLBACK_FILE_NAME, STATUS } from "batch-rename-lib";
+    BaseRenameList,
+    ComposeRenameStringArgs,
+    ExtractBaseAndExtTemplate,
+    RenameItemsArray,
+    SplitFileList,
+    ValidTypes
+} from "@batch-rename/lib";
+import { DEFAULT_SEPARATOR, ERRORS, ROLLBACK_FILE_NAME, STATUS } from "@batch-rename/lib";
+import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
 import { lstat, readdir, rename } from "fs/promises";
 import { SpyInstance } from "jest-mock";
@@ -17,15 +17,15 @@ import process from "process";
 import * as formatTransform from "../converters/formatTextTransform.js";
 import * as utils from "../utils/utils.js";
 import {
-  createDirentArray,
-  examplePath,
-  exampleStats,
-  expectedSplit,
-  generateRejected,
-  mockFileList,
-  mockRenameListToolSet,
-  mockRollbackToolSet,
-  truthyArgument
+    createDirentArray,
+    examplePath,
+    exampleStats,
+    expectedSplit,
+    generateRejected,
+    mockFileList,
+    mockRenameListToolSet,
+    mockRollbackToolSet,
+    truthyArgument
 } from "./mocks.js";
 
 const {

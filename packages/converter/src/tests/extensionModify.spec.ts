@@ -1,5 +1,5 @@
-import type { BaseRenameList, GenerateRenameListArgs } from "batch-rename-lib";
-import { EXT_REGEX } from "batch-rename-lib";
+import type { BaseRenameList, GenerateRenameListArgs } from "@batch-rename/lib";
+import { EXT_REGEX } from "@batch-rename/lib";
 import { extensionModifyTransform } from "../converters/extensionModify.js";
 import { generateMockSplitFileList } from "./mocks.js";
 

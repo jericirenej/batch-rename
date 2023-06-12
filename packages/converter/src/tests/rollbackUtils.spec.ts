@@ -1,6 +1,6 @@
+import type { BaseRenameItem, RenameItemsArray, RollbackFile } from "@batch-rename/lib";
+import { ERRORS, ROLLBACK_FILE_NAME } from "@batch-rename/lib";
 import { jest } from "@jest/globals";
-import type { BaseRenameItem, RenameItemsArray, RollbackFile } from "batch-rename-lib";
-import { ERRORS, ROLLBACK_FILE_NAME } from "batch-rename-lib";
 import fs, { existsSync } from "fs";
 import { readFile, unlink, writeFile } from "fs/promises";
 import { nanoid } from "nanoid";

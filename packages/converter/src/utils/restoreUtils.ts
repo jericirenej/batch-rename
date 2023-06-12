@@ -6,8 +6,8 @@ import type {
   RenameItemsArray,
   RestoreByLevels,
   RollbackFile
-} from "batch-rename-lib";
-import { ERRORS, STATUS } from "batch-rename-lib";
+} from "@batch-rename/lib";
+import { ERRORS, STATUS } from "@batch-rename/lib";
 import { nanoid } from "nanoid";
 import { jsonReplicate } from "./utils.js";
 

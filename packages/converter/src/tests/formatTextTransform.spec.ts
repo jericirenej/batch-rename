@@ -1,4 +1,4 @@
-import type { GenerateRenameListArgs, ValidTextFormats } from "batch-rename-lib";
+import type { GenerateRenameListArgs, ValidTextFormats } from "@batch-rename/lib";
 import {
     formatFile,
     formatTextTransform

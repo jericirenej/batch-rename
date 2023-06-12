@@ -1,8 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "./src/", "outDir": "./dist", "composite": true },
+  "compilerOptions": {
+    "rootDir": "./src/",
+    "outDir": "./dist",
+    "composite": true,
+    "paths": { "@batch-rename/lib": ["../lib/src"] }
+  },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/tests"],
-  "paths": {"batch-rename-lib": "../lib"},
-  "references": [{"path": "../lib"}]
+  "references": [{ "path": "../lib" }]
 }

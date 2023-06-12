@@ -1,5 +1,5 @@
-import type { ProgramCLIOptions } from "batch-rename-lib";
-import { PROGRAM_VERSION, VALID_DATE_TRANSFORM_TYPES } from "batch-rename-lib";
+import type { ProgramCLIOptions } from "@batch-rename/lib";
+import { PROGRAM_VERSION, VALID_DATE_TRANSFORM_TYPES } from "@batch-rename/lib";
 
 const programOptions: ProgramCLIOptions[] = [
   {

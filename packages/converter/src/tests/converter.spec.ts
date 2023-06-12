@@ -1,11 +1,11 @@
 import type {
-  AreNewNamesDistinct,
-  CreateBatchRenameList,
-  DryRunTransformArgs,
-  RenameListArgs,
-  TransformTypes
-} from "batch-rename-lib";
-import { ERRORS } from "batch-rename-lib";
+    AreNewNamesDistinct,
+    CreateBatchRenameList,
+    DryRunTransformArgs,
+    RenameListArgs,
+    TransformTypes
+} from "@batch-rename/lib";
+import { ERRORS } from "@batch-rename/lib";
 import { writeFile } from "fs/promises";
 import * as addConverter from "../converters/addTextTransform.js";
 import * as converter from "../converters/converter.js";
@@ -16,12 +16,12 @@ import * as truncateTransformFunctions from "../converters/truncateTransform.js"
 import * as rollbackUtils from "../utils/rollbackUtils.js";
 import * as utils from "../utils/utils.js";
 import {
-  examplePath,
-  exampleStats,
-  generateMockSplitFileList,
-  generateRejected,
-  mockFileList,
-  mockRenameListToolSet
+    examplePath,
+    exampleStats,
+    generateMockSplitFileList,
+    generateRejected,
+    mockFileList,
+    mockRenameListToolSet
 } from "./mocks.js";
 
 const { renameLists: mockRenameLists } = mockRenameListToolSet;

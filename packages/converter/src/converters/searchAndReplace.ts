@@ -1,10 +1,10 @@
 import type {
-  BaseRenameItem,
-  GenerateSearchAndReplaceArgs,
-  KeepTransform,
-  OmitTransform,
-  SearchAndReplace
-} from "batch-rename-lib";
+    BaseRenameItem,
+    GenerateSearchAndReplaceArgs,
+    KeepTransform,
+    OmitTransform,
+    SearchAndReplace
+} from "@batch-rename/lib";
 import { composeRenameString } from "../utils/utils.js";
 
 export const generateSearchAndReplaceArgs: GenerateSearchAndReplaceArgs = (

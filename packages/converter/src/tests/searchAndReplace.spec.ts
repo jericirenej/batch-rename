@@ -1,12 +1,12 @@
 import type {
-  BaseRenameItem,
-  BaseRenameList,
-  ExtractBaseAndExtReturn,
-  KeepTransformArgs,
-  OmitTransformArgs,
-  SearchAndReplaceArgs,
-} from "batch-rename-lib";
-import { EXT_REGEX } from "batch-rename-lib";
+    BaseRenameItem,
+    BaseRenameList,
+    ExtractBaseAndExtReturn,
+    KeepTransformArgs,
+    OmitTransformArgs,
+    SearchAndReplaceArgs,
+} from "@batch-rename/lib";
+import { EXT_REGEX } from "@batch-rename/lib";
 import * as regexTransform from "../converters/searchAndReplace.js";
 import { examplePath, generateMockSplitFileList, mockKeepList } from "./mocks.js";
 

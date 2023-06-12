@@ -1,5 +1,5 @@
-import type { BaseRenameItem, NumericTransform } from "batch-rename-lib";
-import { VALID_NUMERIC_TRANSFORM_TYPES as numericTransformFunctions } from "batch-rename-lib";
+import type { BaseRenameItem, NumericTransform } from "@batch-rename/lib";
+import { VALID_NUMERIC_TRANSFORM_TYPES as numericTransformFunctions } from "@batch-rename/lib";
 import { composeRenameString } from "../utils/utils.js";
 
 export const generatePaddedNumber = (
