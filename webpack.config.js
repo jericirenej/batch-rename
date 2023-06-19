@@ -15,7 +15,7 @@ const determineMode = () => {
 };
 export default {
   mode: determineMode(),
-  entry: "./src/index.ts",
+  entry: "./packages/cli/src/index.ts",
   context: resolve(__dirname, "."),
   module: {
     rules: [
