@@ -5,4 +5,4 @@ workspace*
 coverage
 src/converters/helpers.ts
 packages/**/*.tsbuildinfo
-
+dist
