@@ -17,7 +17,7 @@ module.exports = {
     "no-console": "off",
     "consistent-return": "off",
     "import/prefer-default-export": "off",
-    "import/extensions": [{ js: "ignorePackages" }],
+    "import/extensions": ["warn", { js: "ignorePackages" }],
     "one-var": "off",
     "no-restricted-syntax": [
       "error",
@@ -49,5 +49,6 @@ module.exports = {
         "import/no-extraneous-dependencies": "off",
       },
     },
+    { files: ["jest.config.*"], rules: { "import/no-relative-packages": "off" } },
   ],
 };
