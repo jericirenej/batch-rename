@@ -55,7 +55,7 @@ export const STATUS = {
     return "Legacy rollback file format found. Will be converted to current format.";
   },
 
-  /* Settled promises eval*/
+  /* Settled promises eval */
   failReport: (promisesRejected: number, operationType: "convert" | "restore"): string => {
     return `${promisesRejected} ${operationType} operations were unsuccessful:`;
   },
