@@ -18,7 +18,7 @@
     "husky-prepare": "husky install",
     "clean": "npm run clean:cli",
     "clean:cli": "tsc -b --clean packages/cli",
-    "compile": "compile:cli",
+    "compile": "npm run compile:cli",
     "compile:cli": "npm run clean:cli && tsc -b packages/cli",
     "ts-exec": "npx ts-node",
     "ts-run": "npx ts-node src/index.ts"
