@@ -1,7 +1,7 @@
 import type {
-  BaseRenameItem,
   CheckExistingFiles,
   DetermineRollbackLevel,
+  LegacyRenameList,
   RenameItem,
   RenameItemsArray,
   RestoreByLevels,
@@ -12,10 +12,6 @@ import { nanoid } from "nanoid";
 import { jsonReplicate } from "./utils.js";
 
 
-export interface LegacyRenameItem extends BaseRenameItem {
-  sourcePath: string;
-}
-export type LegacyRenameList = LegacyRenameItem[];
 
 const { incorrectRollbackFormat } = ERRORS.restoreFileMapper;
 const { legacyConversion, rollbackLevelOverMax } = STATUS;

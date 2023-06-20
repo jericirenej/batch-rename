@@ -329,3 +329,10 @@ export type UtilityActionArgs = Partial<{
   transformPath: string | undefined;
   rollbackLevel: number | undefined;
 }>;
+
+
+// Legacy types (before multi-level rollback)
+export interface LegacyRenameItem extends BaseRenameItem {
+  sourcePath: string;
+}
+export type LegacyRenameList = LegacyRenameItem[];

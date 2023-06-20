@@ -1,15 +1,16 @@
 import type {
-    BaseRenameItem,
-    ExtractBaseAndExtReturn,
-    ExtractBaseAndExtTemplate,
-    PromiseRejectedWriteResult,
-    RenameItem,
-    RenameItemsArray,
-    RollbackFile
+  BaseRenameItem,
+  ExtractBaseAndExtReturn,
+  ExtractBaseAndExtTemplate,
+  LegacyRenameList,
+  PromiseRejectedWriteResult,
+  RenameItem,
+  RenameItemsArray,
+  RollbackFile
 } from "@batch-rename/lib";
 import { Dirent, Stats } from "fs";
 import { join } from "path";
-import type { LegacyRenameList } from "../utils/restoreUtils.js";
+
 import { extractBaseAndExt } from "../utils/utils.js";
 
 export const mockDirentEntryAsFile: Omit<Dirent, "name"> = {
