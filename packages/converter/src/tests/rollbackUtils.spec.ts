@@ -1,5 +1,5 @@
 import type { BaseRenameItem, RenameItemsArray, RollbackFile } from "@batch-rename/lib";
-import { ERRORS, ROLLBACK_FILE_NAME } from "@batch-rename/lib";
+import { ERRORS, ROLLBACK_FILE_NAME, jsonParseReplicate } from "@batch-rename/lib";
 import { jest } from "@jest/globals";
 import fs, { existsSync } from "fs";
 import { readFile, unlink, writeFile } from "fs/promises";
@@ -8,7 +8,6 @@ import { resolve } from "path";
 import process from "process";
 import * as restoreUtils from "../utils/restoreUtils.js";
 import * as rollbackUtils from "../utils/rollbackUtils.js";
-import { jsonParseReplicate } from "../utils/utils.js";
 import { examplePath, mockRollbackToolSet } from "./mocks.js";
 
 jest.mock("fs");

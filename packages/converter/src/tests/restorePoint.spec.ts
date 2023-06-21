@@ -1,5 +1,5 @@
 import type { RestoreBaseReturn } from "@batch-rename/lib";
-import { ERRORS, STATUS } from "@batch-rename/lib";
+import { ERRORS, STATUS, sortedJsonReplicate } from "@batch-rename/lib";
 import fs, { PathLike } from "fs";
 import { readFile, rename } from "fs/promises";
 import { nanoid } from "nanoid";
@@ -26,7 +26,6 @@ jest.mock("fs/promises", () => {
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } = ERRORS.restore;
 const { restoreBaseFunction, restoreOriginalFileNames, dryRunRestore } = restorePoint;
 
-const { sortedJsonReplicate } = utils;
 const {
   renameLists: { distinct },
   mockRollback,

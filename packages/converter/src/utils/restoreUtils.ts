@@ -7,9 +7,8 @@ import type {
   RestoreByLevels,
   RollbackFile
 } from "@batch-rename/lib";
-import { ERRORS, STATUS } from "@batch-rename/lib";
+import { ERRORS, STATUS, jsonReplicate } from "@batch-rename/lib";
 import { nanoid } from "nanoid";
-import { jsonReplicate } from "./utils.js";
 
 
 

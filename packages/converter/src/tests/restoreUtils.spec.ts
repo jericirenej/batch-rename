@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
 import type { RenameItem, RenameItemsArray, RollbackFile } from "@batch-rename/lib";
-import { ERRORS, STATUS } from "@batch-rename/lib";
+import { ERRORS, STATUS, jsonReplicate } from "@batch-rename/lib";
 import { jest } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { nanoid } from "nanoid";
 import * as restoreUtils from "../utils/restoreUtils.js";
-import { jsonReplicate } from "../utils/utils.js";
 import { mockRollbackToolSet } from "./mocks.js";
 
 const {

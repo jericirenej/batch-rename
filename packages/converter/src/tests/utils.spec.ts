@@ -7,7 +7,7 @@ import type {
   SplitFileList,
   ValidTypes
 } from "@batch-rename/lib";
-import { DEFAULT_SEPARATOR, ERRORS, ROLLBACK_FILE_NAME, STATUS } from "@batch-rename/lib";
+import { DEFAULT_SEPARATOR, ERRORS, ROLLBACK_FILE_NAME, STATUS, sortedJsonReplicate } from "@batch-rename/lib";
 import { jest } from "@jest/globals";
 import fs, { Dirent } from "fs";
 import { lstat, readdir, rename } from "fs/promises";
@@ -39,7 +39,6 @@ const {
   listFiles,
   numberOfDuplicatedNames,
   settledPromisesEval,
-  sortedJsonReplicate,
   truncateFile,
   willOverWriteExisting,
 } = utils;
