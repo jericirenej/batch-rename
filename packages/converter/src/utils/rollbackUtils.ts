@@ -1,17 +1,17 @@
 import type {
-    CreateRollbackFile,
-    RenameItem,
-    RenameItemsArray,
-    RollbackFile,
-    TrimRollbackFile
+  CreateRollbackFile,
+  RenameItem,
+  RenameItemsArray,
+  RollbackFile,
+  TrimRollbackFile
 } from "@batch-rename/lib";
-import { ERRORS, ROLLBACK_FILE_NAME } from "@batch-rename/lib";
+import { ERRORS, ROLLBACK_FILE_NAME, determineDir, } from "@batch-rename/lib";
 import { existsSync } from "fs";
 import { readFile, unlink, writeFile } from "fs/promises";
 import { nanoid } from "nanoid";
 import { resolve } from "path";
 import { checkRestoreFile } from "./restoreUtils.js";
-import { determineDir, extractCurrentReferences } from "./utils.js";
+import { extractCurrentReferences } from "./utils.js";
 
 const { noRollbackFile } = ERRORS.cleanRollback;
 

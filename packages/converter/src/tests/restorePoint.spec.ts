@@ -3,6 +3,7 @@ import { ERRORS, STATUS, sortedJsonReplicate } from "@batch-rename/lib";
 import fs, { PathLike } from "fs";
 import { readFile, rename } from "fs/promises";
 import { nanoid } from "nanoid";
+import * as libUtils from "../../../lib/src/utils/utils.js";
 import * as restorePoint from "../converters/restorePoint.js";
 import { restoreByLevels } from "../utils/restoreUtils.js";
 import * as rollbackUtils from "../utils/rollbackUtils.js";
@@ -13,6 +14,7 @@ import {
   mockRenameListToolSet,
   examplePath as transformPath,
 } from "./mocks.js";
+
 
 jest.mock("fs");
 // eslint-disable-next-line arrow-body-style
@@ -41,7 +43,7 @@ const mockedNanoId = jest.mocked(nanoid);
 const consoleSetSpy = (): jest.SpyInstance =>
   jest.spyOn(console, "log").mockImplementation((message: string) => {});
 
-const spyOnListFiles = jest.spyOn(utils, "listFiles"),
+const spyOnListFiles = jest.spyOn(libUtils, "listFiles"),
   spyOnTrimRollbackFile = jest.spyOn(rollbackUtils, "trimRollbackFile"),
   spyOnCreateBatchRenameList = jest.spyOn(utils, "createBatchRenameList"),
   spyOnDryRunRestore = jest.spyOn(restorePoint, "dryRunRestore"),

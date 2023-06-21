@@ -6,7 +6,7 @@ import type {
 import { ERRORS, EXCLUDED_CONVERT_OPTIONS, VALID_TRANSFORM_TYPES } from "@batch-rename/lib";
 import process from "process";
 import * as converters from "../../../converter/src/converters/converter.js";
-import * as utils from "../../../converter/src/utils/utils.js";
+import * as libUtils from "../../../lib/src/utils/utils.js";
 import program from "../generateCommands.js";
 import * as parseCommands from "../parseCommands.js";
 
@@ -197,7 +197,7 @@ describe("setTransformationPath", () => {
   const [folder, restArgs] = ["folder", ["restArg1", "restArg2"]];
   let spyOnCheckPath: jest.SpyInstance;
   beforeEach(() => {
-    spyOnCheckPath = jest.spyOn(utils, "checkPath");
+    spyOnCheckPath = jest.spyOn(libUtils, "checkPath");
   });
   afterEach(() => spyOnCheckPath.mockRestore());
   it("Should call and return checkPath with folder, if latter provided", async () => {

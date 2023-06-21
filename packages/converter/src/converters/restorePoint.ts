@@ -1,26 +1,27 @@
 import type {
-    DryRunRestore,
-    RenameItemsArray,
-    RestoreBaseFunction,
-    RestoreOriginalFileNames
+  DryRunRestore,
+  RenameItemsArray,
+  RestoreBaseFunction,
+  RestoreOriginalFileNames
 } from "@batch-rename/lib";
-import { ERRORS, ROLLBACK_FILE_NAME, STATUS, VALID_DRY_RUN_ANSWERS } from "@batch-rename/lib";
+import {
+  ERRORS, ROLLBACK_FILE_NAME, STATUS, VALID_DRY_RUN_ANSWERS, determineDir,
+  listFiles,
+} from "@batch-rename/lib";
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import { join } from "path";
 import {
-    checkExistingFiles,
-    checkRestoreFile,
-    determineRollbackLevel,
-    restoreByLevels
+  checkExistingFiles,
+  checkRestoreFile,
+  determineRollbackLevel,
+  restoreByLevels
 } from "../utils/restoreUtils.js";
 import { trimRollbackFile } from "../utils/rollbackUtils.js";
 import {
-    askQuestion,
-    createBatchRenameList,
-    determineDir,
-    listFiles,
-    settledPromisesEval
+  askQuestion,
+  createBatchRenameList,
+  settledPromisesEval
 } from "../utils/utils.js";
 
 const { couldNotBeParsed, noFilesToConvert, noRollbackFile, noValidData } =

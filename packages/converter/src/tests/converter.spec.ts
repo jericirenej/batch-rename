@@ -1,12 +1,13 @@
 import type {
-    AreNewNamesDistinct,
-    CreateBatchRenameList,
-    DryRunTransformArgs,
-    RenameListArgs,
-    TransformTypes
+  AreNewNamesDistinct,
+  CreateBatchRenameList,
+  DryRunTransformArgs,
+  RenameListArgs,
+  TransformTypes
 } from "@batch-rename/lib";
 import { ERRORS } from "@batch-rename/lib";
 import { writeFile } from "fs/promises";
+import * as libUtils from "../../../lib/src/utils/utils.js";
 import * as addConverter from "../converters/addTextTransform.js";
 import * as converter from "../converters/converter.js";
 import * as dateTransformFunctions from "../converters/dateTransform.js";
@@ -16,12 +17,12 @@ import * as truncateTransformFunctions from "../converters/truncateTransform.js"
 import * as rollbackUtils from "../utils/rollbackUtils.js";
 import * as utils from "../utils/utils.js";
 import {
-    examplePath,
-    exampleStats,
-    generateMockSplitFileList,
-    generateRejected,
-    mockFileList,
-    mockRenameListToolSet
+  examplePath,
+  exampleStats,
+  generateMockSplitFileList,
+  generateRejected,
+  mockFileList,
+  mockRenameListToolSet
 } from "./mocks.js";
 
 const { renameLists: mockRenameLists } = mockRenameListToolSet;
@@ -77,12 +78,12 @@ const spyOnGenerateRenameList = jest.spyOn(converter, "generateRenameList"),
   spyOnCreateBatchRename = jest
     .spyOn(utils, "createBatchRenameList")
     .mockReturnValue([Promise.resolve()]),
-  sypOnDetermineDir = jest.spyOn(utils, "determineDir"),
+  sypOnDetermineDir = jest.spyOn(libUtils, "determineDir"),
   spyOnListFiles = jest
-    .spyOn(utils, "listFiles")
+    .spyOn(libUtils, "listFiles")
     .mockResolvedValue(mockFileList),
   spyOnExtractBaseAndExt = jest
-    .spyOn(utils, "extractBaseAndExt")
+    .spyOn(libUtils, "extractBaseAndExt")
     .mockReturnValue(splitFileList),
   spyOnProvideFileStats = jest
     .spyOn(dateTransformFunctions, "provideFileStats")

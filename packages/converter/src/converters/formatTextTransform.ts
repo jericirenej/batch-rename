@@ -8,7 +8,7 @@ export const formatTextTransform: FormatTextTransform = ({
   truncate,
 }) =>
   splitFileList.map((fileInfo) => {
-    const { baseName, ext, sourcePath } = fileInfo;
+    const { baseName, ext } = fileInfo;
     const rename = composeRenameString({
       baseName,
       newName: baseName,

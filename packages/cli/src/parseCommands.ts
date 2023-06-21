@@ -1,5 +1,4 @@
 import {
-  checkPath,
   convertFiles,
   deleteRollbackFile,
   restoreOriginalFileNames,
@@ -20,6 +19,7 @@ import {
   EXCLUDED_CONVERT_OPTIONS,
   UTILITY_ACTIONS,
   VALID_TRANSFORM_TYPES,
+  checkPath,
 } from "@batch-rename/lib";
 import objectFilter from "@jericirenej/object-filter";
 import program from "./generateCommands.js";
