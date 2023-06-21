@@ -1,11 +1,11 @@
 /* eslint-disable no-param-reassign */
 import type {
-    BaseRenameList,
-    ComposeRenameStringArgs,
-    ExtractBaseAndExtTemplate,
-    RenameItemsArray,
-    SplitFileList,
-    ValidTypes
+  BaseRenameList,
+  ComposeRenameStringArgs,
+  ExtractBaseAndExtTemplate,
+  RenameItemsArray,
+  SplitFileList,
+  ValidTypes
 } from "@batch-rename/lib";
 import { DEFAULT_SEPARATOR, ERRORS, ROLLBACK_FILE_NAME, STATUS } from "@batch-rename/lib";
 import { jest } from "@jest/globals";
@@ -17,15 +17,15 @@ import process from "process";
 import * as formatTransform from "../converters/formatTextTransform.js";
 import * as utils from "../utils/utils.js";
 import {
-    createDirentArray,
-    examplePath,
-    exampleStats,
-    expectedSplit,
-    generateRejected,
-    mockFileList,
-    mockRenameListToolSet,
-    mockRollbackToolSet,
-    truthyArgument
+  createDirentArray,
+  examplePath,
+  exampleStats,
+  expectedSplit,
+  generateRejected,
+  mockFileList,
+  mockRenameListToolSet,
+  mockRollbackToolSet,
+  truthyArgument
 } from "./mocks.js";
 
 const {
@@ -38,8 +38,6 @@ const {
   extractCurrentReferences,
   listFiles,
   numberOfDuplicatedNames,
-  parseBoolOption,
-  parseRestoreArg,
   settledPromisesEval,
   sortedJsonReplicate,
   truncateFile,
@@ -65,45 +63,6 @@ const mockedFs = jest.mocked(fs),
   mockedLstat = jest.mocked(lstat),
   mockedReadDir = jest.mocked(readdir);
 
-describe("parseBoolOption", () => {
-  it("Should return default value, if arg is falsy or would throw error", () => {
-    [undefined, null, 12345, "truthy", "falsy"].forEach((option) => {
-      [false, true].forEach((defaultArg) => {
-        expect(parseBoolOption(option, defaultArg)).toBe(defaultArg);
-      });
-    });
-  });
-  it("Should pass the parsed string boolean", () => {
-    ["true", "false"].forEach((option) => {
-      [false, true].forEach((defaultArg) => {
-        expect(parseBoolOption(option, defaultArg)).toBe(JSON.parse(option));
-      });
-    });
-  });
-});
-
-describe("parseRestoreArg", () => {
-  it("Should return an integer for stringified number values", () => {
-    for (const [arg, expected] of [
-      ["1", 1],
-      ["2", 2],
-      ["-1", 1],
-      ["2.15", 2],
-    ]) {
-      expect(parseRestoreArg(arg)).toBe(expected);
-    }
-  });
-  it("True and false should be converted to 0", () => {
-    [true, false].forEach((arg) => expect(parseRestoreArg(arg)).toBe(0));
-  });
-  it("Undefined, null, etc. should convert to 0", () => {
-    [null, NaN, undefined].forEach((arg) => expect(parseRestoreArg(arg)).toBe(0));
-  });
-  it("Exception should return 0", () => {
-    // eslint-disable-next-line symbol-description
-    expect(parseRestoreArg(Symbol())).toBe(0);
-  });
-});
 
 describe("extractCurrentReferences", () => {
   const {

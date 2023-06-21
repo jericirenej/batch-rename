@@ -1,28 +1,28 @@
 import type {
-    AreNewNamesDistinct,
-    AreTransformsDistinct,
-    BaseRenameItem,
-    BaseRenameList,
-    CheckPath,
-    ComposeRenameString,
-    CreateBatchRenameList,
-    DetermineDir,
-    ExtractBaseAndExt,
-    ListFiles,
-    NumberOfDuplicatedNames,
-    PromiseRejectedWriteResult,
-    RenameItem,
-    RenameItemsArray,
-    SplitFileList,
-    TruncateFileName
+  AreNewNamesDistinct,
+  AreTransformsDistinct,
+  BaseRenameItem,
+  BaseRenameList,
+  CheckPath,
+  ComposeRenameString,
+  CreateBatchRenameList,
+  DetermineDir,
+  ExtractBaseAndExt,
+  ListFiles,
+  NumberOfDuplicatedNames,
+  PromiseRejectedWriteResult,
+  RenameItem,
+  RenameItemsArray,
+  SplitFileList,
+  TruncateFileName
 } from "@batch-rename/lib";
 import {
-    DEFAULT_SEPARATOR,
-    DEFAULT_TARGET_TYPE,
-    ERRORS,
-    EXT_REGEX,
-    ROLLBACK_FILE_NAME,
-    STATUS
+  DEFAULT_SEPARATOR,
+  DEFAULT_TARGET_TYPE,
+  ERRORS,
+  EXT_REGEX,
+  ROLLBACK_FILE_NAME,
+  STATUS
 } from "@batch-rename/lib";
 import { existsSync } from "fs";
 import { lstat, readdir, rename } from "fs/promises";
@@ -46,27 +46,6 @@ export const jsonParseReplicate = <T>(arg: string): T => JSON.parse(arg) as T;
 export const jsonReplicate = <T>(arg: T): T => jsonParseReplicate(JSON.stringify(arg)) as T;
 export const sortedJsonReplicate = <T extends unknown[]>(arg: T): T => jsonReplicate(arg).sort();
 
-export const parseBoolOption = (arg?: unknown, defaultVal = false): boolean => {
-  try {
-    if (!arg) return defaultVal;
-    const parsed = JSON.parse(String(arg).toLowerCase());
-    return typeof parsed === "boolean" ? parsed : defaultVal;
-  } catch {
-    return defaultVal;
-  }
-};
-
-export const parseRestoreArg = (arg: unknown): number => {
-  try {
-    if (typeof arg === "boolean") {
-      return 0;
-    }
-    const num = Number(arg);
-    return Number.isNaN(num) ? 0 : Math.abs(Math.floor(num));
-  } catch {
-    return 0;
-  }
-};
 
 export const extractCurrentReferences = (
   rollbackTransforms: RenameItemsArray[],
