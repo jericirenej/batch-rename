@@ -1,4 +1,3 @@
-import objectFilter from "@jericirenej/object-filter";
 import { EXCLUDED_CONVERT_OPTIONS, UTILITY_ACTIONS, VALID_TRANSFORM_TYPES } from "../constants.js";
 import { convertFiles } from "../converters/converter.js";
 import { restoreOriginalFileNames } from "../converters/restorePoint.js";
@@ -102,11 +101,9 @@ export const parseOptions = async (options: OptionKeysWithValuesAndRestArgs) => 
 
     const preserveOriginal = parseBoolOption(argPreserveOriginal, true);
 
-    const args = objectFilter({
-      targetObject: options,
-      filters: EXCLUDED_CONVERT_OPTIONS,
-      filterType: "exclude",
-    });
+    const args = Object.fromEntries(
+      Object.entries(options).filter(([key]) => !EXCLUDED_CONVERT_OPTIONS.includes(key))
+    );
 
     return await convertFiles({
       ...args,
